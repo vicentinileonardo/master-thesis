@@ -39,17 +39,17 @@ The following table provides an overview of the main components of the system an
     \hline
     Cloud Providers Kubernetes Operators & Manages the provisioning and reconciliation of cloud resources within Kubernetes, ensuring the actual state matches the desired state. \\
     \hline
-    Kubernetes Mutating Webhook & Intercepts and modifies API requests before they are persisted, allowing dynamic configuration adjustments and policy enforcement. \\
+    Kubernetes Mutating Webhook & Intercepts and modifies API requests before they are persisted, allowing dynamic configuration adjustments with policy enforcement. \\
     \hline
-    OPA Server & Evaluates authorization and policy decisions based on defined constraints and input data from Kubernetes API requests. \\
+    OPA Server & Evaluates authorization and policy decisions based on defined constraints and input data from Kubernetes API requests through the webhook. \\
     \hline
-    OPA Policies and Data & Defines rules for access control, compliance enforcement, and security policies, ensuring governance within the cluster. \\
+    OPA Policies and Data & Define the rules and contextual information used by OPA to make policy decisions, namely scheduling information \\
     \hline
     GreenOps Scheduler & Determines the optimal scheduling region and scheduling time for VMs, acting as an external data source for OPA policies. \\
     \hline
-    MLflow & Allows the tracking, logging, and versioning of machine learning experiments for reproducibility and model lifecycle management. \\
+    MLflow & Allows the tracking, logging, versioning and storing of machine learning experiments for reproducibility and model lifecycle management. \\
     \hline
-    KServe & Provides scalable and Kubernetes-native model serving capabilities, enabling inference and deployment of machine learning models. \\
+    KServe & Provides scalable and Kubernetes-native model serving capabilities, enabling deployment of machine learning models for inference. \\
     \hline
   \end{tabularx}
   \caption{Main components of the system and their respective functions.}
@@ -58,7 +58,7 @@ The following table provides an overview of the main components of the system an
 
 
 
-
+All the components listed in the above table are deployed inside a Kubernetes cluster. The only exception are the OPA Policies and Data which lies outside the cluster as described in section XYZ.
 
 
 Differences wrt other systems described in the background section
@@ -112,14 +112,14 @@ The integration of operators from different cloud providers has enabled the deve
 Kubernetes operators work on the principle of Continuous Reconciliation, ensuring, in this case, that the desired state of the system, as defined by users, aligns with the actual state of provisioned cloud resources. In particular, Operators act as controllers that monitor, adjust, and manage external cloud resources within a Kubernetes-native environment.
 Key characteristics of operators include:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
-  \item[$\bullet$] Managing external cloud resources within a Kubernetes cluster, providing a unified interface for multi-cloud deployments.
+  \item[$\bullet$] Managing external cloud resources within a Kubernetes cluster, providing a \textbf{unified interface} for multi-cloud deployments.
   \item[$\bullet$] Maintaining a \textbf{real-time representation} of provisioned cloud resources within Kubernetes.
   \item[$\bullet$] Using Custom Resources (CRs) to define cloud-specific resources in a \textbf{declarative} manner.
 \end{itemize}
 
 \subsection{Strategic Shift: From Custom Operator to Krateo Core Provider}
 
-In our approach, we opted to replace a custom Kubernetes operator (``Synchronization Operator''), originally designed to handle the \textbf{mapping} from generic to cloud-specific resources, with \textbf{Krateo Core Provider}. This decision was motivated by the need for greater flexibility, maintainability, and scalability in defining multi-cloud infrastructure components. As a matter of fact, the custom operator was originally designed to handle only virtual machines (VMs) mappings and extensions to support additional cloud resources would have required significant code changes and maintenance overhead.
+In our approach, we opted to replace a custom Kubernetes operator (``Synchronization Operator''), originally designed to handle the \textbf{mapping} from generic to cloud-specific resources, with \textbf{Krateo Core Provider}. This decision was motivated by the need for greater flexibility and maintainability in defining multi-cloud infrastructure components. As a matter of fact, the custom operator was originally designed to handle only virtual machines (VMs) mappings and extensions to support additional cloud resources would have required significant code changes and maintenance overhead for each additional resource type added.
 
 Therefore instead of embedding business logic directly within a custom Kubernetes operator, in the current system implementation, we leverage the capabilities of \textbf{Helm templating} to dynamically generate cloud-provider-specific resources. More precisely, another Krateo component, the \textbf{Krateo composition-dynamic-controller} is leveraging Helm templating under the hood to generate Kubernetes resources starting from helm templates.
 This approach, further described in the following sections, offers several advantages:
@@ -127,9 +127,6 @@ This approach, further described in the following sections, offers several advan
 Simplified resource management:  Helm enables a standardized way define resources without maintaining complex operator logic.
 Greater extensibility:  By externalizing the logic from the operator, future modifications and integrations with additional cloud providers become easier.
 Reduced maintenance overhead: Operators typically require constant updates and refinements, while Helm-based resource generation minimizes the need for frequent code changes.
-
-
-Defining the Minimum Set of Cloud Resources for Virtual Machine Provisioning
 
 It must be noted that different cloud provider adopts different design choices for their Kubernetes operators and more in general for their overall infrastructure management. Therefore, for the creation of logically similar resources, like a virtual machine, the structure and the field of the resources can be different. 
 These resources typically include:
@@ -220,6 +217,8 @@ no additional resource needed
 
 \subsection{AWS Operator}
 
+this is a collection of operators that are part of the AWS controllers for Kubernetes (ACK) project.
+
 minimum set of resources needed for vm provisioning
 
 \begin{itemize}[itemsep=0.2pt, topsep=1pt] 
@@ -240,19 +239,48 @@ minimum set of resources needed for vm provisioning
 \label{fig:aws}
 \end{figure}
 
-INSTANCE CR example
 
-Our implementation allows us to compatible with any design choices of cloud provider.
-One example of design choice is not allowing K8s object reference inside CR manifest 
-for instance
+As described at the beginning of this section, the implementation approach adopted in our system ensures compatibility with diverse cloud provider design choices. Cloud providers may impose different constraints and best practices when managing Kubernetes-native resources, and the system is designed to adapt to these variations seamlessly.
 
-interesting since it is an example of using helm lookup functions
+One notable design choice observed with the AWS operator is the restriction on referencing some Kubernetes objects inside a Custom Resource (CR) manifest. This limitation means that developers cannot directly link a resource (e.g., a Virtual Machine) to another Kubernetes object (e.g., a Subnet) using built-in object references.
 
-while the simplest way, from the devolper standpoint would be to use references to K8s objects just like what you can do with subnet manifest to reference a vpc
+To overcome this limitation, our system leverages Helm’s lookup function, which dynamically retrieves Kubernetes object details at runtime. This method allows us to fetch required parameters without directly referencing Kubernetes objects in the CR, ensuring compatibility with the AWS operator’s design constraints. The following example demonstrates how the lookup function can be used to resolve subnet IDs dynamically and inject them into the CR manifest.
 
+\begin{lstlisting}[language=yaml, caption={Helm Lookup Example: Dynamically Resolving Subnet IDs}, label={lst:helm_lookup}]
+...
+apiVersion: ec2.services.k8s.aws/v1alpha1
+kind: Instance
+metadata:
+  name: {{ .Values.vmName }}
+  namespace: {{ .Values.namespace | default "greenops" }}
+...
+spec:
+  ...
+  subnetID: {{ (lookup "ec2.services.k8s.aws/v1alpha1" "Subnet" (.Values.namespace | default "greenops") (printf "%s-subnet" .Values.vmName)).status.subnetID }}
+...
+\end{lstlisting}
 
-HELM LOOKUP LISTING
+In this example, the lookup function retrieves the subnet ID from a Subnet CR dynamically, based on the VM name and namespace. Then, the subnet ID is injected into the Instance CR manifest, ensuring that the VM is provisioned in the correct subnet.
 
+An example by AWS Operator where instead a direct reference to a resource is allowed is the following:
+
+\begin{lstlisting}[language=yaml, caption={Helm Lookup Example: Dynamically Resolving Subnet IDs}, label={lst:helm_lookup}]
+...
+apiVersion: ec2.services.k8s.aws/v1alpha1
+kind: Subnet
+metadata:
+  name: {{ .Values.vmName }}-subnet
+  namespace: {{ .Values.namespace | default "greenops" }}
+...
+spec:
+  vpcRef: 
+    from: 
+      name: {{ .Values.vmName }}-vpc
+      namespace: {{ .Values.namespace | default "greenops" }}
+...
+\end{lstlisting}
+
+In this case, the Subnet CR manifest directly references the VPC CR using name and namespace since the Operator is designed to support this type of relationship.
 
 
 ---
@@ -703,7 +731,12 @@ this mappings are needed since the scheudler knows only...
 inside the policy is a good place to do this mapping
 
 
-CHART image (illustrating data mapping steps) \\
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=1\linewidth]{images/data_mapping.png}
+  \caption{Data mapping}
+  \label{fig:data_mapping}
+\end{figure}
 
 
 \begin{lstlisting}[language=Rego, caption=Rego data mapping, label=lst:rego_data_mapping]
