@@ -1,42 +1,62 @@
 \chapter{Design and Implementation}
 \label{cha:design}
 
-System design and implementation
+This chapter presents the design and implementation of the system, focusing on the integration of the various components and the overall architecture. The system is designed to be modular, scalable, and extensible, enabling the integration of additional components as needed.
 
 \section{Assumptions}
 
-In this work, workload has been modeled as Virtual Machines (VMs).
-This was the first use case taken into account, as it was deemed the ...
+In this work, workload has been modeled as \textbf{Virtual Machines (VMs)}, representing the primary use case considered during the system's initial design phase. 
+[WHY THIS CHOICE?]
+
+A key limitation of this approach is that only resources supported by the cloud provider’s Kubernetes operator can be provisioned. Not all cloud resources available in a provider’s portfolio are guaranteed to have corresponding Kubernetes Custom Resources (CRs). This introduces certain constraints:
 
 
-However the system was designed with flexibility in mind and can be extended to other type of workload, as described in section XYZ.
-a limitiation is that the resource that can be provisioned are the only ones that are supported by the cloud provider operator.
-As a matter of fact, not every cloud resource offered by a cloud provided is guaranteed to be supported by the relative k8s operator
+\begin{itemize}[itemsep=0.2pt, topsep=1pt]
+  \item[$\bullet$] Limited resource availability: if a specific resource type (e.g., a GPU-accelerated instance or a managed database service) is not supported by the operator, it cannot be provisioned using the current system.
+  \item[$\bullet$] Dependence on Operator updates: cloud providers may extend or modify the set of resources supported by their Kubernetes operators over time.
+  \item[$\bullet$] Vendor-specific implementations: different cloud providers expose varying levels of support for Kubernetes-native resource provisioning, leading to potential inconsistencies across multi-cloud environments.
+\end{itemize}
 
+Despite these constraints, the system architecture remains highly adaptable, and future enhancements could incorporate alternative provisioning mechanisms. 
+An example of an alternative implementation could be the direct API interactions with cloud providers to bypass operator limitations.
 
+[TEST]
 
+\newpage
 \section{System Architecture}
 \label{sec:system_architecture}
 
+The following table provides an overview of the main components of the system and their respective functions.
 
-In this section the System Architecture will be described
+\begin{table}[H]
+  \centering
+  \renewcommand{\arraystretch}{1.3} % Adjust row height for readability
+  \begin{tabularx}{\textwidth}{| l | X |} % 'X' makes the second column auto-wrap
+    \hline
+    \textbf{Component} & \textbf{Function} \\
+    \hline
+    Krateo PlatformOps & Provides an abstraction layer for infrastructure orchestration, enabling declarative resource management and integration with cloud providers. \\
+    \hline
+    Cloud Providers Kubernetes Operators & Manages the provisioning and reconciliation of cloud resources within Kubernetes, ensuring the actual state matches the desired state. \\
+    \hline
+    Kubernetes Mutating Webhook & Intercepts and modifies API requests before they are persisted, allowing dynamic configuration adjustments and policy enforcement. \\
+    \hline
+    OPA Server & Evaluates authorization and policy decisions based on defined constraints and input data from Kubernetes API requests. \\
+    \hline
+    OPA Policies and Data & Defines rules for access control, compliance enforcement, and security policies, ensuring governance within the cluster. \\
+    \hline
+    GreenOps Scheduler & Determines the optimal scheduling region and scheduling time for VMs, acting as an external data source for OPA policies. \\
+    \hline
+    MLflow & Allows the tracking, logging, and versioning of machine learning experiments for reproducibility and model lifecycle management. \\
+    \hline
+    KServe & Provides scalable and Kubernetes-native model serving capabilities, enabling inference and deployment of machine learning models. \\
+    \hline
+  \end{tabularx}
+  \caption{Main components of the system and their respective functions.}
+  \label{tab:system_components}
+\end{table}
 
-Main components of the system:
-\begin{itemize}[itemsep=0.2pt, topsep=1pt]
-  \item[$\bullet$] Krateo PlatformOps
-  \item[$\bullet$] Cloud providers Kubernetes operators
-  \item[$\bullet$] Kubernetes mutating webhook
-  \item[$\bullet$] Open Policy Agent section
-  \begin{itemize}[itemsep=1pt, topsep=1pt]
-    \item[$\circ$] OPA Server
-    \item[$\circ$] OPA policies and data
-  \end{itemize}
-  \item[$\bullet$] MLOps infrastructure
-  \begin{itemize}[itemsep=1pt, topsep=1pt]
-    \item[$\circ$] MLflow
-    \item[$\circ$] KServe
-  \end{itemize}
-\end{itemize}
+
 
 
 
@@ -59,11 +79,6 @@ what is krateo
 developer platform
 
 
-\subsection{Krateo}
-what is krateo
-developer platform
-
-
 Self-service platform for multi-cloud native resources
 
 
@@ -76,7 +91,6 @@ Self-service platform for multi-cloud native resources
 generic workload resource definition
 
 
-
 how to define it
 
 Why K8s synchronization operator from scratch was not ideal wrt using helm charts with krateo
@@ -84,45 +98,68 @@ Why K8s synchronization operator from scratch was not ideal wrt using helm chart
 Helm template engine (how to map to cloud provider specific resources, why is better)
 
 
-\section{Cloud providers Kubernetes operators}
-
-Integrating operators from different cloud providers allowed us to effectively create a multi-cloud system.
 
 
 
 
-Operators:
-Continuous Reconciliation
 
-They let manage external cloud resources inside a Kubernetes cluster
-In Kubernetes there is a representation of what is actually provisioned on a public cloud
-This representations are Custom Resources
-As illustrated in the following subsections
+\section{Multi-Cloud Integration through Kubernetes Operators}
+
+The integration of operators from different cloud providers has enabled the development of an effective \textbf{multi-cloud system}, allowing seamless orchestration and provisioning of cloud resources across various cloud platforms. Namely, the system leverages Kubernetes operators from \textbf{Microsoft Azure}, \textbf{Google Cloud Platform (GCP)}, and \textbf{Amazon Web Services (AWS)}.
+
+\subsection{Role of Kubernetes Operators}
+
+Kubernetes operators work on the principle of Continuous Reconciliation, ensuring, in this case, that the desired state of the system, as defined by users, aligns with the actual state of provisioned cloud resources. In particular, Operators act as controllers that monitor, adjust, and manage external cloud resources within a Kubernetes-native environment.
+Key characteristics of operators include:
+\begin{itemize}[itemsep=0.2pt, topsep=1pt]
+  \item[$\bullet$] Managing external cloud resources within a Kubernetes cluster, providing a unified interface for multi-cloud deployments.
+  \item[$\bullet$] Maintaining a \textbf{real-time representation} of provisioned cloud resources within Kubernetes.
+  \item[$\bullet$] Using Custom Resources (CRs) to define cloud-specific resources in a \textbf{declarative} manner.
+\end{itemize}
+
+\subsection{Strategic Shift: From Custom Operator to Krateo Core Provider}
+
+In our approach, we opted to replace a custom Kubernetes operator (``Synchronization Operator''), originally designed to handle the \textbf{mapping} from generic to cloud-specific resources, with \textbf{Krateo Core Provider}. This decision was motivated by the need for greater flexibility, maintainability, and scalability in defining multi-cloud infrastructure components. As a matter of fact, the custom operator was originally designed to handle only virtual machines (VMs) mappings and extensions to support additional cloud resources would have required significant code changes and maintenance overhead.
+
+Therefore instead of embedding business logic directly within a custom Kubernetes operator, in the current system implementation, we leverage the capabilities of \textbf{Helm templating} to dynamically generate cloud-provider-specific resources. More precisely, another Krateo component, the \textbf{Krateo composition-dynamic-controller} is leveraging Helm templating under the hood to generate Kubernetes resources starting from helm templates.
+This approach, further described in the following sections, offers several advantages:
+
+Simplified resource management:  Helm enables a standardized way define resources without maintaining complex operator logic.
+Greater extensibility:  By externalizing the logic from the operator, future modifications and integrations with additional cloud providers become easier.
+Reduced maintenance overhead: Operators typically require constant updates and refinements, while Helm-based resource generation minimizes the need for frequent code changes.
+
+
+Defining the Minimum Set of Cloud Resources for Virtual Machine Provisioning
+
+It must be noted that different cloud provider adopts different design choices for their Kubernetes operators and more in general for their overall infrastructure management. Therefore, for the creation of logically similar resources, like a virtual machine, the structure and the field of the resources can be different. 
+These resources typically include:
+\begin{itemize}[itemsep=0.2pt, topsep=1pt]
+  \item[$\bullet$] Compute resources (e.g., VM instances, virtual machine templates)
+  \item[$\bullet$] Networking components (e.g., virtual networks, subnets, security groups)
+  \item[$\bullet$] Storage allocations (e.g., persistent volumes, cloud disks)
+  \item[$\bullet$] Access management (e.g., resource groups, roles, authentication credentials)
+\end{itemize}
+
+
+For the purpose of this work we defined baseline infrastructure, 
+
+vendor lock-in.
 
 
 
-In particular, we decided to logically replace the custom K8s Operator for the mapping between generic resource to cloud-specific resource with Krateo Core Provider. In short, instead of embedding business logic in a K8s operator, we will leverage Helm templating to generate cloud-provider specific resources.
+\begin{figure}[htb]
+\centering
+\includegraphics[width=1\linewidth]{images/operators.png}
+\caption{Multi-cloud resource management through Kubernetes operators}
+\label{fig:operators}
+\end{figure}
 
-
-the minimum set of cloud resources needed for the provisioning of virtual machine on each of the cloud provider must be determined
-
-
-
-%\begin{figure}[htb]
-%\centering
-%\includegraphics[width=1\linewidth]{images/operators.png}
-%\caption{Operators}
-%\label{fig:opa_architecture}
-%\end{figure}
-
+\newpage
 
 \subsection{Azure Kubernetes Operator}
 
 Microsoft Azure provides a Kubernetes operator called \textbf{Azure Service Operator v2} (ASO).
-
 Currently, ASO supports more than 150 different Azure resources.
-
-
 minimum set of resources needed for vm provisioning on Azure throgh Azure service operator is is:
 
 \begin{itemize}[itemsep=0.2pt, topsep=1pt] \item[$\bullet$] Virtual Network 
@@ -131,7 +168,7 @@ minimum set of resources needed for vm provisioning on Azure throgh Azure servic
 \item[$\bullet$] Virtual Machine
 \end{itemize}
 
-\begin{figure}[htb]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.75\linewidth]{images/azure.png}
 \caption{Minimum set of Azure resources for VM provisioning}
@@ -160,7 +197,7 @@ INSTANCE CR example
 minimum set of resources needed for vm deployment
 
 
-\begin{figure}[htb]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.75\linewidth]{images/gcp.png}
 \caption{Minimum set of GCP resources for VM provisioning}
@@ -185,7 +222,8 @@ no additional resource needed
 
 minimum set of resources needed for vm provisioning
 
-\begin{itemize}[itemsep=0.2pt, topsep=1pt] \item[$\bullet$] VPC
+\begin{itemize}[itemsep=0.2pt, topsep=1pt] 
+\item[$\bullet$] VPC
 \item[$\bullet$] Subnet
 \item[$\bullet$] EC2 Instance
 \end{itemize}
@@ -195,7 +233,7 @@ minimum set of resources needed for vm provisioning
 
 
 
-\begin{figure}[htb]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.75\linewidth]{images/aws.png}
 \caption{Minimum set of AWS resources for VM provisioning}
@@ -229,6 +267,7 @@ manual tests were made to check correspondance from scraped ubuntu website and A
 
 
 \newpage
+
 \section{Open Policy Agent (OPA)}
 
 Open Policy Agent (OPA) is an open-source general-purpose \textbf{policy engine} that enables unified policy enforcement across cloud-native environments. OPA provides a declarative language called Rego enabling a paradigm known as ``\textbf{Policy as Code}" \cite{opa_docs}.
@@ -500,12 +539,12 @@ no need for the opa K8s pod to be restarted
 big advantage since if we want to add a new policy or update data we just push those changes in a code repository (like on GitHub) and the CI/CD (GitHub action) will bundle and publish the policies as a OCI Container on a Container registry. \newpage
 
 
-%\begin{figure}[htb]
-%\centering
-%\includegraphics[width=1\linewidth]{images/opa_bundles.png}
-%\caption{OPA bundles}
-%\label{fig:opa_bundles}
-%\end{figure}
+\begin{figure}[htb]
+\centering
+\includegraphics[width=1\linewidth]{images/opa_bundles.png}
+\caption{OPA bundles}
+\label{fig:opa_bundles}
+\end{figure}
 
 
 \subsection{OPA Gatekeeper}
@@ -735,12 +774,12 @@ both at request time
 and at response time
 
 
-%\begin{figure}[htb]
-%\centering
-%\includegraphics[width=1\linewidth]{images/mutating_webhook+OPA_integration.png}
-%\caption{Kubernetes mutating webhook + OPA integration}
-%\label{fig:webhook+opa}
-%\end{figure}
+\begin{figure}[htb]
+\centering
+\includegraphics[width=1\linewidth]{images/mutating_webhook+OPA_integration.png}
+\caption{Kubernetes mutating webhook + OPA integration}
+\label{fig:webhook+opa}
+\end{figure}
 
 Figure \ref{fig:webhook+opa} represents the configuration of the Kubernetes Mutating Webhook with the intergeation of Open Policy Agent.
 In particular, 
