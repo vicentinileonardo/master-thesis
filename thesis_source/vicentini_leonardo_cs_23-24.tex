@@ -90,17 +90,66 @@
     package, import, default, some, else, not, with, as, true, false,
     null, if, then, else, in, contains, count, sum, max, min
   },
-  sensitive=false, % Keywords are case-insensitive
-  morecomment=[l]{\#}, % Line comments with #
-  morestring=[b]", % Double-quoted strings
-  morestring=[b]{`}, % Backtick-quoted strings
-  showstringspaces=false,
-  basicstyle=\ttfamily\small,
-  keywordstyle=\color{blue}\bfseries,
-  commentstyle=\color{gray},
-  stringstyle=\color{red},
-  breaklines=true
+  sensitive=false,            % Keywords are case-insensitive
+  morecomment=[l]{\#},        % Line comments with #
+  morestring=[b]",            % Double-quoted strings
+  morestring=[b]{`},          % Backtick-quoted strings
+  showstringspaces=false,     % Hide spaces in strings
+  basicstyle=\ttfamily\footnotesize, % Use a readable font size
+  keywordstyle=\color{blue}\bfseries, % Keywords in blue and bold
+  commentstyle=\color{gray},  % Comments in gray
+  stringstyle=\color{red},  % Strings in green
+  breaklines=true,            % Enable line breaking
+  breakatwhitespace=true,     % Break lines at spaces when possible
+  breakautoindent=true,       % Indent wrapped lines properly
+  tabsize=2,                  % Set tab size to 2 spaces
+  frame=single,               % Draw a box around the code
+  numbers=left,               % Line numbers on the left
+  numberstyle=\tiny\color{gray}, % Line numbers in small gray font
+  captionpos=b,               % Place caption below the code
+  escapeinside={<@}{@>}       % Allows inline LaTeX commands
 }
+
+% Define Rego style for listings
+\lstdefinestyle{rego}{
+    language=Rego,
+    basicstyle=\ttfamily\footnotesize,  % Small monospace font
+    keywordstyle=\color{blue}\bfseries, % Keywords in blue and bold
+    commentstyle=\color{gray},          % Comments in gray
+    stringstyle=\color{red},          % Strings in green
+    numbers=left,                        % Line numbers on the left
+    numberstyle=\tiny\color{gray},       % Tiny gray line numbers
+    stepnumber=1,                        % Number every line
+    breaklines=true,                     % Break long lines
+    frame=lines,                         % Adds lines above and below
+    captionpos=b,                        % Captions below the code
+    showspaces=false,                    % Do not show spaces
+    showstringspaces=false,              % Do not mark spaces in strings
+    tabsize=2                             % Set tab size to 2 spaces
+}
+
+% Define YAML language for listings
+\lstdefinelanguage{YAML}{
+    keywords={true, false, null, Yes, No, On, Off}, % YAML booleans
+    keywordstyle=\color{blue}\bfseries,            % Highlight keywords in blue & bold
+    comment=[l]{\#},                               % Line comments start with #
+    morecomment=[l]{\#},                           % Comments in gray
+    commentstyle=\color{gray},                     
+    stringstyle=\color{green},                     % Strings in green
+    numberstyle=\tiny\color{gray},                 % Line numbers in tiny gray
+    basicstyle=\ttfamily\footnotesize,             % Small monospace font
+    numbers=left,                                  % Line numbers on the left
+    stepnumber=1,                                  % Number every line
+    breaklines=true,                               % Break long lines
+    frame=lines,                                   % Adds lines above and below the code
+    captionpos=b,                                  % Captions below the code
+    showspaces=false,                              % Do not show spaces
+    showstringspaces=false,                        % Do not mark spaces in strings
+    tabsize=2,                                     % Set tab size to 2 spaces (YAML standard)
+    moredelim=[s][\color{red}]{:}{\ },            % Highlight keys in red before the colon
+    moredelim=[s][\bfseries]{---}{...}            % YAML document delimiters in bold
+}
+
 
 
 
