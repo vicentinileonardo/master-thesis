@@ -94,86 +94,113 @@ The following table provides an overview of the main components of the system an
   \label{tab:system_components}
 \end{table}
 
-
-
-All the components listed in the above table are deployed inside a Kubernetes cluster. The only exception are the OPA Policies and Data which lies outside the cluster as described in section XYZ.
-
-
-Differences wrt other systems described in the background section
-production-ready system
+All the components listed in the above table must be deployed inside a Kubernetes cluster. The only exception are the OPA Policies and data which lies outside the cluster as described in section \ref{sec:opa_bundles}.
 
 \section{Krateo PlatformOps integration}
 
-\subsection{Helm}
-what is an helm chart
+Krateo PlatformOps is utilized in this system for \textbf{multi-cloud resource management}, allowing for the declarative orchestration of cloud resources across different cloud providers leveragin Kubernetes as a control plane. 
+This section highlights the differences between two approaches for resource synchronization:
+\begin{itemize}[itemsep=0.2pt, topsep=1pt]
+  \item[$\bullet$] The \textbf{Custom Kubernetes ``Synchronization Operator"} approach
+  \item[$\bullet$] The \textbf{Krateo PlatformOps} approach
+\end{itemize}
 
+It is deemed interesting to describe both approaches in order to identify the several trade-offs between implementing a custom synchronization operator and leveraging a template-based abstraction for cloud resource provisioning.
 
-\subsection{Krateo}
+\subsection{Resource management: the Custom Kubernetes ``Synchronization Operator" approach}
+
+When dealing with multi-cloud workloads with Kubernetes as a control plane, a synchronization and mapping mechanism is required to bridge the gap between:
+\begin{itemize}[itemsep=0.2pt, topsep=1pt]
+  \item[$\bullet$] \textbf{Generic Kubernetes Custom Resources}, which represent generic provider-agnostic workloads.
+  \item[$\bullet$] \textbf{Cloud provider-specific Custom Resources}, which correspond to the actual cloud resources provisioned through the respective Kubernetes operators provided by Azure, AWS or GCP (in our case).
+\end{itemize}
+
+A custom Kubernetes Operator would be responsible for the mapping and synchronization of the above resource types. This approach is based on the principle of \textbf{Continuous Reconciliation}, where the operator continuously monitors and adjusts the system to maintain consistency between the desired and actual states.
+Candidate solutions for the development of the K8s Operator includes: Operator SDK, Kubebuilder, or writing the operator from scratch using the Kubernetes client libraries. For the purpose of this work, Kubebuilder was used to develop a Proof of Concept (PoC) for the custom synchronization operator.
+
+\subsubsection{Responsibilities of the Custom Operator}
+
+In our specific case, the operator should continuously watch the generic CRs in the Kubernetes cluster to check if critical scheduling fields have been set:
+\begin{itemize}[itemsep=0.2pt, topsep=1pt]
+  \item[$\bullet$] \textbf{schedulingRegion}: Defines where the workload should be placed.
+  \item[$\bullet$] \textbf{schedulingTime}: Specifies when the workload should be deployed.
+\end{itemize}
+
+These fields, if set, indicate a geographical placement and timing for the workload have been determined by the GreenOps Scheduler.
+If these fields are not yet present, the operator must wait for scheduling decisions before proceeding.
+Therefore, inside its Reconcile() loop, the operator should:
+\begin{enumerate}[itemsep=0.2pt, topsep=1pt]
+  \item Continuously check if scheduling fields (schedulingRegion, schedulingTime) are set.
+  \item Trigger the creation of the provider-specific resource when the schedulingTime is approaching.
+  \item Track the provisioning status by marking the generic CR with a field indicating that the cloud-specific resource has been created.
+\end{enumerate}
+
+\subsubsection{Post-Creation Considerations}
+
+Once the cloud provider-specific resource is created, two main questions arise:
+\begin{itemize}[itemsep=0.2pt, topsep=1pt]
+  \item[$\bullet$] What happens if the provider-specific CR is modified manually?
+  \item[$\bullet$] What happens if the VM configuration is modified directly on the cloud provider (outside Kubernetes)?
+\end{itemize}
+
+Related to the first question, an example scenario could be: changing the VM instance type (VM size) inside the Kubernetes cluster. In this case, the operator needs to decide whether to revert unauthorized changes or allow them and update the generic CR accordingly.
+For the second question, an example could be: changing the VM size directly on the cloud provider’s console. In this case, the operator should detect the drift and update the generic CR to reflect the external changes.
+
+\subsubsection{Resource linking}
+
+A mechanism must be in place to link the generic CR to the cloud provider-specific CR. Possible approaches include:
+\begin{itemize}[itemsep=0.2pt, topsep=1pt]
+  \item[$\bullet$] UUID-based linking: A universally unique identifier ensuring each resource is mapped correctly.
+  \item[$\bullet$] Kubernetes Object Metadata (ObjectMetadata.Name \& ObjectMetadata.Namespace): This approach may be preferable within a single Kubernetes cluster, avoiding the need for an external ID system.
+\end{itemize}
+
+\subsubsection{Termination Logic}
+
+The operator must handle the deletion of cloud resources correctly in a variety of scenarios:
+\begin{itemize}[itemsep=0.2pt, topsep=1pt]
+  \item[$\bullet$] When the provider-specific CR is deleted from Kubernetes, the corresponding cloud resource is de-provisioned and the custom operator should ensure the deletion process is handled gracefully, avoiding orphaned generic CRs.
+  \item[$\bullet$] If the provider-specific CR is deleted directly on the cloud provider, the operator should detect the change and update the generic CR accordingly.
+  \item[$\bullet$] In the event of a generic CR deletion, the custom operator should ensure the provider specific resource is removed, troggering a deletion process on the cloud provider side (de-provisioning).
+\end{itemize}
+
+\subsubsection{Managing cloud provider-specific fields}
+Each cloud provider has unique resource configurations and constraints that must be managed.
+Some differences are purely syntactic (e.g., AWS uses instanceType, whereas Azure uses vmSize).
+Others require additional provider-specific metadata (e.g., Azure requires a resourceGroup field which represent a logical container for resources in Azure).
+A custom synchronization operator must encode this logic explicitly, making it more complex to maintain especially when supporting several cloud providers.
+
+\subsubsection{Limitations of a Custom ``Synchronization Operator''}
+Another major challenge with a custom synchronization operator is that some cloud providers do not support time scheduling metadata within their Custom Resources. In particular, no cloud operator among the ones we used for the system (AWS, Azure, GCP) provides a dedicated field for scheduling time.
+This means that the Kubernetes operator itself must handle time scheduling logic, delaying CR creation until the scheduled time.
+If the operator immediately creates the cloud-provider specific CR (without a ``waiting logic''), the Cloud-provider Operator will trigger and provision the VM immediately, ignoring scheduling constraints.
+Due to these limitations and complexities, we explored and leveraged an \textbf{alternative template-driven approach} using Krateo PlatformOps, described in the next section.
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=1\linewidth]{images/k8s_operator.png}
+  \caption{Multi-cloud resource management with Custom Kubernetes ``Synchronization Operator'' approach}
+  \label{fig:k8s_operator}
+\end{figure}
+
+\subsection{Resource management: the Krateo approach}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=1\linewidth]{images/krateo.png}
+  \caption{Multi-cloud resource management with Krateo PlatformOps approach}
+  \label{fig:krateo}
+\end{figure}
+
 what is krateo
 developer platform
-
+already described in section \ref{xyz}
 
 Self-service platform for multi-cloud native resources
 
-
-
 (generic VM mapped thanks to Krateo components, what is the added value)
 
-
-
-
 generic workload resource definition
-
-
 how to define it
-
-Why K8s synchronization operator from scratch was not ideal wrt using helm charts with krateo
-
-
-
-A synchronization / mapping mechanism is needed to deal with K8s Custom Resources representing a generic workload and the cloud provider specific K8s Custom Resources used for the provisioning of VM with the respective K8s operators developed by Cloud Providers.
-The K8s Operator should look at the generic CR, mutated by policy decisions with the necessary fields, and create the correspondent cloud provider-specific CR.
-
-What the Operator must watch?
-Check if schedulingRegion and schedulingTime are set. This would mean that the generic CR has received the scheduling proposed by the AI inference (and other policies).
-If those fields are not present it means that the generic CR still has to receive the scheduling information.
-
-The resources managed by this K8s Operator are just the generic, provider-agnostic CRs representing a generic VM. The provider-specific resources are built by this K8s Operator using the generic CR as a blueprint but this Operator will not watch and act on these resources after the creation. (Is this true?)
-
-
-What to do inside Reconcile()?
-continuously check and “wait” if scheduling information have been added to the generic CR (schedulingProvider, schedulingRegion, schedulingTime)
-create the provider-specific resource when schedulingTime is “close” (critical step, pitfalls)
-set a field in the generic CR that will testify that the corresponding provider-specific resource has been created (therefore assumed to be provisioned?). 
-
-
-What happens after the provider-specific resource has been created?
-Examples: 
-what happens if I manually modify the provider-specific CR cpu field from 2 to 4 (inside the cluster)?
-what happens if I modify my provisioned instance with the aws console (web UI)?
-
-
-How to link the 2 Custom Resources?
-Which is the best way to actually link a generic CR to a provider specific CR. Something like UUID? Or another approach like ObjectMeta.Name and ObjectMeta.Namespace is better?
-
-How to handle the termination logic of a VM?
-Deleting the provider-specific CR inside our K8s container should trigger the correspondent operator that will delete the resources previously provisioned on the cloud provider
-
-Cloud-provider specific fields
-This K8s Operator should also contain the logic to deal with cloud-provider specific fields in order to create a valid provider-specific Custom Resource.
-In this case we are not referring to different naming conventions for the same concept (Azure vmSize and AWS instanceType) but rather additional fields like Azure resourceGroup.
-
-Candidate solutions for the development of the K8s Operator
-kubebuilder 
-
-
-
-
-additional challenge of this custom operator (solved by helm template engine)
-Note that we cannot set scheduling time in the AzureVirtualMachine Custom Resource. There is no such dedicated field.
-This means that it is our K8s synchronization operator’s duty to create the AzureVirtualMachine CR at the right time. Once the AzureVirtualMachine CR is created, the provisioning (managed by Azure Operator) will start.
-If the K8s synchronization operator creates the correspondent provider-specific CR right away, without a waiting logic, the provision on the cloud provider will start in a time different than schedulingTime.
-
 
 
 Helm template engine (how to map to cloud provider specific resources, why is better)
@@ -197,12 +224,22 @@ Map (CPU, RAM) => InstanceType
 
 This mapping is done through Helm templating when creating 
 
+
+
+
+krateo cdc
+The composition-dynamic-controller is an operator that is instantiated by the core-provider to manage the Custom Resources whose Custom Resource Definition is generated by the core-provider.
+
 \section{Kubernetes Mutating Webhook}
 
 [from k8s docs]
 
 K8s mutating webhook is used to modify K8s custom resources with the data from policies. 
 The K8s mutating webhook intercepts the CREATE or UPDATE API request, asks about policies (with also scheduling decision) and mutates the resource.
+
+we can distinguish between two types of webhooks: validating and mutating.
+
+we can distinguish two entities semnatically different: the webhook configuration and the webhook service
 
 [generic webhook image]
 
@@ -212,7 +249,7 @@ The integration of operators from different cloud providers has enabled the deve
 
 \subsection{Role of Kubernetes Operators}
 
-Kubernetes operators work on the principle of Continuous Reconciliation, ensuring, in this case, that the desired state of the system, as defined by users, aligns with the actual state of provisioned cloud resources. In particular, Operators act as controllers that monitor, adjust, and manage external cloud resources within a Kubernetes-native environment.
+Kubernetes operators work on the principle of Continuous Reconciliation, ensuring, in this case, that the desired state of the system, as defined by users, aligns with the actual state of provisioned cloud resources. In particular, Operators act as controllers that monitor, adjust, and manage external cloud resources within a Kubernetes-native environment. Inside the K8s lie the representation of the cloud resources, which are managed by the operators.
 Key characteristics of operators include:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
   \item[$\bullet$] Managing external cloud resources within a Kubernetes cluster, providing a \textbf{unified interface} for multi-cloud deployments.
@@ -249,12 +286,7 @@ vendor lock-in.
 
 
 
-\begin{figure}[htb]
-\centering
-\includegraphics[width=1\linewidth]{images/operators.png}
-\caption{Multi-cloud resource management through Kubernetes operators}
-\label{fig:operators}
-\end{figure}
+
 
 \newpage
 
@@ -637,6 +669,7 @@ else := {"allowed": true, "uid": uid}
 Therefore, in this specific case, the creation of the Kubernetes Pod will be \textbf{denied}. OPA is responsible for \textbf{decision-making}, determining that the request do not complies with the defined policies, while the Kubernetes API server, using the AdmissionReview response generated by OPA, handles \textbf{policy enforcement}, effectively rejecting the CREATE request since it violates the specified rules.
 
 \subsection{OPA Policy bundles}
+\label{sec:opa_bundles}
 
 An OPA policy bundle is a collection of policies and optional associated contextual data. More precisely, a bundle is a standardized way to package policies, facilitating version control and distribution \cite{opa_bundles}. As a matter of fact, a single policy bundle can be potentially used by multiple OPA instances.
 A policy bundle mainly consists of:
@@ -941,8 +974,7 @@ It is deemed useful to mention some of the advanced features of OPA that were no
 
 \section{MLOps infrastructure}
 
-mlops venn diagram image
-to explain what it is
+A MLOps infrastrcutrue is not necessarily needed for multi-cloud resource management but since it is believed that ai or ml models will be used in the future more and more to get scheduling and management decisions, it is deemed important to describe a MLOps infrastructure in a Kubernetes environment.
 
 \subsection{MLOps purpose}
 
