@@ -5,21 +5,34 @@
 
 A comprehensive end-to-end integrated test has been carried out on a Kubernetes cluster
 
+this was used to validate the system
+
 (dependency graph)
-
-
 
 \section{Theoretic upper bound}
 
  (how close can we get, masachussets amherest group)
 
-
-
 \section{Baseline definition}
+
+We should prepare one or more baseline schedulings that will be used as a baseline and compared with a carbon-aware scheduling proposed by our system.
 
 \section{Black hole phenomenon}
 
+How to deal with the so-called “Black hole” phenomenon?
+That is, if 100 workload scheduling arrives at some point, there is the possibility that the outcome of the system we are building is: “schedule all workloads in Norway” where Norway is the region with least carbon intensity at that moment.
+This phenomenon came up also in a previous meeting but it is not clear if this could be a problem etc..
+A probable differentiator could be the max latency field of the workload request. Other service requirements could contribute to this as well.
+
+
 (how it is countered)
+
+\section{side effects}
+
+Maybe out of scope of this work, side effects, big picture.
+What happens if a big percentage of companies that relies on cloud services starts to adopt carbon-aware scheduling of their workloads?
+We tend to image cloud providers or even cloud regions as an infinite pool of resources, and at a certain level it is almost like that. But could carbon aware scheduling have larger, not foreseen, side effects?
+Is this a responsibility of who schedules? Shall schedulers be responsible for the load on regions? Like self-imposing some sort of limits/caps. Ethics?
 
 \section{Preliminary evaluation}
 
@@ -45,4 +58,3 @@ it is still usable for research purposes like in this case.
 
 
 \newpage
-

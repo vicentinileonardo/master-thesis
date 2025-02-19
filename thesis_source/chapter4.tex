@@ -1,18 +1,51 @@
 \chapter{Design and Implementation}
 \label{cha:design}
 
-This chapter presents the design and implementation of the system, focusing on the integration of the various components and the overall architecture. The system is designed to be modular, scalable, and extensible, enabling the integration of additional components as needed.
+This chapter presents the design and implementation of our system, focusing on the integration of the various components and the overall architecture. The system is designed to be modular, scalable, and extensible, enabling the integration of additional components as needed.
 
 \section{Assumptions}
 
+
+
+\subsection{workload definition}
 In this work, workload has been modeled as \textbf{Virtual Machines (VMs)}, representing the primary use case considered during the system's initial design phase. 
 [WHY THIS CHOICE?]
 
+We define, for the purpose of this work, a workload as a Virtual Machine (VM).
+We can assume/imagine that inside of the VM, some kind of processing/work P will happen.
+This VM can be scheduled on any Public Cloud Provider since we are looking for a multi-cloud setting: cloud can be seen as a commodity. 
+Alternatively, a subset of eligible Public Cloud Providers can be set as a policy.
+We can use general-purpose VMs.
+
+The VM has the following characteristics:
+MinCPU needed
+MinRAM needed
+Duration (D): the time duration that a VM must run to accomplish its processing/work
+Deadline (DL): the time (timestamp) when the VM must have finish its work (maybe this can be omitted for the basic use cases)
+Max latency (ML): value in ms 
+
+If the workload is completely delay-tolerant then the Deadline parameter must not be used.
+
+So a VM could be defined as a tuple like the following:
+VM = (MinCPU, MinRAM, D, DL, ML)
+
+
+example
+
+Min CPU: 4 vCPU
+Min RAM: 4 GB of RAM
+Duration (D): 1h
+Deadline (DL): 2022-12-31 23:59:59
 ---
 
 The system is designed to be cloud-agnostic, however for the purpose of this work, the system is currently configured to support three major cloud providers: \textbf{Microsoft Azure}, \textbf{Google Cloud Platform (GCP)}, and \textbf{Amazon Web Services (AWS)}.
 
 ---
+
+
+
+
+
 
 A limitation of our general approach is that only resources supported by the cloud provider’s Kubernetes operator can be provisioned. Not all cloud resources available in a provider’s portfolio are guaranteed to have corresponding Kubernetes Custom Resources (CRs). This introduces certain constraints:
 
@@ -27,6 +60,7 @@ An example of an alternative implementation could be the direct API interactions
 [KRATEO custom operator REST]
 
 \newpage
+
 \section{System Architecture}
 \label{sec:system_architecture}
 
@@ -39,7 +73,7 @@ The following table provides an overview of the main components of the system an
     \hline
     \textbf{Component} & \textbf{Function} \\
     \hline
-    Krateo PlatformOps & Provides an abstraction layer for infrastructure orchestration, enabling declarative resource management and integration with cloud providers. \\
+    Krateo PlatformOps & Provides an abstraction layer for infrastructure orchestration, enabling declarative resource management and integration with cloud providers with templates. \\
     \hline
     Cloud Providers Kubernetes Operators & Manages the provisioning and reconciliation of cloud resources within Kubernetes, ensuring the actual state matches the desired state. \\
     \hline
@@ -68,10 +102,6 @@ All the components listed in the above table are deployed inside a Kubernetes cl
 Differences wrt other systems described in the background section
 production-ready system
 
-
-
-
-
 \section{Krateo PlatformOps integration}
 
 \subsection{Helm}
@@ -99,13 +129,82 @@ how to define it
 
 Why K8s synchronization operator from scratch was not ideal wrt using helm charts with krateo
 
+
+
+A synchronization / mapping mechanism is needed to deal with K8s Custom Resources representing a generic workload and the cloud provider specific K8s Custom Resources used for the provisioning of VM with the respective K8s operators developed by Cloud Providers.
+The K8s Operator should look at the generic CR, mutated by policy decisions with the necessary fields, and create the correspondent cloud provider-specific CR.
+
+What the Operator must watch?
+Check if schedulingRegion and schedulingTime are set. This would mean that the generic CR has received the scheduling proposed by the AI inference (and other policies).
+If those fields are not present it means that the generic CR still has to receive the scheduling information.
+
+The resources managed by this K8s Operator are just the generic, provider-agnostic CRs representing a generic VM. The provider-specific resources are built by this K8s Operator using the generic CR as a blueprint but this Operator will not watch and act on these resources after the creation. (Is this true?)
+
+
+What to do inside Reconcile()?
+continuously check and “wait” if scheduling information have been added to the generic CR (schedulingProvider, schedulingRegion, schedulingTime)
+create the provider-specific resource when schedulingTime is “close” (critical step, pitfalls)
+set a field in the generic CR that will testify that the corresponding provider-specific resource has been created (therefore assumed to be provisioned?). 
+
+
+What happens after the provider-specific resource has been created?
+Examples: 
+what happens if I manually modify the provider-specific CR cpu field from 2 to 4 (inside the cluster)?
+what happens if I modify my provisioned instance with the aws console (web UI)?
+
+
+How to link the 2 Custom Resources?
+Which is the best way to actually link a generic CR to a provider specific CR. Something like UUID? Or another approach like ObjectMeta.Name and ObjectMeta.Namespace is better?
+
+How to handle the termination logic of a VM?
+Deleting the provider-specific CR inside our K8s container should trigger the correspondent operator that will delete the resources previously provisioned on the cloud provider
+
+Cloud-provider specific fields
+This K8s Operator should also contain the logic to deal with cloud-provider specific fields in order to create a valid provider-specific Custom Resource.
+In this case we are not referring to different naming conventions for the same concept (Azure vmSize and AWS instanceType) but rather additional fields like Azure resourceGroup.
+
+Candidate solutions for the development of the K8s Operator
+kubebuilder 
+
+
+
+
+additional challenge of this custom operator (solved by helm template engine)
+Note that we cannot set scheduling time in the AzureVirtualMachine Custom Resource. There is no such dedicated field.
+This means that it is our K8s synchronization operator’s duty to create the AzureVirtualMachine CR at the right time. Once the AzureVirtualMachine CR is created, the provisioning (managed by Azure Operator) will start.
+If the K8s synchronization operator creates the correspondent provider-specific CR right away, without a waiting logic, the provision on the cloud provider will start in a time different than schedulingTime.
+
+
+
 Helm template engine (how to map to cloud provider specific resources, why is better)
 
 
+Multi-cloud VMs list and mapping
+We need to know which VMs (instance types) are actually available on Azure, AWS, GCP.
+What to actually use to fetch the list and where to store it
+How frequent the elements changes and how to update the list (this is done with policy updates (updates to contextual data))
+How to match generic workload to candidate VMs instance types (that adhere to the generic workload specs), what is the mapping logic.
+For example:
+Requested VM (generic): (2 vCPU, 16 GiB)
+Chosen VM instance: Azure Standard E2as v4
+What are the steps of the process to identify the correct VM instance?
 
+Use Cloud Providers API / CLI and store the records in a local DB. Regular scheduled updates.
+For our PoC we could maybe use a small subset of all the available instance types.
 
+Current approach:
+Map (CPU, RAM) => InstanceType
 
+This mapping is done through Helm templating when creating 
 
+\section{Kubernetes Mutating Webhook}
+
+[from k8s docs]
+
+K8s mutating webhook is used to modify K8s custom resources with the data from policies. 
+The K8s mutating webhook intercepts the CREATE or UPDATE API request, asks about policies (with also scheduling decision) and mutates the resource.
+
+[generic webhook image]
 
 \section{Multi-Cloud Integration through Kubernetes Operators}
 
@@ -144,6 +243,7 @@ These resources typically include:
 
 For the purpose of this work we defined baseline infrastructure for each cloud provider in order to have a common ground for the system to work. This baseline infrastructure is composed by the minimum set of resources needed for a VM provisioning.
 
+each providers has its complexities and nuances
 
 vendor lock-in.
 
@@ -315,7 +415,9 @@ In order to select the most suitable AMI for a given VM, the system leverages He
 
 Open Policy Agent (OPA) is an open-source general-purpose \textbf{policy engine} that enables unified policy enforcement across cloud-native environments. OPA provides a declarative language called Rego enabling a paradigm known as ``\textbf{Policy as Code}" \cite{opa_docs}.
 
-Open Policy Agent can be integrated as a sidecar container, host-level daemon, or library to perform policy decisions for a plethora of use cases: microservices, Kubernetes admission control, CI/CD pipelines,  API gateways and more \cite{opa_docs}. 
+Open Policy Agent can be integrated as a sidecar container, host-level daemon, or library to perform policy decisions for a plethora of use cases: microservices, Kubernetes admission control, CI/CD pipelines, API gateways and more \cite{opa_docs}. 
+
+In the context of our system, OPA and the Policy-as-Code paradigm are used to enforce policies for workload scheduling: encoding the output of a scheduling decision coming from an external GreenOps Scheduler and ensuring compliance with additional policies related to latency requirements and legal constraints.
 
 \subsection{Policy as Code paradigm}
 
@@ -329,6 +431,7 @@ OPA's generic defintion of policy is: ``\textit{A policy is a set of rules that 
 \item[$\bullet$] Ensuring infrastructure compliance, for example, by verifying that new cloud resources to be provisioned follow predefined security configurations.
 \item[$\bullet$] Enforcing that new deployed servers must have the prefix ``server-" in their name.
 \end{itemize}
+
 Therefore, the use cases covered span from role-based access control to container image security and beyond.
 \newline
 
@@ -342,12 +445,9 @@ In practice, this means that when a software module needs to make a policy decis
   \item[$\bullet$] \textbf{Scalability}: since OPA and application modules are not tightly coupled.
 \end{itemize} 
 
-
-
-
 \subsection{OPA architecture overview}
 
-As mentioned in the introduction to this section, one common approach to integrating OPA into a software system is by deploying it as a host-level daemon. The latter is essentially a lightweight server that processes policy queries via HTTP requests. This setup allows services to offload policy decision-making to OPA in a scalable and efficient manner since the two entities are not tighlty coupled.
+As mentioned in the introduction to this section, one common approach to integrating OPA into a software system is by deploying it as a host-level daemon. The latter is essentially a lightweight server that processes policy queries via HTTP requests. This setup allows services to offload policy decision-making to OPA in a scalable and efficient manner since the two entities are not tightly coupled.
 
 A standard OPA deployment consists of three main components:
 
@@ -378,8 +478,6 @@ types of external data strategies
 http.send()
 paramters 
 
-
-
 \subsection{OPA integration with Kubernetes}
 
 In Kubernetes admission control, policy enforcement is handled by the \textbf{Kubernetes API server} itself. OPA makes the policy decisions when queried by the admission controller, but the actual enforcement (namely allowing or denying requests) is executed by Kubernetes' built-in admission control mechanisms. This workflow is represented in figure \ref{fig:webhook_opa} where \textbf{AdmissionrReview request} and \textbf{AdmissionReview response} are respectively input and output of the whole OPA section. The API Server sends the entire Kubernetes object in the webhook request to OPA. %cite OPA kubernetes primer
@@ -408,9 +506,6 @@ In the current system configuration, the kube-mgmt container is deployed to faci
 Looking ahead, future policies could leverage VmTemplate resource information to enforce naming conflict resolution, quota management, or additional constraints.
 
 \newpage
-
-
-
 
 \subsection{OPA policies}
 \label{sec:opa_policies}
@@ -630,6 +725,8 @@ spec:
   parameters: {}
 \end{lstlisting}
 
+In the example, the policy is defined as a ConstraintTemplate, which is then instantiated as a Constraint Custom Resource of kind defined in the ConstraintTemplate. The ConstraintTemplate specifies the Rego policy logic, while the Constraint defines the target resources and parameters for policy enforcement. Therefore a ConstraintTemplate can be used by multiple Constraints, allowing for policy reuse.
+
 OPA Gatekeeper also provides additional Kubernetes Custom Resources called \textit{mutators} (Assign, AssignMetadata, AssignImage, ModifySet) that allow modifying resource fields without writing Rego code. These mutators are useful for simple transformations, such as setting default labels or annotations. However simultaneous mutation of multiple fields leveraging external data is not supported \cite{opa_gatekeeper_external_data}. This limitation, in the context of our system, determined the choice of the standard OPA server for policy enforcement.
 
 It must be noted that OPA Gatekeeper limitations could be potentially addressed in future releases, making it a more viable option for complex policy enforcement scenarios. However, for the current system requirements, the standard OPA server was deemed more suitable due to its flexibility.
@@ -683,6 +780,28 @@ Figure \ref{fig:latency_matrix} illustrates an small example (4 regions subset) 
 
 \end{lstlisting}
 
+
+data
+
+Azure provides monthly Percentile P50 round trip times between Azure regions:
+(https://learn.microsoft.com/en-us/azure/networking/azure-network-latency?tabs=Americas%2CWestUS)
+https://learn.microsoft.com/en-us/azure/networking/media/azure-network-latency/azure-network-latency-thumb.png#lightbox 
+
+Azure network latencies docs:
+https://raw.githubusercontent.com/MicrosoftDocs/azure-docs/refs/heads/main/articles/networking/azure-network-latency.md
+
+Merged Azure network latencies:
+https://docs.google.com/spreadsheets/d/1kxtPw9ZSnAv1vQ6IDwzw-mXdHoKUFb8AjlsjACnvDqE/edit?usp=sharing 
+
+
+AWS:
+https://www.cloudping.co/grid (not official, not using VMs but Lambda functions)
+
+google
+syntetic data
+
+
+
 \subsection{GDPR policy}
 
 Another policy configured in the system is the ``GDPR Policy'', which ensures that virtual machines (VMs) are deployed in cloud regions that reside in countries of the European Union. 
@@ -692,9 +811,11 @@ Since each cloud provider has its own regional distribution, the list of EU-comp
 
 It must be noted that this policy is \textbf{not intended to be a comprehensive GDPR compliance solution}, but rather a basic example of how OPA can enforce \textbf{data residency requirements in a multi-cloud environment}. Organizations with more stringent GDPR compliance needs should consider additional measures.
 
-\subsection{Mutation policy}
+\subsection{Scheduling outcome policy}
 
 main policy
+
+Mutation policy
 dedicated to 
 
 
@@ -703,11 +824,12 @@ patch code
 
 encoded patches
 
-
 \subsection{OPA Data mapping}
 
 OPA is flexible enough to handle data mapping between different data models, enabling seamless integration with external systems. In our GreenOps system, data mapping is essential for translating between ElectricityMaps regions and cloud provider regions. 
 
+
+At some point in the system this mapping needs to be done.
 this mappings are needed since the scheudler knows only about ElectricityMaps regions, and do not possess the knowledge of cloud provider regions. Therefore, a mapping is needed to translate the ElectricityMaps regions to cloud provider regions and vice versa.
 
 inside the policy is a good place to do this mapping
@@ -751,12 +873,6 @@ map_from_electricitymaps(em_region, provider) = cloud_region if {
 }
 
 \end{lstlisting}
-
-
-
-
-
-
 
 \subsection{OPA end-to-end workflow}
 
@@ -814,7 +930,6 @@ The mutating webhook configuration is set on the CREATE and UPDATE operations
 UPDATE operation trigger
 K8s Cronjob that attach a label to the custom resoruce 
 
-
 \subsection{OPA advanced features}
 
 It is deemed useful to mention some of the advanced features of OPA that were not employed in the system described in this thesis but could be potentially useful in future developments or in other contexts where OPA is used.
@@ -823,8 +938,6 @@ It is deemed useful to mention some of the advanced features of OPA that were no
 - delta bundles
 
 \newpage
-
-
 
 \section{MLOps infrastructure}
 
@@ -1045,35 +1158,141 @@ model = WrappedModel(model)
 print(model(test_dataset[0]['past_values'].unsqueeze(0)))
 \end{lstlisting}
 
-
-
-
-
-
-
-
-
 \section{Measurements}
+
+
+\subsection{System / performance metrics}
 
 
 how to measuere cloud resource systems
 
 
+especially useful for ``day 2 operations''
+scaling down a VM
 
 
+Metrics collected could be:
+CPU usage
+memory usage.
+These metrics are especially useful for the 2nd use case for instance: scaling down a VM.
+
+
+Prometheus exporters (https://prometheus.io/docs/instrumenting/exporters/) + Prometheus scrapers for data collection.
+Generic Prometheus exporters and scrapers already used for Krateo Composable FinOps leveraging specific K8s Custom Resources. These exporters are generic and can scrape arbitrary metrics configured in specific CRs (for instance, collecting VMs CPU consumption though Azure APIs).
+From the Krateo Composable FinOps document: 
+- “we transform all optimizations into a set of Kubernetes Custom Resources (CRs) to act upon newly found cost-related deficiencies. This allows us to use Kubernetes operators (explicitly coded to interact with cloud services) to monitor these metrics and act automatically to apply changes to remote resources.”
+
+- “forward the optimization to the Krateo operator that manages the services that need to be optimized, for example, the Azure Operator to modify the size of a Virtual Machine;”
+
+- “the optimization is automatically encoded in a CR for the finops-operator-vm-manager, which then analyzes it and decides how to manage the Virtual Machine. For example, it could scale up or down the virtual machine, stop it for the night, etc.”
+
+From my current understanding, only Azure is available for now on the finops-operator-vm-manager. 
+This operator is only able to: start; stop; deallocate; scale-up; scale-down.
+So finops-operator-vm-manager operates on already provisioned virtual machines and it applies optimizations.
+
+---
+
+
+
+Cloud providers API (“hypervisor” / host level) to get CPU usage, memory usage
+Azure monitoring REST API: https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/rest-api-walkthrough?tabs=rest%2Cportal
+https://learn.microsoft.com/en-us/rest/api/monitor/metrics/list?view=rest-monitor-2023-10-01&tabs=HTTP
+https://learn.microsoft.com/en-us/azure/virtual-machines/monitor-vm 
+
+
+Cloud providers agents
+Azure Monitor Agent (https://learn.microsoft.com/en-us/azure/azure-monitor/agents/azure-monitor-agent-overview)
+Google Ops Agent: “the primary agent for collecting telemetry from your Compute Engine instances” (https://cloud.google.com/monitoring/agent/ops-agent)
+
+
+Standard agents/deamons manually installed the VMs (e.g. Prometheus node exporter, 
+many metrics restricted by public cloud providers
+not straightforward to automate the deployment
+
+
+---
+
+Challenges
+Public Cloud Providers do not provide data about carbon intensity of a VM instance
+Public Cloud Providers do not provide data about power consumption of a VM instance
+
+Power consumption metrics
+scaphandre: NOT supported by public cloud providers. “Public cloud providers do not expose the underlying RAPL sensors that scaphandre and other measurement tools rely on to track consumption”. (https://github.com/hubblo-org/scaphandre/issues/142)
+https://hubblo-org.github.io/scaphandre-documentation/index.html
+
+kepler: really interesting and quite mature project but works only with K8s resources inside the cluster (Nodes, Pods). Therefore not good for our use first case.
+https://sustainable-computing.io/design/architecture/
+
+
+manually estimate power consumption based on CPU utilization, memory usage. Could be a very difficult task. 
+there is the TEADS metodology like 
+
+
+
+---
+
+
+Carbon metrics:
+there is no adopted standard, there is not something similar to FOCUS yet;
+there is a proposal for a specification (work in progress, not supported yet by Public Cloud Providers): 
+https://github.com/Green-Software-Foundation/real-time-cloud 
+https://github.com/Green-Software-Foundation/real-time-cloud/blob/main/Cloud_Region_Metadata_specification.md 
+
+
+Public Cloud Providers monthly reports (probably not useful in this case)
+Export Azure carbon optimization emissions data (Preview) (probably not fine-grained as we want)
+
+Cloud Carbon Footprint
+Uses cloud provider billing (AWS Cost and Usage Reports with Amazon Athena, GCP Billing Export Table using BigQuery, Azure Consumption 
+Management API). Using these services costs.
+Electricity Maps API integration is supported (for live grid carbon intensity)
+
+ 
+aether calculation engine (https://aether.green/docs/methodologies/) 
+only AWS and GCP supported, Azure not yet
+uses AWS CloudWatch and Google monitoring
+very small project
+no live Grid Carbon Intensity Coefficient, they extrapolate data from “governative” data reports
+https://aether.green/docs/methodologies/#grid-carbon-intensity-coefficient
+
+
+carbond agent) (https://gitlab.com/sustainable-computing-systems/carbond)
+installed on the machine
+
+
+Example of a manual approach (not scalable due to tech specs research): https://devblogs.microsoft.com/sustainable-software/how-can-i-calculate-co2eq-emissions-for-my-azure-vm/ 
+
+The critical point here is to get/calculate the energy consumed by a cloud instance, since there are a huge number of technical configurations to find, retrieve and use for calculations.
+
+
+
+\subsection{Impact framework}
 
 Impact framework (by green software foundation)
-
-
-
-
-
-
 
 \section{End-to-End workflow}
 \label{sec:e2eflow}
 
-swim lanes chart figure
+[TO BE CHANGED]
+A user request for a workload arrives in Kubernetes / Krateo. 
+The request shape is VM1 = (MinCPU=4vCPU, MinRAM=4GiB, D=12h)
+As we can see the request is generic: it does not contain a specific cloud provider or a specific cloud region.
+A K8s Custom Resource (CR) representing the workload is created.
+mutating webhook intercepts the CREATE API request.
+K8s mutating webhook retrieve and evaluate policies and in particular, the AI model inference is called and should return a decision with the region and scheduling time (time-shifting and geographical shifting).
+OPA will use this decision to mutate the VM specification, adding the provider, the schedulingRegion and schedulingTime fields.
+Krateo core provider / cdc
+
+
+\begin{sidewaysfigure}
+  \centering
+  \includegraphics[width=\textheight]{images/sequence_diagram.png}
+  \caption{Example of a full-page rotated image}
+  \label{fig:rotated_image}
+\end{sidewaysfigure}
+
+
+\newpage
 
 
 
@@ -1103,4 +1322,3 @@ Helm
 
 
 \newpage
-
