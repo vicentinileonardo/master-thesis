@@ -39,9 +39,14 @@ each provider has a different number of regions and zones and different naming c
 there is no standardization in the industry for this. 
 for instance a region located in london is called eu-west-2 in AWS, uk-west in Azure and europe-west2 in GCP
 
-[table how many per cloud provider]
+[table how many regions per cloud provider]
 
-[world map with regions of the 3 big cloud providers and country colored by grid carbon intensity]
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=1\linewidth]{images/azure_data_centers.png}
+    \caption{Geo-distribution of Azure data centers with country Grid Carbon Intensity}
+    \label{fig:azure_data_centers}
+\end{figure}
 
 \subsection{Computational Sustainability by Public cloud providers}
 
@@ -93,8 +98,7 @@ Being able to work in a multi-cloud environment is also important for accomplish
 If the system is designed to be multi-cloud then flexibility is higher for organizations and users.
 For the purpose of this work, we will consider only the 3 major Public Cloud Provider as of today: AWS, Azure, GCP
 
-
-\subsubsection{Multi cloud resource management}
+\section{Multi cloud resource management}
 \label{sec:multi_cloud_resource_management}
 
 The idea of a \textbf{dynamic placement of workloads leveraging a multi-cloud paradigm} is not new. We can find some examples in the literature, such as the work of Simarro et al. \cite{Simarro_2011} that back at the dawn of cloud computing (2011) proposed a multi-cloud architecture for the dynamic placement of Virtual Machines (VMs).
@@ -108,7 +112,6 @@ Cloud service brokers (CSBs) were also described and categorized by Wadhwa et al
 The emerging cloud computing led to the proliferation of cloud services and providers, and by consequence the need for mechanisms to manage costs, capacity and resources. This was deem necessary for adoption and management of cloud resources both on the provider and consumer side \cite{Wadhwa_2013}.
 
 An interesting CSB example in the literature is STRATOS by Pawluk et al. proposed in 2012 so the work can be considered a pioneer in the field of multi-cloud resource management since it can be framed in the first years of cloud computing \cite{STRATOS}.
-
 STRATOS tried to avoid the assumption of resource homogeneity and represented an initial attempt to provide a ``\textbf{cross-cloud resource provisioning}'' system \cite{STRATOS}.
 
 
@@ -161,7 +164,7 @@ The key concept is the \textbf{Helm chart}, which is a collection of files that 
 These files are mainly of two types: templates and values.
 The \textbf{templates} are Kubernetes manifest files that are rendered by Helm's \textbf{powerful templating engine}. 
 The \textbf{values} are the set of variables that are used to render the templates.
-Upon an Helm chart installation, Helm will render the templates ``injecting" the values and deploy the resources in the Kubernetes cluster.
+Upon an Helm chart installation, Helm will render the templates ``injecting" the values and deploy the resources in the Kubernetes cluster. 
 One major advantage that Helm provides is the complete management of the lifecycle of the resources.
 As a matter of fact, Helm allows to easily \textbf{upgrade}, \textbf{rollback} and \textbf{uninstall} the Kubernetes resources deployed with a Helm chart reducing time and errors in such operations \cite{helm}. 
 Without Helm, the user would have to deal with each single Kubernetes resource manifest file and manually apply changes to them.
@@ -223,6 +226,7 @@ The system is defined as a multi-objective optimization problem that considers t
 By evaluating the framework in real-world scenarios, the authors demonstrate that CASPER achieves significant reductions in carbon emissions (up to 70\%) while meeting application \textbf{Service Level Objectives (SLOs)}, highlighting its potential for practical implementation in large-scale distributed systems \cite{Souza_2023}.
 The authors of CASPER highlight the importance of considering the workload characteristics such as memory state, latency and \textbf{regulatory constraints such as GDPR} \cite{Souza_2023}.
 
+%https://github.com/carbonfirst/casper?tab=readme-ov-file
 
 [HOW is it deployed]
 

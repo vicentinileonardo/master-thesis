@@ -1,0 +1,6 @@
+geopandas==0.14.4
+pandas
+matplotlib 
+numpy 
+shapely
+contextily

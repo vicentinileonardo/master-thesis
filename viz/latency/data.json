@@ -1,0 +1,37 @@
+{
+    "italynorth": {
+        "italynorth": 0,
+        "japaneast": 249,
+        "francecentral": 24,
+        "eastus": 97,
+        "westus": 165
+    },
+    "japaneast": {
+        "italynorth": 252,
+        "japaneast": 0,
+        "francecentral": 252,
+        "eastus": 170,
+        "westus": 108
+    },
+    "francecentral": {
+        "italynorth": 25,
+        "japaneast": 251,
+        "francecentral": 0,
+        "eastus": 90,
+        "westus": 150
+    },
+    "eastus": {
+        "italynorth": 96,
+        "japaneast": 169,
+        "francecentral": 87,
+        "eastus": 0,
+        "westus": 71
+    },
+    "westus": {
+        "italynorth": 165,
+        "japaneast": 108,
+        "francecentral": 150,
+        "eastus": 71,
+        "westus": 0
+    }
+}
