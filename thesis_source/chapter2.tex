@@ -75,10 +75,14 @@ Google CFE\%: “This is the average percentage of carbon free energy consumed i
 
 \section{Kubernetes}
 
+became the de-facto standard for container orchestration
 
 \subsection{Kubernetes as a platform}
-Kubernetes as a platform to manage things
 
+Kubernetes as a platform to manage external resources
+
+This concept is widely used 
+(cloud provider operators for example)
 
 Many cloud-native development teams work with a mix of configuration systems, APIs, and tools to manage their infrastructure. This mix is often difficult to understand, leading to reduced velocity and expensive mistakes. Config Connector provides a method to configure many Google Cloud services and resources using Kubernetes tooling and APIs.
 %(https://cloud.google.com/config-connector/docs/overview)
@@ -91,26 +95,46 @@ Many cloud-native development teams work with a mix of configuration systems, AP
 
 CRDs
 
-\section{Krateo}
+\section{Krateo PlatformOps}
 \label{sec:krateo}
 
-what is krateo. Recognized by Gartner
-by 2025 companies without a ... (cite)
+Krateo PlatformOps is an open-source Kubernetes-based platform that aims to provide a unified interface for managing any desired resource on any infrastructure \cite{krateo_docs}.
+
+Krateo runs as a Kubernetes deployment but acts as a control plane even for resource external to the Kubernetes cluster.
+A requirement is that the resources needs to be descriptible using a YAML file which represents the desired state of the resource \cite{krateo_docs}.
+
+
+Recognized by Gartner
+Gartner... by 2025 companies without a ... (cite)
 
 architecture, components
-core provider, cdc
+Krateo main 3 components
+
+Krateo Composable Operations
+Krateo Composable Portal
+Krateo Composable FinOps
+
+
+
+
+
+The core-provider is a Kubernetes operator that downloads and manages Helm charts. 
+It checks for the existence of a file named values.schema.json and uses it to generate a Kubernetes Custom Resource Definition (CRD), accurately representing the possible values that can be expressed for the installation of the chart.
+The file values.schema.json is a JSON schema that describes the structure of the values.yaml file for the Helm chart and it is considered a best practice for Helm charts.
+
+
 helm charts as native resources
 
 
 \subsection{Helm}
+
+HELM
+
 what is an helm chart
 
 values.schema.json
 
----
 
-
-Krateo main 3 components
 
 
 \begin{figure}[htb]
