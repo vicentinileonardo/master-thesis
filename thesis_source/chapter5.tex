@@ -1,64 +1,54 @@
-\chapter{Discussion}
-\label{cha:discussion}
-
-\section{End-to-end integrated test}
-
-final result
-A comprehensive end-to-end integrated test has been carried out on a Kubernetes cluster
-
-this was used to validate the system
-
-%(dependency graph)
-
-\section{GreenOps system evaluation}
-
-\subsection{Theoretic upper bound}
-
- (how close can we get, masachussets amherest group)
-
-\subsection{Baseline definition}
-
-We should prepare one or more baseline schedulings that will be used as a baseline and compared with a carbon-aware scheduling proposed by our system.
-
-\subsection{Black hole phenomenon}
-
-How to deal with the so-called “Black hole” phenomenon?
-That is, if 100 workload scheduling arrives at some point, there is the possibility that the outcome of the system we are building is: “schedule all workloads in Norway” where Norway is the region with least carbon intensity at that moment.
-This phenomenon came up also in a previous meeting but it is not clear if this could be a problem etc..
-A probable differentiator could be the max latency field of the workload request. Other service requirements could contribute to this as well.
+\chapter{Conclusion}
+\label{cha:conclusion}
 
 
-(how it is countered)
+production-ready system
 
-\subsection{Side effects}
+\section{Future improvements}
 
-Maybe out of scope of this work, side effects, big picture.
-What happens if a big percentage of companies that relies on cloud services starts to adopt carbon-aware scheduling of their workloads?
-We tend to image cloud providers or even cloud regions as an infinite pool of resources, and at a certain level it is almost like that. But could carbon aware scheduling have larger, not foreseen, side effects?
-Is this a responsibility of who schedules? Shall schedulers be responsible for the load on regions? Like self-imposing some sort of limits/caps. Ethics?
+day2 operations
+we are ready for this
 
-\subsection{Preliminary evaluation}
+Scaling down a VM (example of Day 2 operations)
+From: (4 vCPU, 8 GiB RAM)
+To: (2 vCPU, 4 GiB RAM)
 
-\begin{comment}
-for the purpose of this theses
+This use case is meaningful for workloads with durations in the order of at least days. Otherwise, for short-lived workload this use case does not make sense.
+And in the case of workloads with days as duration, time and geographical shifting is not that relevant.
 
-boavizta API simulation
-
-assumptions
-- analysis limited to only cloud VM, (aligned with the scope of this theses)
-- data related to GCP is not data from boavizta (even if gcp is supported in our current system) but mapped from azure and aws
-
-limitations
-- whole countries, not regions
+This use case will leverage system and performance metrics.
 
 
-not easily integratable in a real production system due to its quite restrictive license (AGPL 3)
-it is still usable for research purposes like in this case.
-\end{comment}
 
 
+
+
+
+
+support for other resources
+we need
+templates
+operators
+
+
+
+there is one paper (https://ceur-ws.org/Vol-2382/ICT4S2019_paper_28.pdf) that uses local air temperature and solar irradiance as tiebreaker for 2 datacenters with similar carbon intense grid. 
+“Local air temperature surrounding a datacentre affects the amount of energy needed for cooling”. 
+They also claim that: “Solar irradiance varies more widely than carbon intensity across global regions”.
+
+Maybe it could be an extension of our system in the future.
+
+
+\subsection{Multi model serving}
+"The original design of KServe deploys one model per InferenceService. But, when dealing with a large number of models, its 'one model, one server' paradigm presents challenges for a Kubernetes cluster."
+
+kserve model mesh instead of several InferenceService
+there is a lot of overhead in the current configuration
+
+how much is better to use more models instead of one generic model 
 
 
 
 
 \newpage
+
