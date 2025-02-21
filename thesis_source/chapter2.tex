@@ -5,7 +5,7 @@
 
 what is greenops
 
-from greenops landscape itself
+greenops landscape 
 
 In the context of cloud-native sustainability,
 the Technical Advisory Group (TAG) Environmental Sustainability is a XXX that supports and advocates for environmental sustainability initiatives in cloud native technologies.
@@ -15,18 +15,26 @@ the Technical Advisory Group (TAG) Environmental Sustainability is a XXX that su
 \subsubsection{Green Software foundation}
 
 green software foundation
+very important actor in the field of green software
+
+sci: https://sci.greensoftware.foundation/
 
 proposed a standard for data like the FOCUS standard available 
 trying to push a specification similar to what focus is for FinOps
-
 as per 2025 this standard is not yet adopted by cloud providers
+``real time cloud" proposed standard (not yet adopted): https://github.com/Green-Software-Foundation/real-time-cloud?tab=readme-ov-file
 
 the foundation also developed the Impact Framework which will be described in section XY
+could be potentially integrated in our system
+
+https://patterns.greensoftware.foundation/catalog/cloud/choose-region-closest-to-users
+[which patterns are used in our system]
 
 \section{Public cloud providers}
 
 what are they, what is this deployment model
 which are the 3 main players
+what is an hyperscaler (AWS, Azure, GCP)
 
 \subsection{Regions and zones}
 cloud regions
@@ -103,30 +111,53 @@ For the purpose of this work, we will consider only the 3 major Public Cloud Pro
 \section{Multi cloud resource management}
 \label{sec:multi_cloud_resource_management}
 
-The idea of a \textbf{dynamic placement of workloads leveraging a multi-cloud paradigm} is not new. We can find some examples in the literature, such as the work of Simarro et al. \cite{Simarro_2011} that back at the dawn of cloud computing (2011) proposed a multi-cloud architecture for the dynamic placement of Virtual Machines (VMs).
+The idea of a \textbf{dynamic management of workloads leveraging a multi-cloud paradigm} is not new. In this section we will provide an overview of some of the existing works in the literature that have tackled the problem of multi-cloud resource management.
+
+
+\subsection{Dynamic Virtual Machine placement}
+The work of Simarro et al. \cite{Simarro_2011} back at the dawn of cloud computing (2011) proposed a multi-cloud architecture for the dynamic placement of Virtual Machines (VMs).
 The main objective of the system was cost optimization but this paradigm provides reliability and flexibility as well.
-The scheduling part is comprised of a ``cloud broker" that is responsible for VM placement transparent to users providing a single uniform interface to the cloud resources.
+The scheduling part is comprised of a ``\textbf{cloud broker}" that is responsible for VM placement \textbf{transparent to users} providing a single uniform interface to the cloud resources.
 Users can provide to the system a ``\textbf{service description template}'' to specify the number of VMs to provision and some constraints.
 The cloud broker architecture is composed of two major components: the \textbf{scheduler} and the \textbf{cloud manager} \cite{Simarro_2011}. The former is responsible for placement decision across multiple cloud providers, while the latter is responsible for the actual management of the VMs in the cloud providers. More precisely, the cloud manager is represented by the OpenNebula (ONE) virtual infrastructure manager \cite{Simarro_2011}.
 OpenNebula is an open-source platform that aims to provide a unified management interface for multiple virtualization technologies and cloud providers \cite{open_nebula}.
 
-Cloud service brokers (CSBs) were also described and categorized by Wadhwa et al. \cite{Wadhwa_2013} in their work of 2013.
-The emerging cloud computing led to the proliferation of cloud services and providers, and by consequence the need for mechanisms to manage costs, capacity and resources. This was deem necessary for adoption and management of cloud resources both on the provider and consumer side \cite{Wadhwa_2013}.
+\subsection{Cloud service brokers}
+A CSB is a system that acts as an \textbf{intermediary} between cloud service providers and consumers, providing a \textbf{unified interface} to manage cloud resources across multiple providers \cite{Wadhwa_2013}.
+Cloud service brokers (CSBs) were described and categorized by Wadhwa et al. \cite{Wadhwa_2013} in their work of 2013.
+The emerging market of cloud computing led to the proliferation of cloud services and providers, and by consequence the need for mechanisms to manage costs, capacity and resources \cite{Wadhwa_2013}. 
 
-An interesting CSB example in the literature is STRATOS by Pawluk et al. proposed in 2012 so the work can be considered a pioneer in the field of multi-cloud resource management since it can be framed in the first years of cloud computing \cite{STRATOS}.
-STRATOS tried to avoid the assumption of resource homogeneity and represented an initial attempt to provide a ``\textbf{cross-cloud resource provisioning}'' system \cite{STRATOS}.
+An interesting CSB example in the literature is the \textbf{STRATOS} system by Pawluk et al. proposed in 2012. The work can be considered a pioneer in the field of multi-cloud resource management since it can be framed in the first years of cloud computing \cite{STRATOS} but the proposed paradigms and concepts are relevant today.
+STRATOS tried to \textbf{avoid the assumption of resource homogeneity} and represented an initial attempt to provide a ``\textbf{cross-cloud resource provisioning}'' system \cite{STRATOS}.
+The proposed architecture enables the specification of high-level objectives that can be assessed in a standardized manner across different providers. The decision-making process is fully automated, shifting the decision point from deployment to runtime \cite{STRATOS}.
+Users first submit a topology document, triggering the Cloud Manager to communicate with the Broker for topology instantiation. The Broker (implemented in Java) then conducts the initial resource acquisition decision (RAD), optimizing the allocation of resources across multiple providers (configured beforehand) \cite{STRATOS}.
+Experiments indicate that distributing workloads across different cloud providers can reduce the overall cost of the topology. The approach taken by the authors primarily focuses on two objectives: \textbf{cost efficiency} and \textbf{avoiding vendor lock-in}. The application environment was deployed on public cloud platforms, specifically AWS and Rackspace \cite{STRATOS}.
 
-
+---
 
 
 More recent works are 
 
 which leverage ML
 
+
+
 \section{Kubernetes}
 
 became the de-facto standard for container orchestration
-an extensive description of Kubernetes is out of the scope of this work.
+an extensive description of Kubernetes is out of the scope of this thesis.
+But it is deem necessary to provide a brief overview of the main concepts of Kubernetes that are relevant for the purpose of this work.
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=1\linewidth]{images/kubernetes-architecture-diagram.png}
+    \caption{Kubernetes architecture by CNCF \cite{kubernetes_cnfc}}
+    \label{fig:kubernetes_architecture}
+\end{figure}
+
+It must be noted that in our system we are not extending the Kubernetes scheduler since we are not dealing with the scheduling of the in-cluster resources (e.g., Pods). 
+We are instead focusing on the management of external resources and the scheduling of the workloads in the cloud providers.
+An example of a system that extends the Kubernetes scheduler is the work of . \cite{} that we described in section XYZ.
 
 \subsection{Kubernetes as a platform}
 
@@ -219,7 +250,7 @@ The architecture of the Krateo core-provider and composition-dynamic-controller 
 
 \section{Carbon-aware systems for resource management}
 
-An analysis of existing systems have been made in order to...
+An analysis of existing carbon-aware systems have been made in order to...
 
 \subsection{CASPER}
 

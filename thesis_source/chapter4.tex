@@ -79,7 +79,7 @@ The following table provides an overview of the main components of the system an
     \hline
     Kubernetes Mutating Webhook Configuration & Intercepts and modifies API requests before they are persisted, allowing dynamic configuration adjustments with policy enforcement. \\
     \hline
-    OPA Server & Evaluates authorization and policy decisions based on defined constraints and input data from Kubernetes API requests through the webhook. \\
+    OPA Server & Evaluates policy decisions based on defined constraints and input data from Kubernetes API requests through the webhook configuration. \\
     \hline
     OPA Policies and Data & Define the rules and contextual information used by OPA to make policy decisions, namely scheduling information \\
     \hline
@@ -109,7 +109,7 @@ It is deemed interesting to describe both approaches in order to identify the se
 
 \subsection{Resource management: the Custom Kubernetes ``Synchronization Operator" approach}
 
-When dealing with multi-cloud workloads with Kubernetes as a control plane, a synchronization and mapping mechanism is required to bridge the gap between:
+When dealing with multi-cloud workloads with Kubernetes as a control plane, a synchronization and mapping mechanism (broker) is required to bridge the gap between:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
   \item[$\bullet$] \textbf{Generic Kubernetes Custom Resources}, which represent generic provider-agnostic workloads.
   \item[$\bullet$] \textbf{Cloud provider-specific Custom Resources}, which correspond to the actual cloud resources provisioned through the respective Kubernetes operators provided by Azure, AWS or GCP (in our case).
@@ -191,9 +191,8 @@ Due to these limitations and complexities, we explored and leveraged an \textbf{
   \label{fig:krateo}
 \end{figure}
 
-what is krateo
-developer platform
-already described in section \ref{xyz}
+
+krateo already described in section \ref{xyz}
 
 Self-service platform for multi-cloud native resources
 
@@ -201,6 +200,109 @@ Self-service platform for multi-cloud native resources
 
 generic workload resource definition
 how to define it
+
+
+\begin{lstlisting}[language=yaml, caption={values.yaml}, label={lst:values.yaml}]
+# @param {string} vmName Name of the VM
+vmName: test-vm
+
+# @param {integer} cpu  Number of CPU cores
+cpu: 1
+
+# @param {integer} memory Number of GB of RAM
+memory: 2
+
+# @param {string} [schedulingTime] Scheduling Time for the VM
+schedulingTime: 2025-05-05T00:00:00Z
+
+# @param {string} [schedulingLocation] Scheduling Location for the VM
+schedulingLocation: italynorth
+
+# @param {string} duration Duration of the Workload
+duration: 3h
+
+# @param {string} deadline Deadline of the Workload
+deadline: 2025-12-31T10:00:00Z
+
+# @param {integer} maxLatency Maximum Latency of the Workload
+maxLatency: 100
+\end{lstlisting}
+
+
+\lstset{style=jsonstyle}
+\begin{lstlisting}[caption={values.schema.json}]
+{
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "required": [
+    "vmName",
+    "cpu",
+    "memory",
+    "duration",
+    "deadline",
+    "maxLatency"
+  ],
+  "properties": {
+    "vmName": {
+      "type": [
+        "string"
+      ],
+      "description": "Name of the VM",
+      "default": "test-vm"
+    },
+    "cpu": {
+      "type": [
+        "integer"
+      ],
+      "description": "Number of CPU cores",
+      "default": "1"
+    },
+    "memory": {
+      "type": [
+        "integer"
+      ],
+      "description": "Number of GB of RAM",
+      "default": "2"
+    },
+    "schedulingTime": {
+      "type": [
+        "string"
+      ],
+      "description": "Scheduling Time for the VM",
+      "default": "2025-05-05T00:00:00Z"
+    },
+    "schedulingLocation": {
+      "type": [
+        "string"
+      ],
+      "description": "Scheduling Location for the VM",
+      "default": "italynorth"
+    },
+    "duration": {
+      "type": [
+        "string"
+      ],
+      "description": "Duration of the Workload",
+      "default": "3h"
+    },
+    "deadline": {
+      "type": [
+        "string"
+      ],
+      "description": "Deadline of the Workload",
+      "default": "2025-12-31T10:00:00Z"
+    },
+    "maxLatency": {
+      "type": [
+        "integer"
+      ],
+      "description": "Maximum Latency of the Workload",
+      "default": "100"
+    }
+  }
+}
+  
+\end{lstlisting}
 
 
 Helm template engine (how to map to cloud provider specific resources, why is better)
@@ -232,14 +334,28 @@ The composition-dynamic-controller is an operator that is instantiated by the co
 
 \section{Kubernetes Mutating Webhook Configuration}
 
-[from k8s docs]
+\subsection{Kubernetes Admission Control}
+
+In the context of \textbf{Kubernetes Admission Control}, in addition to standard, compiled-in admission plugins, Kubernetes supports the use of additional admission plugins that are effectively extensions of the system and run as \textbf{webhooks} configured at runtime \cite{kubernetes_dynamic_admission_control}. This means that the admission control logic can be extended dynamically without the need to recompile the Kubernetes API server or other Kubernetes components. Changes are applied at runtime to the running Kubernetes cluster, making the system more flexible and adaptable.
+
+
+
+
+
+
+
+
+
+
+
+These plugins can be used to enforce custom policies and perform additional validation and mutation of Kubernetes objects before they are persisted in the cluster.
 
 K8s mutating webhook is used to modify K8s custom resources with the data from policies. 
 The K8s mutating webhook intercepts the CREATE or UPDATE API request, asks about policies (with also scheduling decision) and mutates the resource.
 
 we can distinguish between two types of webhooks: validating and mutating.
 
-we can distinguish two entities semantically different: the webhook configuration and the actual webhook service which perform mutation or validation
+we can distinguish two entities semantically different: the webhook configuration and the actual webhook /server which perform mutation or validation
 
 it could be a server that you need to implement to perform your own custum mutation or validation logic
 it could be a service ready to use out of the box like OPA server
@@ -252,17 +368,19 @@ it could be a service ready to use out of the box like OPA server
 \end{figure}
 
 
-service can be either a deployment with the related service
-inside the cluster like seen in the image \ref{fig:k8s_webhook_example}
+service can be either a deployment with the related service inside the cluster like seen in the image \ref{fig:k8s_webhook_example}
+
+or can be deployed outside the cluster
+
+Figure \ref{fig:k8s_webhook_example} shows an example of a Kubernetes Mutating Webhook. The webhook server is deployed as a Kubernetes Deployment (with 1 Pod), with a corresponding Service to expose it within the cluster. The webhook server is responsible for receiving The AdmissionReview Request, applying custom logic, and returning an AdmissionReview Response to the Kubernetes API server describing the mutation to be applied to the resource.
+The custom logic in this simple example is just to add a label "mutated: true" to the resource.
 
 \begin{figure}[htb]
   \centering
   \includegraphics[width=1\linewidth]{images/k8s_webhook_example.png}
-  \caption{Kubernetes Mutating Webhook example}
+  \caption{Kubernetes Mutating Webhook example \cite{kubernetes_mutating_webhook_example}}
   \label{fig:k8s_webhook_example}
 \end{figure}
-
-[cite https://www.youtube.com/watch?app=desktop&v=Eb9pMSCTDjI for the image of the example]
 
 \section{Multi-Cloud Integration through Kubernetes Operators}
 
@@ -402,9 +520,9 @@ As described at the beginning of this section, the implementation approach adopt
 
 One notable design choice observed with the AWS operator is the restriction on referencing some Kubernetes objects inside a Custom Resource (CR) manifest. This limitation means that developers cannot directly link a resource (e.g., a Virtual Machine) to another Kubernetes object (e.g., a Subnet) using built-in object references.
 
-To overcome this limitation, our system leverages Helm’s lookup function, which dynamically retrieves Kubernetes object details at runtime. This method allows us to fetch required parameters without directly referencing Kubernetes objects in the CR, ensuring compatibility with the AWS operator’s design constraints. The following example demonstrates how the lookup function can be used to resolve subnet IDs dynamically and inject them into the CR manifest. \\
+To overcome this limitation, our system leverages \textbf{Helm’s \textit{lookup function}}, which dynamically retrieves Kubernetes object details at runtime. This method allows us to fetch required parameters without directly referencing Kubernetes objects in the CR, ensuring compatibility with the AWS operator’s design constraints. The following example demonstrates how the lookup function can be used to resolve subnet IDs dynamically and inject them into the CR manifest. \\
 
-\begin{lstlisting}[language=yaml, caption={Helm Lookup example: dynamically resolving SubnetIDs}, label={lst:helm_lookup}]
+\begin{lstlisting}[language=yaml, caption={Helm Lookup example: dynamically resolving SubnetIDs}, label={lst:helm_lookup}, float=htpb]
 ...
 apiVersion: ec2.services.k8s.aws/v1alpha1
 kind: Instance
@@ -438,8 +556,7 @@ spec:
 ...
 \end{lstlisting}
 
-In this case, the Subnet Custom Resource manifest directly references the VPC Custom Resource using name and namespace since the Operator is designed to support this type of relationship. As explained before, this is determined by Operator design choices.
-
+In thr case of Listing \ref{lst:aws_direct_reference}, the Subnet Custom Resource manifest directly references in a conveneint way the VPC Custom Resource using its name and namespace since the Operator is designed to support this type of relationship. As explained before, this is determined by Operator design choices but our system is able to handle both scenarios.
 
 \subsubsection{Provider specific configurations}
 
@@ -743,7 +860,7 @@ deny[msg] {
 }
 \end{lstlisting}
 
-The second example, illustrated in listing \ref{lst:gatekeeper-template} utilizes OPA Gatekeeper, which extends OPA with Kubernetes-native Custom Resource Definitions (CRDs), enabling declarative policy management. By using a ConstraintTemplate, policies can be enforced dynamically through Kubernetes, making them easier to distribute and manage.
+The second example, illustrated in listing \ref{lst:gatekeeper-template} utilizes OPA Gatekeeper, which extends Kubernetes with Kubernetes-native Custom Resource Definitions (CRDs), enabling declarative policy management. By using a ConstraintTemplate, policies can be enforced dynamically through Kubernetes, making them easier to distribute and manage.
 In other words, with this kind of setting, OPA policy bundles are not employed in the same way as in the standard OPA server. Instead, policies are defined as Kubernetes resources, allowing for more straightforward policy enforcement and management within a Kubernetes environment.
 
 \begin{lstlisting}[language=yaml, caption={OPA Gatekeeper ConstraintTemplate}, label={lst:gatekeeper-template}]
@@ -766,7 +883,7 @@ spec:
         }
 \end{lstlisting}
 
-\begin{lstlisting}[language=yaml, caption={OPA Gatekeeper Constraint}, label={lst:gatekeeper-constraint}]
+\begin{lstlisting}[language=yaml, caption={OPA Gatekeeper Constraint}, label={lst:gatekeeper-constraint}, float=htpb]
 apiVersion: constraints.gatekeeper.sh/v1beta1
 kind: PodNamespaceConstraint
 metadata:
@@ -850,9 +967,11 @@ https://docs.google.com/spreadsheets/d/1kxtPw9ZSnAv1vQ6IDwzw-mXdHoKUFb8AjlsjACnv
 
 AWS:
 https://www.cloudping.co/grid (not official, not using VMs but Lambda functions)
+how it is calculated
 
 google
 syntetic data
+no offical data
 
 
 
@@ -873,10 +992,18 @@ Mutation policy
 dedicated to 
 
 
-JSON patch, what is a jsonpatch
-patch code
 
-encoded patches
+JSON Patch is a format for describing changes to a JSON document which avoid the need to send the entire document when only a part of it has changed. Effectively, only deltas are sent back to the requester which are themselves JSON documents.
+The format is defined in RFC 6902 from the IETF \cite{json_patch}.
+
+As an example, a single patch operation 
+
+
+OPA, assuming the role of a webhook server, has the duty of ..
+
+
+
+
 
 \subsection{OPA Data mapping}
 
@@ -1191,7 +1318,9 @@ Seldon MLserver
 
 
 accorgimenti: \\
+model wrapping
 
+\begin{comment}
 \lstset{style=python}
 \begin{lstlisting}[caption={Wrapping a PyTorch Model}, label={lst:wrapped_model}]
 import torch
@@ -1210,6 +1339,7 @@ model = WrappedModel(model)
 # Now calling model() will return only 'prediction_outputs' (test)
 print(model(test_dataset[0]['past_values'].unsqueeze(0)))
 \end{lstlisting}
+\end{comment}
 
 \section{Measurements}
 
