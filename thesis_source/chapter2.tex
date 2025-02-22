@@ -137,6 +137,7 @@ Users first submit a topology document, triggering the Cloud Manager to communic
 Experiments indicate that distributing workloads across different cloud providers can reduce the overall cost of the topology. The approach taken by the authors primarily focuses on two objectives: \textbf{cost efficiency} and \textbf{avoiding vendor lock-in}. The application environment was deployed on public cloud platforms, specifically AWS and Rackspace \cite{STRATOS}.
 
 \subsection{AI-based resource management in cloud computing}
+\label{sec:ai_based_resource_management}
 
 More recent works have focused on the development of systems that leverage AI techniques for the optimization of resource management in cloud computing environments.
 
@@ -311,8 +312,27 @@ CarbonScaler: Leveraging Cloud Workload Elasticity for Optimizing Carbon-Efficie
 [A Low Carbon Kubernetes Scheduler]
 https://ceur-ws.org/Vol-2382/ICT4S2019_paper_28.pdf
 
+It provisions entire K8s clusters on the selected regions.
+Interesting feature: they use local air temperature and solar irradiance as tiebreaker for 2 datacenters with similar carbon intense grid. The claim is that: “Solar irradiance varies more widely than carbon intensity across global regions” and that “Local air temperature surrounding a datacentre affects the amount of energy needed for cooling”. 
+
+
+
+
+
 Data-driven Algorithm Selection for Carbon-Aware Scheduling
 https://hotcarbon.org/assets/2024/pdf/hotcarbon24-final23.pdf
+
+
+Carbon aware computing at Google
+https://www.performance2021.deib.polimi.it/www.performance2021.deib.polimi.it/wp-content/uploads/2021/11/Carbon-Aware-Computing-%40-Google-and-Beyond.pdf
+Year: 2021
+Description: 
+It states that Carbon-aware computing is: exploiting flexibility in when and where and how computing is done to reduce carbon emissions.
+Some examples of flexible workloads are: video processing, training large-scale machine learning models, simulation pipelines.
+The components they recognized to be necessary are: accurate carbon intensity data (Tomorrow), Scalable infrastructures (Cloud), Virtualizations and migration mechanisms (VMs), Well identified flexible load, data-driven methodology.
+At Google: the total amount of work that needs to get done per day is quite predictable.
+
+
 
 \subsection{SOTA Recap}
 

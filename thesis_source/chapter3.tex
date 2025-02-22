@@ -68,6 +68,8 @@ Another approach could involve the development of custom operators or controller
 
 [KRATEO custom REST operator description]
 
+\newpage
+
 \section{System Architecture}
 \label{sec:system_architecture}
 
@@ -235,6 +237,7 @@ deadline: 2025-12-31T10:00:00Z
 maxLatency: 100
 \end{lstlisting}
 
+\newpage
 
 \lstset{style=jsonstyle}
 \begin{lstlisting}[caption={values.schema.json}]
@@ -925,31 +928,31 @@ Figure \ref{fig:latency_matrix} illustrates an small example (4 regions subset) 
 
 \lstset{style=jsonstyle}
 \begin{lstlisting}[caption={Latancy matrix example encoded in JSON format}, label={lst:latency_matrix_example}]
-  {
-    "italynorth": {
-        "italynorth": 0,
-        "japaneast": 249,
-        "francecentral": 24,
-        "westus": 165
-    },
-    "japaneast": {
-        "italynorth": 252,
-        "japaneast": 0,
-        "francecentral": 252,
-        "westus": 108
-    },
-    "francecentral": {
-        "italynorth": 25,
-        "japaneast": 251,
-        "francecentral": 0,
-        "westus": 150
-    },
-    "westus": {
-        "italynorth": 165,
-        "japaneast": 108,
-        "francecentral": 150,
-        "westus": 0
-    }
+{
+  "italynorth": {
+      "italynorth": 0,
+      "japaneast": 249,
+      "francecentral": 24,
+      "westus": 165
+  },
+  "japaneast": {
+      "italynorth": 252,
+      "japaneast": 0,
+      "francecentral": 252,
+      "westus": 108
+  },
+  "francecentral": {
+      "italynorth": 25,
+      "japaneast": 251,
+      "francecentral": 0,
+      "westus": 150
+  },
+  "westus": {
+      "italynorth": 165,
+      "japaneast": 108,
+      "francecentral": 150,
+      "westus": 0
+  }
 }
 
 \end{lstlisting}
@@ -1096,12 +1099,12 @@ and at response time
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=1\linewidth]{images/mutating_webhook+OPA_integration.png}
-\caption{Kubernetes mutating webhook + OPA integration}
-\label{fig:webhook+opa}
+\includegraphics[width=1\linewidth]{images/architecture.png}
+\caption{General architecture}
+\label{fig:architecture}
 \end{figure}
 
-Figure \ref{fig:webhook+opa} represents the configuration of the Kubernetes Mutating Webhook with the intergeation of Open Policy Agent.
+Figure \ref{fig:architecture}represents the configuration of the Kubernetes Mutating Webhook with the intergeation of Open Policy Agent.
 In particular, 
 
 
@@ -1125,9 +1128,8 @@ It is deemed useful to mention some of the advanced features of OPA that were no
 
 \section{MLOps infrastructure}
 
-A MLOps infrastrcutrue is not necessarily needed for multi-cloud resource management but since it is believed that AI models will be used in the future more and more to get scheduling and management decisions
-as testified by recents works described in chapter XXX.
-It is therefore deemed important to describe a MLOps infrastructure in a Kubernetes environment leveraged by the system described in this thesis.
+A MLOps infrastructure is not necessary required for multi-cloud resource management, but it is believed that AI models will be utilized in the future more and more to get scheduling and management decisions, as evidenced by recent studies discussed in section \ref{sec:ai_based_resource_management}.
+It is therefore deemed important to describe the MLOps infrastructure deployed in a Kubernetes environment and leveraged by the system described in this thesis.
 
 \subsection{MLOps purpose}
 
@@ -1146,8 +1148,6 @@ faster model selection and deployment to production
 
 
 allows all the team member to have visibility on the status of the ML models
-
-Instead of having the so-called ``AI Inference Mock Server", treated as a black box returning a scheul;ding time and schedulingLocation
 
 \begin{figure}[htb]
 \centering
@@ -1168,7 +1168,7 @@ KServe framework
 MLflow Tracking Server
 
 
-mlflow is compatible with many ML frameworks like sklearn, pythorch
+mlflow is compatible with many ML frameworks like sklearn, pythorch, tensorflow, xgboost, etc
 
 
 what is a model tracking server
@@ -1251,10 +1251,7 @@ InferenceService with TorchServe runtime which is the default installed serving 
 Kserve project proposes a standard protocol for inference servers.
 The version 2 of the KServe Inference Protocol is the Open Inference Protocol.
 
-
-
 \subsubsection{Open Inference Protocol}
-
 
 \begin{table}[h!]
 \centering
@@ -1273,7 +1270,7 @@ Server Metadata & GET           & v2                                            
 
 
 
-
+adopted by several inference servers like TorchServe, Seldon, etc
 adopted by NVIDIA
 
 
@@ -1303,11 +1300,10 @@ clusterservingruntimes -> kserve-mlserver (supported models: sklearn, xgboost, l
 
 mlserver
 
+
+
+
 [chart to illustrate this]
-
-
-
-
 
 
 
@@ -1318,6 +1314,9 @@ Seldon MLserver
 
 accorgimenti: \\
 model wrapping
+
+
+\newpage
 
 \section{Measurements}
 
