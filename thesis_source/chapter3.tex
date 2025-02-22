@@ -5,61 +5,68 @@ This chapter presents the design and implementation of our system, focusing on t
 
 \section{Assumptions}
 
+In this section we present the assumptions made during the design and implementation of the system. 
+
+\subsection{Workload definition}
+In this work, workloads has been modeled as \textbf{Virtual Machines (VMs)}, representing the \textbf{primary use case} considered during the system's initial design phase. 
+It is possible to define as interrupible workloads, those workloads that can be stopped and restarted without losing the work done. 
+For this first iteration of the system only \textbf{non-interruptible workloads} are considered.
+This choice was driven by the fact the Virtual Machines are both a common and widely used cloud and one of the simplest cloud resources to provision and therefore ideal for the first iteration of the system.
+Having said that, for the purpose of this work, a formalization can be done.
+
+A VM is defined as a tuple:
+
+\[
+\text{VM} = (\text{MinCPU}, \text{MinRAM}, D, DL, ML)
+\]
+
+where:
+\begin{itemize}[itemsep=0.2pt, topsep=1pt]
+    \item \( \text{MinCPU} \) is the minimum number of virtual CPUs required.
+    \item \( \text{MinRAM} \) is the minimum RAM required (in GB).
+    \item \( D \) is the duration for which the VM must run to complete its processing task \( P \) (in hours).
+    \item \( DL \) is the deadline timestamp by which the VM must complete execution.
+    \item \( ML \) is the maximum allowed latency in milliseconds. If latency is not a constraint, then a high value can be set (e.g., \( ML = 2000 \)). \\
+\end{itemize}
+
+This VM can be scheduled on any Public Cloud Provider since we are interested in a multi-cloud system where the cloud can be effectively seen as a commodity. 
+Alternatively, a subset of \textbf{eligible Public Cloud Providers} can be set at runtime by the user.
+We will refer to \textbf{general-purpose VMs} and not specialized ones like GPU instances or high-performance computing instances. \\
+
+As an example, we can define a VM with the following specifications:
+
+\[
+\text{VM}_{\text{example}} = (4, 4, 2, \texttt{"2025-03-20T23:59:59Z"}, 100)
+\]
 
 
-\subsection{workload definition}
-In this work, workload has been modeled as \textbf{Virtual Machines (VMs)}, representing the primary use case considered during the system's initial design phase. 
-[WHY THIS CHOICE?]
-
-We define, for the purpose of this work, a workload as a Virtual Machine (VM).
-We can assume/imagine that inside of the VM, some kind of processing/work P will happen.
-This VM can be scheduled on any Public Cloud Provider since we are looking for a multi-cloud setting: cloud can be seen as a commodity. 
-Alternatively, a subset of eligible Public Cloud Providers can be set as a policy.
-We can use general-purpose VMs.
-
-The VM has the following characteristics:
-MinCPU needed
-MinRAM needed
-Duration (D): the time duration that a VM must run to accomplish its processing/work
-Deadline (DL): the time (timestamp) when the VM must have finish its work (maybe this can be omitted for the basic use cases)
-Max latency (ML): value in ms 
-
-If the workload is completely delay-tolerant then the Deadline parameter must not be used.
-
-So a VM could be defined as a tuple like the following:
-VM = (MinCPU, MinRAM, D, DL, ML)
-
-
-example
-
-Min CPU: 4 vCPU
-Min RAM: 4 GB of RAM
-Duration (D): 1h
-Deadline (DL): 2022-12-31 23:59:59
----
+where:
+\begin{itemize}[itemsep=0.2pt, topsep=1pt]
+    \item \( \text{MinCPU} = 4 \) vCPUs
+    \item \( \text{MinRAM} = 4 \) GB
+    \item \( D = 1 \) hour
+    \item \( DL = \texttt{"2025-03-20T23:59:59Z"} \) (i.e., the processing task \( P \) inside the VM must complete before this timestamp) \\
+\end{itemize}
 
 The system is designed to be cloud-agnostic, however for the purpose of this work, the system is currently configured to support three major cloud providers: \textbf{Microsoft Azure}, \textbf{Google Cloud Platform (GCP)}, and \textbf{Amazon Web Services (AWS)}.
 
----
+\subsection{System limitations}
 
-
-
-
-
-
-A limitation of our general approach is that only resources supported by the cloud provider’s Kubernetes operator can be provisioned. Not all cloud resources available in a provider’s portfolio are guaranteed to have corresponding Kubernetes Custom Resources (CRs). This introduces certain constraints:
+A limitation of our general approach is that only resources supported by the cloud provider’s Kubernetes operator can be provisioned in a 
+seamless way.
+Not all cloud resources available in a provider’s portfolio are guaranteed to have corresponding Kubernetes Custom Resources (CRs). This introduces certain constraints:
 
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
-  \item[$\bullet$] Limited resource availability: if a specific resource type (e.g., a GPU-accelerated instance or a managed database service) is not supported by the cloud provider Operator, it cannot be provisioned using the current system.
+  \item[$\bullet$] Limited resource availability: if a specific resource type (e.g., a GPU-accelerated instance or a database service) is not supported by the cloud provider Operator, it cannot be provisioned using the current system.
   \item[$\bullet$] Dependence on Operator updates: cloud providers may extend or modify the set of resources supported by their Kubernetes operators over time.
-  \item[$\bullet$] Vendor-specific implementations: different cloud providers expose varying levels of support for Kubernetes-native resource provisioning, leading to potential inconsistencies across multi-cloud environments.
+  \item[$\bullet$] Vendor-specific implementations: for the same class of resources (e.g., virtual machines), the structure and fields of the CRs may vary a lot between cloud providers.
 \end{itemize}
 
 Despite these constraints, the system architecture remains highly adaptable, and future enhancements could incorporate additional or alternative provisioning mechanisms. 
-An example of an alternative implementation could be the direct API interactions with cloud providers to bypass operator limitations. Another approach could involve the development of custom operators or controllers to manage specific resource types not supported by existing operators. 
-[KRATEO custom operator REST]
+An example of an alternative implementation could be the \textbf{direct API interactions} with cloud providers to bypass operator limitations. As a matter of fact, usually cloud provider Operators are leveraging these APIs under the hood to interact with the cloud provider’s services.
+Another approach could involve the development of custom operators or controllers to manage specific resource types not supported by existing operators. 
 
-\newpage
+[KRATEO custom REST operator description]
 
 \section{System Architecture}
 \label{sec:system_architecture}
@@ -202,7 +209,7 @@ generic workload resource definition
 how to define it
 
 
-\begin{lstlisting}[language=yaml, caption={values.yaml}, label={lst:values.yaml}]
+\begin{lstlisting}[language=yaml, caption={values.yaml}, label={lst:values.yaml}, float=htpb]
 # @param {string} vmName Name of the VM
 vmName: test-vm
 
@@ -495,7 +502,7 @@ no additional resource needed
 
 this is a collection of operators that are part of the AWS controllers for Kubernetes (ACK) project.
 
-minimum set of resources needed for vm provisioning
+The minimum set of resources needed for vm provisioning
 
 \begin{itemize}[itemsep=0.2pt, topsep=1pt] 
 \item[$\bullet$] VPC
@@ -503,18 +510,12 @@ minimum set of resources needed for vm provisioning
 \item[$\bullet$] EC2 Instance
 \end{itemize}
 
-
-
-
-
-
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.75\linewidth]{images/aws.png}
 \caption{Minimum set of AWS resources for VM provisioning}
 \label{fig:aws}
 \end{figure}
-
 
 As described at the beginning of this section, the implementation approach adopted in our system ensures compatibility with diverse cloud provider design choices. Cloud providers may impose different constraints and best practices when managing Kubernetes-native resources, and the system is designed to adapt to these variations seamlessly.
 
@@ -609,9 +610,9 @@ Therefore, the use cases covered span from role-based access control to containe
 Another important aspect of OPA is that it effectively \textbf{decouples} policy decision-making from policy enforcement, enabling organizations to implement consistent and scalable authorization across their systems \cite{test}.
 In practice, this means that when a software module needs to make a policy decision, it queries OPA, supplying relevant data as input. In other words, policy decisions are \textbf{offloaded} to OPA rather than being hardcoded within individual services. This approach offers several key advantages:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
-  \item[$\bullet$] \textbf{Centralized policy management}: policies are defined in a single location, ensuring uniform enforcement across all services.
+  \item[$\bullet$] \textbf{Centralized policy management}: policies are defined in a single location, ensuring uniform enforcement across all services of an organization.
   \item[$\bullet$] \textbf{Improved maintainability}: updating policies does not require modifying, recompiling or redeploying application code, reducing complexity and deployment overhead.
-  \item[$\bullet$] \textbf{Greater flexibility}: policies can be dynamically updated (e.g., with CI/CD approaches) based on evolving security and compliance requirements 
+  \item[$\bullet$] \textbf{Greater flexibility}: policies can be dynamically updated (e.g., with CI/CD approaches) based on evolving security and compliance requirements. 
   \item[$\bullet$] \textbf{Scalability}: since OPA and application modules are not tightly coupled.
 \end{itemize} 
 
@@ -622,9 +623,9 @@ As mentioned in the introduction to this section, one common approach to integra
 A standard OPA deployment consists of three main components:
 
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
-\item[$\bullet$] \textbf{OPA Server} – The core service that evaluates policy queries and returns decisions based on defined rules, contextual data and input data.
-\item[$\bullet$] \textbf{OPA Policies} – Rules written in the Rego language that define the logic to be enforced.
-\item[$\bullet$] \textbf{Data} – Optional contextual information, typically structured in JSON format, that policies use to make informed decisions along with input data.
+\item[$\bullet$] \textbf{OPA Server}: The core service that evaluates policy queries and returns decisions based on defined rules, contextual data and input data.
+\item[$\bullet$] \textbf{OPA Policies}: Rules written in the Rego language that define the logic to be enforced.
+\item[$\bullet$] \textbf{Data}: Optional contextual information, typically structured in JSON format, that policies use to make informed decisions along with input data.
 \end{itemize}
 
 To facilitate deployment and management, Rego policies and associated contextual data are packaged into \textbf{policy bundles}, as described in section \ref{sec:opa_policies}. These bundles enable version-controlled, centralized policy distribution, ensuring consistency and maintainability across distributed environments. \newline

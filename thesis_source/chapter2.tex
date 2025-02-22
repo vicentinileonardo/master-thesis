@@ -117,7 +117,6 @@ For the purpose of this work, we will consider only the 3 major Public Cloud Pro
 
 The idea of a \textbf{dynamic management of workloads leveraging a multi-cloud paradigm} is not new. In this section we will provide an overview of some of the existing works in the literature that have tackled the problem of multi-cloud resource management.
 
-
 \subsection{Dynamic Virtual Machine placement}
 The work of Simarro et al. \cite{Simarro_2011} back at the dawn of cloud computing (2011) proposed a multi-cloud architecture for the dynamic placement of Virtual Machines (VMs).
 The main objective of the system was cost optimization but this paradigm provides reliability and flexibility as well.
@@ -137,38 +136,36 @@ The proposed architecture enables the specification of high-level objectives tha
 Users first submit a topology document, triggering the Cloud Manager to communicate with the Broker for topology instantiation. The Broker (implemented in Java) then conducts the initial resource acquisition decision (RAD), optimizing the allocation of resources across multiple providers (configured beforehand) \cite{STRATOS}.
 Experiments indicate that distributing workloads across different cloud providers can reduce the overall cost of the topology. The approach taken by the authors primarily focuses on two objectives: \textbf{cost efficiency} and \textbf{avoiding vendor lock-in}. The application environment was deployed on public cloud platforms, specifically AWS and Rackspace \cite{STRATOS}.
 
+\subsection{AI-based resource management in cloud computing}
+
+More recent works have focused on the development of systems that leverage AI techniques for the optimization of resource management in cloud computing environments.
+
+[Machine learning (ML)-centric resource management in cloud computing: A review and future directions]
+% https://www.sciencedirect.com/science/article/abs/pii/S1084804522000649
+
+[HUNTER: AI based holistic resource management for sustainable cloud computing]
+% https://www.sciencedirect.com/science/article/abs/pii/S0164121221002211
+
+\subsection{Policy-driven resource management systems}
+
+[SLA-driven dynamic cloud resource management]
+% https://www.sciencedirect.com/science/article/abs/pii/S0167739X1300215X
+
+[Deadline-aware Dynamic Resource Management in Serverless Computing Environments]
+% https://ieeexplore.ieee.org/abstract/document/9499407
+
+[Policy-Based Cloud Management Through Resource Usage Prediction]
+% https://link.springer.com/chapter/10.1007/978-3-319-13464-2_14
+
+[Amazon Web Services Cloud Compliance Automation with Open Policy Agent]
+% https://ieeexplore.ieee.org/abstract/document/10612535
+
+
 ---
-
-
-More recent works are 
-which leverage ML
-
 
 % Optimizing Cost and Maximizing Profit for Multi-Cloud-Based Big Data Computing by Deadline-Aware Optimize Resource Allocation
 % https://link.springer.com/chapter/10.1007/978-981-15-8469-5_3
 
-
-% Machine learning (ML)-centric resource management in cloud computing: A review and future directions
-% https://www.sciencedirect.com/science/article/abs/pii/S1084804522000649
-
-
-% SLA-driven dynamic cloud resource management
-% https://www.sciencedirect.com/science/article/abs/pii/S0167739X1300215X
-
-
-% Policy-Based Cloud Management Through Resource Usage Prediction
-% https://link.springer.com/chapter/10.1007/978-3-319-13464-2_14
-
-
-% HUNTER: AI based holistic resource management for sustainable cloud computing
-% https://www.sciencedirect.com/science/article/abs/pii/S0164121221002211
-
-%Amazon Web Services Cloud Compliance Automation with Open Policy Agent
-% https://ieeexplore.ieee.org/abstract/document/10612535
-
-
-% Deadline-aware Dynamic Resource Management in Serverless Computing Environments
-% https://ieeexplore.ieee.org/abstract/document/9499407
 
 \section{Kubernetes}
 
@@ -278,48 +275,51 @@ The architecture of the Krateo core-provider and composition-dynamic-controller 
 
 \section{Carbon-aware systems for resource management}
 
-An analysis of existing carbon-aware systems have been made in order to...
+An analysis of existing systems have been made in order to understand the state of the art in the field of carbon-aware resource management.
+
+The work of 2023 by Sukprasert et al. named ``\textit{Spatiotemporal Carbon-aware Scheduling in the Cloud: Limits and Benefits}'' \cite{10.1145/3599733.3606301} is a comprehensive analysis on the limits and benefits of the employment of geographical shifting and time shifting for cloud workloads.
+The authors highlight the fact that different workloads have different characteristics and therefore different degrees of flexibility. Those include, for instance: \textbf{execution deadlines}, \textbf{data protection laws}, and \textbf{latency requirements}. Therefore, carbon savings are constrained by a complex set of factors that need to be taken into account when designing a carbon-aware system \cite{10.1145/3599733.3606301}.
 
 \subsection{CASPER}
 
 CASPER (Carbon-Aware Scheduling and Provisioning for Distributed Web Services) is a carbon-aware scheduling and provisioning system whose primary purpose is to minimize the carbon footprint of distributed web services \cite{Souza_2023}.
 The system is defined as a multi-objective optimization problem that considers two factors: the \textbf{variable carbon intensity} and the \textbf{latency constraints} of the network \cite{Souza_2023}.
 By evaluating the framework in real-world scenarios, the authors demonstrate that CASPER achieves significant reductions in carbon emissions (up to 70\%) while meeting application \textbf{Service Level Objectives (SLOs)}, highlighting its potential for practical implementation in large-scale distributed systems \cite{Souza_2023}.
-The authors of CASPER highlight the importance of considering the workload characteristics such as memory state, latency and \textbf{regulatory constraints such as GDPR} \cite{Souza_2023}.
-
+The authors of CASPER highlight the importance of considering the workload characteristics such as memory state, \textbf{latency} and \textbf{regulatory constraints such as GDPR} \cite{Souza_2023}.
+The system is not adopting time-shifting since it is dealing with web services that are by their nature non-stopping workloads. The architecture is tied to scheduling K8s resources inside K8s clusters and does not consider external resource management.
 %https://github.com/carbonfirst/casper?tab=readme-ov-file
-
-[HOW is it deployed]
-
-
+%[HOW is it deployed]
 
 \subsection{CASPIAN}
 
 most important ptobably
 
-
-
-
 \subsection{Let'sWaitAwhile}
 
 test
-
-
-
-
 
 \subsection{CarbonScaler}
 
 https://dl.acm.org/doi/abs/10.1145/3626788
 CarbonScaler: Leveraging Cloud Workload Elasticity for Optimizing Carbon-Efficiency
 
+\subsection{Microsoft's Carbon-Aware Kubernetes}
+
+% https://devblogs.microsoft.com/sustainable-software/carbon-aware-kubernetes/
 
 
+[A Low Carbon Kubernetes Scheduler]
+https://ceur-ws.org/Vol-2382/ICT4S2019_paper_28.pdf
+
+Data-driven Algorithm Selection for Carbon-Aware Scheduling
+https://hotcarbon.org/assets/2024/pdf/hotcarbon24-final23.pdf
 
 \subsection{SOTA Recap}
 
-many simulation, no real system
-no much flexibility
+many simulation, 
+no real production-ready system
+no much flexibility for what concern variaty of resource managed
+usually tied to one type of resource (e.g., VMs, K8s pods)
 
 
 
