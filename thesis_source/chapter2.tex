@@ -8,13 +8,13 @@ what is greenops
 greenops landscape 
 
 In the context of cloud-native sustainability,
-the Technical Advisory Group (TAG) Environmental Sustainability is a XXX that supports and advocates for environmental sustainability initiatives in cloud native technologies.
+the Technical Advisory Group (TAG) Environmental Sustainability is a XYZ that supports and advocates for environmental sustainability initiatives in cloud native technologies.
 
 % https://hbr.org/2020/09/how-green-is-your-software
 
 % https://www.usenix.org/publications/loginonline/slos-and-ghgs
 
-\subsubsection{Green Software foundation}
+\subsection{Green Software foundation}
 
 green software foundation
 very important actor in the field of green software
@@ -181,9 +181,10 @@ But it is deem necessary to provide a brief overview of the main concepts of Kub
     \label{fig:kubernetes_architecture}
 \end{figure}
 
-It must be noted that in our system we are not extending the Kubernetes scheduler since we are not dealing with the scheduling of the in-cluster resources (e.g., Pods). 
-We are instead focusing on the management of external resources and the scheduling of the workloads in the cloud providers.
-An example of a system that extends the Kubernetes scheduler is the work of . \cite{} that we described in section XYZ.
+It must be noted that in our system we are not extending the Kubernetes scheduler as described for instance in the work of ..
+since we are not dealing with the scheduling of the in-cluster resources (e.g., Kubernetes Pods). 
+We are instead focusing on the management of external resources on cloud providers.
+
 
 \subsection{Kubernetes as a platform}
 
@@ -306,7 +307,7 @@ CarbonScaler: Leveraging Cloud Workload Elasticity for Optimizing Carbon-Efficie
 
 \subsection{Microsoft's Carbon-Aware Kubernetes}
 
-% https://devblogs.microsoft.com/sustainable-software/carbon-aware-kubernetes/
+[https://devblogs.microsoft.com/sustainable-software/carbon-aware-kubernetes/]
 
 
 [A Low Carbon Kubernetes Scheduler]
@@ -314,8 +315,6 @@ https://ceur-ws.org/Vol-2382/ICT4S2019_paper_28.pdf
 
 It provisions entire K8s clusters on the selected regions.
 Interesting feature: they use local air temperature and solar irradiance as tiebreaker for 2 datacenters with similar carbon intense grid. The claim is that: “Solar irradiance varies more widely than carbon intensity across global regions” and that “Local air temperature surrounding a datacentre affects the amount of energy needed for cooling”. 
-
-
 
 
 
@@ -334,17 +333,12 @@ At Google: the total amount of work that needs to get done per day is quite pred
 
 
 
-\subsection{SOTA Recap}
+\subsection{State of the Art analysis outcome}
 
-many simulation, 
-no real production-ready system
+many simulation compared to real-world scenarios
 no much flexibility for what concern variaty of resource managed
 usually tied to one type of resource (e.g., VMs, K8s pods)
 
-
-
 usually either time shifting or geographical shifting
-like letaswaitawhile is time shifting
-
 
 \newpage
