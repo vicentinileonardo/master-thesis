@@ -1,11 +1,43 @@
 \chapter{Background}
 \label{cha:background}
 
+In this chapter, we provide an overview of the main concepts, paradigms and technologies that are relevant for the purpose of this work.
+We start by introducing the concept of \textbf{Public Cloud Providers} and the \textbf{Multi Cloud paradigm}.
+We then provide a brief overview of \textbf{Kubernetes}, the de-facto standard for container orchestration. 
+After that, \textbf{Krateo PlatformOps}, an open-source Kubernetes-based platform that is a fundamental part of our system, is introduced.
+We deemed also valuable to provide an overview of the existing works in the field of \textbf{multi-cloud resource management}. 
+Finally, the \textbf{GreenOps landscape} is introduced, focusing on the the \textbf{Computational Sustainability} initiatives by Public Cloud Providers and on \textbf{carbon-aware systems for resource management}. 
+
 \section{Public cloud providers}
 
-what are they, what is this deployment model
-which are the 3 main players
-what is an hyperscaler (AWS, Azure, GCP)
+The Cloud Computing definition by the National Institute of Standards and Technology (NIST) \cite{nist} states that ``\textit{Cloud Computing is a model for enabling ubiquitous, convenient, on-demand network access to a shared pool of configurable computing resources (e.g., networks, servers, storage, applications, and services) that can be rapidly provisioned and released with minimal management effort or service provider interaction}" \cite{nist}.
+\textbf{Public Cloud Providers} or Cloud Service Providers (CSPs) are companies that have as their core business the provisioning of cloud computing services. These services, which are growing in number and complexity, range from computing resources to storage, networking, databases, machine learning, and more. 
+
+
+%Public cloud is a deployment model opposed to private cloud.
+%The former deployment model allows organizations to consume cloud services without having to build and maintain their own physical infrastructure, therefore reducing capital expenditure (CapEx) and shifting to an operational expense model (OpEx). 
+
+%The public cloud represents a multi-tenant environment where resources are shared among multiple customers.
+%Doing so requires public cloud provider to leverage paradigm and technique which were known in the industry well before the advent of cloud computing: virtualization and isolation.
+
+
+
+Currently, as of 2024, the public cloud market is dominated by three main hyperscalers: \textbf{Amazon Web Services (AWS)}, \textbf{Microsoft Azure}, and \textbf{Google Cloud Platform (GCP)}.
+An hyperscaler is ...
+
+Figure \ref{fig:pcp} shows the worldwide market share of leading cloud infrastructure service providers as of Q3 2024 \cite{statista}.
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=0.75\linewidth]{images/pcp.jpeg}
+    \caption{Worldwide market share of leading cloud infrastructure service providers as of Q3 2024 \cite{statista}}
+    \label{fig:pcp}
+\end{figure}
+  
+
+
+% https://www.statista.com/chart/18819/worldwide-market-share-of-leading-cloud-infrastructure-service-providers/
+
 
 \subsection{Regions and zones}
 cloud regions
@@ -31,25 +63,6 @@ Figure \ref{fig:azure_data_centers} shows the geo-distribution of Azure cloud re
 
 % https://www.naturalearthdata.com/downloads/110m-cultural-vectors/
 
-\subsection{Computational Sustainability by Public cloud providers}
-
-what are they already doing
-
----
-
-We assume that a cloud data center will likely rely on the same energy sources that characterize a specific geographical region (grid).
-For example, if data from Electricity Maps tell us that Finland is producing energy with low carbon emissions then we assume that the data centers in that area will likely be powered with energy from low carbon sources.
-However, some cloud providers may have better access to renewable energy sources in certain regions due to their individual initiatives e.g. wind farms that feed directly into their data centers.
-
-
-what microsoft is already doing with alternative energy sources apart from grid
-
-
----
-
-https://blog.google/inside-google/infrastructure/data-centers-work-harder-sun-shines-wind-blows/
-
-Google CFE\%: “This is the average percentage of carbon free energy consumed in a particular location on an hourly basis, while taking into account the investments we have made in carbon-free energy in that location. This means that in addition to the carbon free energy that's already supplied by the grid, we have added carbon-free energy generation in that location”.
 
 \subsection{Multi cloud paradigm}
 
@@ -291,6 +304,28 @@ could be potentially integrated in our system
 
 https://patterns.greensoftware.foundation/catalog/cloud/choose-region-closest-to-users
 [which patterns are used in our system]
+
+\subsection{Computational Sustainability by Public cloud providers}
+
+what are they already doing
+
+---
+
+We assume that a cloud data center will likely rely on the same energy sources that characterize a specific geographical region (grid).
+For example, if data from Electricity Maps tell us that Finland is producing energy with low carbon emissions then we assume that the data centers in that area will likely be powered with energy from low carbon sources.
+However, some cloud providers may have better access to renewable energy sources in certain regions due to their individual initiatives e.g. wind farms that feed directly into their data centers.
+
+
+what microsoft is already doing with alternative energy sources apart from grid
+
+
+---
+
+https://blog.google/inside-google/infrastructure/data-centers-work-harder-sun-shines-wind-blows/
+
+Google CFE\%: “This is the average percentage of carbon free energy consumed in a particular location on an hourly basis, while taking into account the investments we have made in carbon-free energy in that location. This means that in addition to the carbon free energy that's already supplied by the grid, we have added carbon-free energy generation in that location”.
+
+
 
 \section{Carbon-aware systems for resource management}
 

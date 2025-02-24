@@ -204,8 +204,6 @@ Due to these limitations and complexities, we explored and leveraged an \textbf{
 \end{figure}
 
 
-\subsection{Strategic Shift: From Custom Operator to Krateo Core Provider}
-
 In our approach, we opted to replace a custom Kubernetes operator (``Synchronization Operator''), originally designed to handle the \textbf{mapping} from generic to cloud-specific resources, with \textbf{Krateo Core Provider}. This decision was motivated by the need for greater flexibility and maintainability in defining multi-cloud infrastructure components. As a matter of fact, the custom operator was originally designed to handle only virtual machines (VMs) mappings and extensions to support additional cloud resources would have required significant code changes and maintenance overhead for each additional resource type added.
 
 Therefore instead of embedding business logic directly within a custom Kubernetes operator, in the current system implementation, we leverage the capabilities of \textbf{Helm templating} to dynamically generate cloud-provider-specific resources. More precisely, another Krateo component, the \textbf{Krateo composition-dynamic-controller} is leveraging Helm templating under the hood to generate Kubernetes resources starting from helm templates.
@@ -344,34 +342,28 @@ This mapping is done through Helm templating when creating
 
 compostion definition
 
-
 \section{Kubernetes Mutating Webhook Configuration}
 
-\subsection{Kubernetes Admission Control}
+In the context of \textbf{Kubernetes Admission Control}, in addition to standard, compiled-in admission plugins, Kubernetes supports the use of additional admission plugins that are effectively extensions of the system and run as \textbf{webhooks} configured at runtime \cite{kubernetes_dynamic_admission_control}. 
+This means that the admission control logic can be extended dynamically without the need to recompile the Kubernetes API server or other Kubernetes components. 
+Changes are applied at runtime to the running Kubernetes cluster, making the system more flexible and adaptable.
+Said plugins can be used to enforce custom policies and perform additional validation and mutation of Kubernetes objects before they are persisted in the cluster.
+We can classify webooks in two categories: validating and mutating webhooks.
+Validating webhooks are used to validate the object and reject it if it does not meet the validation criteria.
+Mutating webhooks are used to modify the object before it is persisted in the cluster.
+We must highlight the difference of two entities: the webhook configuration and the actual webhook server which performs mutation or validation.
+The latter could be a custom server to apply custum mutation or validation logic or it could be a service ready to use out of the box like an Open Policy Agent server.
 
-In the context of \textbf{Kubernetes Admission Control}, in addition to standard, compiled-in admission plugins, Kubernetes supports the use of additional admission plugins that are effectively extensions of the system and run as \textbf{webhooks} configured at runtime \cite{kubernetes_dynamic_admission_control}. This means that the admission control logic can be extended dynamically without the need to recompile the Kubernetes API server or other Kubernetes components. Changes are applied at runtime to the running Kubernetes cluster, making the system more flexible and adaptable.
-
-
-
-
-
-
-
-
-
-
-
-These plugins can be used to enforce custom policies and perform additional validation and mutation of Kubernetes objects before they are persisted in the cluster.
-
-K8s mutating webhook is used to modify K8s custom resources with the data from policies. 
-The K8s mutating webhook intercepts the CREATE or UPDATE API request, asks about policies (with also scheduling decision) and mutates the resource.
-
-we can distinguish between two types of webhooks: validating and mutating.
-
-we can distinguish two entities semantically different: the webhook configuration and the actual webhook /server which perform mutation or validation
-
-it could be a server that you need to implement to perform your own custum mutation or validation logic
-it could be a service ready to use out of the box like OPA server
+Figure \ref{fig:k8s_admission_control} shows the Kubernetes Admission Control flow with the addition of mutating and validating webhooks.
+The flow can be summarized as follows:
+\begin{enumerate}[itemsep=0.2pt, topsep=1pt]
+  \item The K8s API server receives an API request.
+  \item Authentication and authorization phase take place.
+  \item Mutating webhooks are called first. If any of them returns an error, the request is rejected.
+  \item The Object Schema Validation phase is executed.
+  \item Validating webhooks are called. If any of them returns an error, the request is rejected.
+  \item The object is persisted in the cluster.
+\end{enumerate}
 
 \begin{figure}[htb]
   \centering
@@ -380,13 +372,12 @@ it could be a service ready to use out of the box like OPA server
   \label{fig:k8s_admission_control}
 \end{figure}
 
+A webhook service can be either a deployment with the related service inside the cluster like seen in the image \ref{fig:k8s_webhook_example} or can be a service deployed outside the cluster as long as it is reachable by the K8s API server.
 
-service can be either a deployment with the related service inside the cluster like seen in the image \ref{fig:k8s_webhook_example}
-
-or can be deployed outside the cluster
-
-Figure \ref{fig:k8s_webhook_example} shows an example of a Kubernetes Mutating Webhook. The webhook server is deployed as a Kubernetes Deployment (with 1 Pod), with a corresponding Service to expose it within the cluster. The webhook server is responsible for receiving The AdmissionReview Request, applying custom logic, and returning an AdmissionReview Response to the Kubernetes API server describing the mutation to be applied to the resource.
-The custom logic in this simple example is just to add a label "mutated: true" to the resource.
+Figure \ref{fig:k8s_webhook_example} shows an example of a Kubernetes Mutating Webhook. 
+The webhook server is deployed as a Kubernetes Deployment (with 1 Pod), with a corresponding Service to expose it within the cluster. 
+The webhook server is responsible for receiving The AdmissionReview Request, applying custom logic, and returning an AdmissionReview Response to the Kubernetes API server describing the mutation to be applied to the resource.
+The custom logic in this simple example is to add a label "mutated: true" to the resource.
 
 \begin{figure}[htb]
   \centering
@@ -394,6 +385,9 @@ The custom logic in this simple example is just to add a label "mutated: true" t
   \caption{Kubernetes Mutating Webhook example \cite{kubernetes_mutating_webhook_example}}
   \label{fig:k8s_webhook_example}
 \end{figure}
+
+In the context of our system, a Kubernetes Mutating Webhook is used to enforce policies for workload scheduling by modifying K8s custom resources (VmTemplates) with the data from policies. 
+The K8s mutating webhook intercepts a CREATE or UPDATE API request, asks about policies (with also scheduling decision) and mutates the resource.
 
 \section{Multi-Cloud Integration through Kubernetes Operators}
 
@@ -639,6 +633,18 @@ types of external data strategies
 
 http.send()
 paramters 
+
+/ # curl -X POST -H "Content-Type: application/json" \
+> -d '{
+>   "number_of_jobs" : 1,
+>   "eligible_regions": ["FR", "IT", "FI"],
+>   "deadline": "2025-06-09T10:00:00",
+>   "duration": 6,
+>   "cpu": 4,
+>   "memory": 8,
+>   "req_timeout": 180
+> }' http://greenops-scheduler.greenops-scheduler-system.svc.cluster.local/scheduling
+{"scheduling_location":"FR","scheduling_time":"2025-02-06T17:42:11Z"}
 
 \subsection{OPA integration with Kubernetes}
 
@@ -1156,15 +1162,13 @@ MLflow Tracking Server, as the name suggest, is a server that is constantly wait
 Said data comes from the various training scripts that are executed by the data scientists or machine learning engineers which are run in  training environments.
 In particular the training scripts must be instrumented with the \textbf{MLflow API calls} to log the data in the remote MLflow Tracking Server.
 This setting is very flexible since the training scripts can be run in any environment (e.g., local environment, Universities' HPC clusters), as long as they have access to the MLflow Tracking Server.
-
 It is deemed important to mention some of the MLflow API calls that are used in the training scripts: the \textit{infer\_signature} and \textit{autolog} functions.
-
 The \textit{infer\_signature} function captures the \textbf{input and output schema of the model}, which is important for the deployment of the model.
 The \textit{autolog} function is used to automatically log the parameters and metrics of the model training session, without the need to manually log them. In particular, each supported ML framework has its own autolog function which is used to automatically log the parameters and metrics of the model training session.
 
 The final phase of a model training session is the automatic creation of a \textbf{self-contained directory}, named after the experiment and run IDs, that contains all the necessary files to deploy the model. In particular, the folder contains: the serialized model with model weights, the configuration files (conda.yaml, requirements.txt), and the MLmodel file that contains additional configuration, among which, the model signature.
 The self-contained folder is then automatically uploaded to the MLflow Tracking Server as an artifact.
-The following is an example of the structure of the self-contained directory created by MLflow after a PyTorch model training session. \\
+The following is an example of the structure of the self-contained directory created by MLflow after a PyTorch model training session: \\
 
 \dirtree{%
 .1 model/.
@@ -1212,7 +1216,7 @@ Listing \ref{lst:inference_service} shows an example of the InferenceService Cus
 apiVersion: "serving.kserve.io/v1beta1"
 kind: "InferenceService"
 metadata:
-  name: "forecaster-1"
+  name: "forecaster-IT-NO"
   namespace: "model-inference"
 spec:
   predictor:
@@ -1225,6 +1229,12 @@ spec:
 \end{lstlisting}
 
 % https://kserve.github.io/website/master/modelserving/v1beta1/mlflow/v2/
+
+We can see that the InferenceService CR is quite simple and self-explanatory. 
+The most important fields are the \textit{model} field, which specifies the model format, the protocol version, and the storage URI.
+The storage URI is the location of the model artifacts in the artifact store, which in the case of the system is the SeaweedFS object storage service with S3 compatibility. 
+At the location specified by the storage URI, the model artifacts are stored in the self-contained directory created by MLflow after the model training session as described in the previous section.
+
 
 
 
@@ -1265,7 +1275,7 @@ Figure \ref{fig:forecaster} illustrates the configuration of the InferenceServic
 \begin{figure}[htb]
   \centering
   \includegraphics[width=1\linewidth]{images/forecaster.png}
-  \caption{Model deployment configuration}
+  \caption{Model deployment configuration and GreenOps system integration}
   \label{fig:forecaster}
 \end{figure}
 
@@ -1296,12 +1306,13 @@ In particular, MLflow is used for model tracking, model selection, and model sto
 % https://dynamorio.org/google_workload_traces.html
 
 
-how to measuere cloud resource systems
+how to measure cloud resource systems
 
+
+\subsection{System performance metrics}
 
 especially useful for ``day 2 operations''
 scaling down a VM
-
 
 Metrics collected could be:
 CPU usage
@@ -1321,8 +1332,6 @@ From the Krateo Composable FinOps document:
 From my current understanding, only Azure is available for now on the finops-operator-vm-manager. 
 This operator is only able to: start; stop; deallocate; scale-up; scale-down.
 So finops-operator-vm-manager operates on already provisioned virtual machines and it applies optimizations.
-
----
 
 
 
@@ -1348,7 +1357,8 @@ Challenges
 Public Cloud Providers do not provide data about carbon intensity of a VM instance
 Public Cloud Providers do not provide data about power consumption of a VM instance
 
-Power consumption metrics
+\subsection{Power consumption metrics}
+
 scaphandre: NOT supported by public cloud providers. “Public cloud providers do not expose the underlying RAPL sensors that scaphandre and other measurement tools rely on to track consumption”. (https://github.com/hubblo-org/scaphandre/issues/142)
 https://hubblo-org.github.io/scaphandre-documentation/index.html
 
@@ -1360,9 +1370,7 @@ manually estimate power consumption based on CPU utilization, memory usage. Coul
 there is the TEADS metodology like 
 
 
-
----
-
+\subsection{Carbon metrics}
 
 Carbon metrics:
 there is no adopted standard, there is not something similar to FOCUS yet;
@@ -1371,7 +1379,7 @@ https://github.com/Green-Software-Foundation/real-time-cloud
 https://github.com/Green-Software-Foundation/real-time-cloud/blob/main/Cloud_Region_Metadata_specification.md 
 
 
-Public Cloud Providers monthly reports (probably not useful in this case)
+Public Cloud Providers provide monthly reports (probably not useful in this case)
 Export Azure carbon optimization emissions data (Preview) (probably not fine-grained as we want)
 
 Cloud Carbon Footprint
@@ -1388,8 +1396,9 @@ no live Grid Carbon Intensity Coefficient, they extrapolate data from “governa
 https://aether.green/docs/methodologies/#grid-carbon-intensity-coefficient
 
 
-carbond agent) (https://gitlab.com/sustainable-computing-systems/carbond)
-installed on the machine
+carbond agent (https://gitlab.com/sustainable-computing-systems/carbond)
+,ust installed on the machine
+so in this case, probably not useful 
 
 
 Example of a manual approach (not scalable due to tech specs research): https://devblogs.microsoft.com/sustainable-software/how-can-i-calculate-co2eq-emissions-for-my-azure-vm/ 
@@ -1401,6 +1410,8 @@ The critical point here is to get/calculate the energy consumed by a cloud insta
 \subsection{Impact framework}
 
 Impact framework (by green software foundation)
+
+\newpage
 
 \section{End-to-End workflow}
 \label{sec:e2eflow}
