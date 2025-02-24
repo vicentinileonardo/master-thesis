@@ -1159,13 +1159,33 @@ The \textit{infer\_signature} function captures the \textbf{input and output sch
 The \textit{autolog} function is used to automatically log the parameters and metrics of the model training session, without the need to manually log them. In particular, each supported ML framework has its own autolog function which is used to automatically log the parameters and metrics of the model training session.
 
 The final phase of a model training session is the automatic creation of a \textbf{self-contained directory}, named after the experiment and run IDs, that contains all the necessary files to deploy the model. In particular, the folder contains: the serialized model with model weights, the configuration files (conda.yaml, requirements.txt), and the MLmodel file that contains additional configuration, among which, the model signature.
-This self-contained folder is then automatically uploaded to the MLflow Tracking Server as an artifact.
+The self-contained folder is then automatically uploaded to the MLflow Tracking Server as an artifact.
+The following is an example of the structure of the self-contained directory created by MLflow after a PyTorch model training session. \\
+
+\dirtree{%
+.1 model/.
+.2 MLmodel.
+.2 conda.yaml.
+.2 python\_env.yaml.
+.2 requirements.txt.
+.2 data/.
+.3 model.pth.
+.3 pickle\_module\_info.txt.
+}
+
 
 \subsubsection{MLflow deployment configuration}
 
 In the context of our system, MLflow is deployed on a Kubernetes cluster with a loosely coupled architecture as can be seen in Figure \ref{mlflow_config}, where the MLflow Tracking Server is decoupled from its storage: the metadata store (backend store) and the artifact store.
 This configuration is the most common in production environments, as it allows for better scalability and environment flexibility.
 The metadata store chosen for the system is \textbf{CrateDB}, while the artifact store is the \textbf{SeaweedFS} object storage service. \\
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.50\linewidth]{images/mlflow_config.png}
+  \caption{MLflow deployment configuration}
+  \label{fig:mlflow_config}
+\end{figure}
 
 During the design phase, \textbf{alternative configurations} were considered.
 One of the alternative configurations was to use a single CrateDB instance as both the metadata store and the artifact store. This configuration was not implemented due to the lack of native support of object storage in CrateDB.
@@ -1175,31 +1195,43 @@ A second theorized approach was to use a sidecar container with the duty of watc
 \subsection{KServe}
 \label{sec:kserve}
 
+KServe is an open-source model inference platform that extends Kubernetes with a set of Custom Resource Definitions (CRDs) to \textbf{deploy} and scale machine learning models in production environments.
+KServe can be deployed in several ways, one of which is the ``Serverless mode'' which is built on top of Istio and Knative, leveraging their powerful capabilities such as automatic scaling. 
+There are two main CRs that can be used to set up a model serving environment: \textit{\textbf{ServingRuntimes}} (or \textit{\textbf{ClusterServingRuntimes}}) and \textit{\textbf{InferenceServices}}.
+The former are abstractions that define model serving environments, specifying the templates for Kubernetes Pods capable of serving particular model formats. The latter are actually leveraging the available ServingRuntimes to deploy the models in the system.  
+KServe provides several out-of-the-box ClusterServingRuntimes for common model formats, such as TensorFlow, PyTorch, and XGBoost, which can be used to deploy models without the need to define and configure the runtimes themselves.
+In particular, in our specific use case, since the forecasting models are PyTorch models, packaged by MLflow as described in the previous section, InferenceServices with ``kserve-mlserver" ClusterServingRuntime are used. 
+As a matter of fact, this runtime is the one that supports models packaged with MLflow.
+Listing \ref{lst:inference_service} shows an example of the InferenceService Custom Resource used to deploy a model in the system. \\
 
-Kserve extedns kubernetes with a set of CRDs to deploy, scale and manage ML models in production.
+\begin{lstlisting}[language=yaml, caption={InferenceService Custom Resource example}, label={lst:inference_service}]
+apiVersion: "serving.kserve.io/v1beta1"
+kind: "InferenceService"
+metadata:
+  name: "forecaster-1"
+  namespace: "model-inference"
+spec:
+  predictor:
+    serviceAccountName: sa-s3creds
+    model:
+      modelFormat:
+        name: mlflow
+      protocolVersion: v2  
+      storageUri: s3://mlartifacts/forecaster-1
+\end{lstlisting}
+
+% https://kserve.github.io/website/master/modelserving/v1beta1/mlflow/v2/
 
 
 
-
-KServe Inference Service
-
-what is
-inference server / model server
-
-
-used to deploy the forecaster (ML model)
-
-
-uses Istio and Knative under the hood
-features: scaling to zero, etc
-
-
-InferenceService with TorchServe runtime which is the default installed serving runtime for PyTorch models.
-
-Kserve project proposes a standard protocol for inference servers.
-The version 2 of the KServe Inference Protocol is the Open Inference Protocol.
 
 \subsubsection{Open Inference Protocol}
+
+Interoperability is key in a fast-moving environment as the one of machine learning and AI. 
+Therefore KServe has introduced the Open Inference Protocol specification to standardize the communication between inference servers and clients. 
+The Open Inference Protocol has been adopted by several inference servers, including NVIDIA's Triton and Seldon MLserver
+
+% https://github.com/kserve/open-inference-protocol
 
 \begin{table}[h!]
 \centering
@@ -1215,48 +1247,32 @@ Server Metadata & GET           & v2                                            
 \end{tabular}
 \end{table}
 
+\subsubsection{Model deployment}
 
+Our specific use case requires the deployment of multiple models, each corresponding to a different region.
+This is true if we want to achieve better model performance compared to a single model that tries to predict the carbon intensity of all the regions.
+The current strategy adopted for the system is the following: one model per region is deployed, and a generic model is used as a fallback if the specific model is not available.
 
+This translates into the deployment of multiple InferenceServices, each corresponding to a specific region, and one InferenceService that acts as a fallback.
+This setting introduces a quite large amount of overhead in terms of resources, since each InferenceService set up a whole new set of resources (e.g., large Kubernetes Pods with underlying model serving environments) for each model.
+Figure \ref{fig:forecaster} illustrates the configuration of the InferenceServices used to deploy the forecasting models in the system.
 
-which has been adopted by several inference servers, including NVIDIA's Triton and Seldon.
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=1\linewidth]{images/forecaster.png}
+  \caption{Model deployment configuration}
+  \label{fig:forecaster}
+\end{figure}
 
+\subsubsection{Model compatibility}
 
-
-
-
-multi model deployment
-
-our current strategy:
-1 model per region
-1 generic model? as fallback if specific model is not available?
-
-
-
-
-Several out-of-the-box ClusterServingRuntimes are provided with KServe so that users can quickly deploy common model formats without having to define the runtimes themselves.
-
-
-
-
-
-
-[chart to illustrate this]
-
-
-
-serving runtimes
-
-Seldon MLserver
-
-
-accorgimenti: \\
-model wrapping
-
+In scenarios where ML models produce outputs in formats not directly compatible with the serving runtime, some workarounds are necessary, such as model wrapping. This process involves adapting the model's input and output interfaces to align with the expected formats of the serving runtime, ensuring a correct model deployment.
+For instance, in the case of the forecasting models, the output format was not directly compatible with the serving runtime: the output was a custom defined class specific to the model, instead of a single tensor. Therefore, a simple model wrapping was needed to make the model compatible with the serving runtime, effectively operation a selection of output fields from the model output and returning them as a single tensor.
 
 \subsection{MLOps general architecture}
 
 Figure \ref{fig:mlops} illustrates the general architecture of the MLOps infrastructure deployed in the Kubernetes environment. 
-The architecture consists of two main components: MLflow and KServe.
+The architecture consists of two main components, described in the previous sections: MLflow and KServe.
 In particular, MLflow is used for model tracking, model selection, and model storage, while KServe is leveraged for model deployment. 
 
 \begin{figure}[htb]
@@ -1265,7 +1281,6 @@ In particular, MLflow is used for model tracking, model selection, and model sto
   \caption{MLOps Architecture}
   \label{fig:mlops}
 \end{figure}
-
 
 \newpage
 

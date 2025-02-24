@@ -1,37 +1,6 @@
 \chapter{Background}
 \label{cha:background}
 
-\section{GreenOps landscape}
-
-what is greenops
-
-greenops landscape 
-
-In the context of cloud-native sustainability,
-the Technical Advisory Group (TAG) Environmental Sustainability is a XYZ that supports and advocates for environmental sustainability initiatives in cloud native technologies.
-
-% https://hbr.org/2020/09/how-green-is-your-software
-
-% https://www.usenix.org/publications/loginonline/slos-and-ghgs
-
-\subsection{Green Software foundation}
-
-green software foundation
-very important actor in the field of green software
-
-sci: https://sci.greensoftware.foundation/
-
-proposed a standard for data like the FOCUS standard available 
-trying to push a specification similar to what focus is for FinOps
-as per 2025 this standard is not yet adopted by cloud providers
-``real time cloud" proposed standard (not yet adopted): https://github.com/Green-Software-Foundation/real-time-cloud?tab=readme-ov-file
-
-the foundation also developed the Impact Framework which will be described in section XY
-could be potentially integrated in our system
-
-https://patterns.greensoftware.foundation/catalog/cloud/choose-region-closest-to-users
-[which patterns are used in our system]
-
 \section{Public cloud providers}
 
 what are they, what is this deployment model
@@ -112,67 +81,12 @@ Being able to work in a multi-cloud environment is also important for accomplish
 If the system is designed to be multi-cloud then flexibility is higher for organizations and users.
 For the purpose of this work, we will consider only the 3 major Public Cloud Provider as of today: AWS, Azure, GCP
 
-\section{Multi cloud resource management}
-\label{sec:multi_cloud_resource_management}
-
-The idea of a \textbf{dynamic management of workloads leveraging a multi-cloud paradigm} is not new. In this section we will provide an overview of some of the existing works in the literature that have tackled the problem of multi-cloud resource management.
-
-\subsection{Dynamic Virtual Machine placement}
-The work of Simarro et al. \cite{Simarro_2011} back at the dawn of cloud computing (2011) proposed a multi-cloud architecture for the dynamic placement of Virtual Machines (VMs).
-The main objective of the system was cost optimization but this paradigm provides reliability and flexibility as well.
-The scheduling part is comprised of a ``\textbf{cloud broker}" that is responsible for VM placement \textbf{transparent to users} providing a single uniform interface to the cloud resources.
-Users can provide to the system a ``\textbf{service description template}'' to specify the number of VMs to provision and some constraints.
-The cloud broker architecture is composed of two major components: the \textbf{scheduler} and the \textbf{cloud manager} \cite{Simarro_2011}. The former is responsible for placement decision across multiple cloud providers, while the latter is responsible for the actual management of the VMs in the cloud providers. More precisely, the cloud manager is represented by the OpenNebula (ONE) virtual infrastructure manager \cite{Simarro_2011}.
-OpenNebula is an open-source platform that aims to provide a unified management interface for multiple virtualization technologies and cloud providers \cite{open_nebula}.
-
-\subsection{Cloud service brokers}
-A CSB is a system that acts as an \textbf{intermediary} between cloud service providers and consumers, providing a \textbf{unified interface} to manage cloud resources across multiple providers \cite{Wadhwa_2013}.
-Cloud service brokers (CSBs) were described and categorized by Wadhwa et al. \cite{Wadhwa_2013} in their work of 2013.
-The emerging market of cloud computing led to the proliferation of cloud services and providers, and by consequence the need for mechanisms to manage costs, capacity and resources \cite{Wadhwa_2013}. 
-
-An interesting CSB example in the literature is the \textbf{STRATOS} system by Pawluk et al. proposed in 2012. The work can be considered a pioneer in the field of multi-cloud resource management since it can be framed in the first years of cloud computing \cite{STRATOS} but the proposed paradigms and concepts are relevant today.
-STRATOS tried to \textbf{avoid the assumption of resource homogeneity} and represented an initial attempt to provide a ``\textbf{cross-cloud resource provisioning}'' system \cite{STRATOS}.
-The proposed architecture enables the specification of high-level objectives that can be assessed in a standardized manner across different providers. The decision-making process is fully automated, shifting the decision point from deployment to runtime \cite{STRATOS}.
-Users first submit a topology document, triggering the Cloud Manager to communicate with the Broker for topology instantiation. The Broker (implemented in Java) then conducts the initial resource acquisition decision (RAD), optimizing the allocation of resources across multiple providers (configured beforehand) \cite{STRATOS}.
-Experiments indicate that distributing workloads across different cloud providers can reduce the overall cost of the topology. The approach taken by the authors primarily focuses on two objectives: \textbf{cost efficiency} and \textbf{avoiding vendor lock-in}. The application environment was deployed on public cloud platforms, specifically AWS and Rackspace \cite{STRATOS}.
-
-\subsection{AI-based resource management in cloud computing}
-\label{sec:ai_based_resource_management}
-
-More recent works have focused on the development of systems that leverage AI techniques for the optimization of resource management in cloud computing environments.
-
-[Machine learning (ML)-centric resource management in cloud computing: A review and future directions]
-% https://www.sciencedirect.com/science/article/abs/pii/S1084804522000649
-
-[HUNTER: AI based holistic resource management for sustainable cloud computing]
-% https://www.sciencedirect.com/science/article/abs/pii/S0164121221002211
-
-\subsection{Policy-driven resource management systems}
-
-[SLA-driven dynamic cloud resource management]
-% https://www.sciencedirect.com/science/article/abs/pii/S0167739X1300215X
-
-[Deadline-aware Dynamic Resource Management in Serverless Computing Environments]
-% https://ieeexplore.ieee.org/abstract/document/9499407
-
-[Policy-Based Cloud Management Through Resource Usage Prediction]
-% https://link.springer.com/chapter/10.1007/978-3-319-13464-2_14
-
-[Amazon Web Services Cloud Compliance Automation with Open Policy Agent]
-% https://ieeexplore.ieee.org/abstract/document/10612535
-
-
----
-
-% Optimizing Cost and Maximizing Profit for Multi-Cloud-Based Big Data Computing by Deadline-Aware Optimize Resource Allocation
-% https://link.springer.com/chapter/10.1007/978-981-15-8469-5_3
-
-
 \section{Kubernetes}
 
-became the de-facto standard for container orchestration
-an extensive description of Kubernetes is out of the scope of this thesis.
-But it is deem necessary to provide a brief overview of the main concepts of Kubernetes that are relevant for the purpose of this work.
+Kubernetes is an open-source platform for automating the orchestration of containerized applications.
+It is widely used in the industry and became the de-facto standard for container orchestration.
+An extensive description of Kubernetes is out of the scope of this thesis but it is deemed necessary to provide a brief overview of the main concepts of Kubernetes that are relevant for the purpose of this work.
+Figure \ref{fig:kubernetes_architecture} shows the Kubernetes architecture as described by the Cloud Native Computing Foundation (CNCF) \cite{kubernetes_cnfc}.
 
 \begin{figure}[htb]
     \centering
@@ -181,13 +95,26 @@ But it is deem necessary to provide a brief overview of the main concepts of Kub
     \label{fig:kubernetes_architecture}
 \end{figure}
 
+The main components of Kubernetes are:
+\begin{itemize}[itemsep=0.2pt, topsep=1pt]
+    \item[$\bullet$] \textbf{Kubernetes API server}: the central component that manages the Kubernetes cluster. It exposes the Kubernetes API and is responsible for validating and mutating data for the Kubernetes objects.
+    \item[$\bullet$] \textbf{etcd}: a key-value store used to store the cluster state.
+    \item[$\bullet$] \textbf{Kubernetes controller manager}: a daemon that embeds the core control loops shipped with Kubernetes.
+    \item[$\bullet$] \textbf{Kubernetes scheduler}: a component that assigns Pods to nodes.
+    \item[$\bullet$] \textbf{Kubelet}: an agent that runs on each node in the cluster. It makes sure that containers are correctly running in a Pod.
+    \item[$\bullet$] \textbf{Kubernetes proxy}: a network proxy that runs on each node in the cluster. It maintains network rules and it is responsible for routing network traffic.
+    \item[$\bullet$] \textbf{Container runtime}: the software that is responsible for running containers on the Node (in this case represented by Docker).
+\end{itemize}
+
+[TO BE FIXED]
 It must be noted that in our system we are not extending the Kubernetes scheduler as described for instance in the work of ..
 since we are not dealing with the scheduling of the in-cluster resources (e.g., Kubernetes Pods). 
 We are instead focusing on the management of external resources on cloud providers.
-
+As described in the following section, our focus will be on the Kubernetes API sever and in particular on Admission Control 
 
 \subsection{Kubernetes as a platform}
 
+[TO BE FIXED]
 Kubernetes as a platform to manage external resources
 representing resources as kubernetes objects to leverage the powerful kubernetes API and tooling
 
@@ -200,14 +127,18 @@ Many cloud-native development teams work with a mix of configuration systems, AP
 
 %https://cloud.google.com/config-connector/docs/concepts/resources#managing_resources_with_kubernetes_objects
 
-
-
-
-
 \subsection{Kubernetes extendability}
 
-Operator paradigm
+[TO BE FIXED]
 % https://www.cncf.io/blog/2022/06/15/kubernetes-operators-what-are-they-some-examples/
+
+Kubernetes allows for the extension of its functionalities through the use of \textbf{Custom Resource Definitions (CRDs)} and \textbf{Kubernetes Operators}, effectively adopting the so-called \textbf{Operator paradigm}.
+Simply put, Custom Resource Definitions are a way to instruct Kubernetes to manage a new resource type. They are a schema that defines the structure of the resource and the Kubernetes API server will validate the resource against the schema.
+\textbf{Custom Resources (CRs)} are actually instances of the resources defined by CRDs and are managed by an Operator.
+The Operator is a piece of software that is responsible for managing the lifecycle of the resources defined by the CRD.
+Effectively the code of an Operator is usually deployed on the Kubernetes cluster in the form of a Deployment.
+This concept is not different of what actually happens for standard built-in Kubernetes resources which are however manged by built-in controllers.
+An high-level overview of the Operator paradigm is depicted in Figure \ref{fig:operator_paradigm}.
 
 \begin{figure}[H]
     \centering
@@ -275,9 +206,95 @@ The architecture of the Krateo core-provider and composition-dynamic-controller 
     \label{fig:krateo_core_provider}
 \end{figure}
 
+\section{Multi cloud resource management}
+\label{sec:multi_cloud_resource_management}
+
+The idea of a \textbf{dynamic management of workloads leveraging a multi-cloud paradigm} is not new. In this section we will provide an overview of some of the existing works in the literature that have tackled the problem of multi-cloud resource management.
+
+\subsection{Dynamic Virtual Machine placement}
+The work of Simarro et al. \cite{Simarro_2011} back at the dawn of cloud computing (2011) proposed a multi-cloud architecture for the dynamic placement of Virtual Machines (VMs).
+The main objective of the system was cost optimization but this paradigm provides reliability and flexibility as well.
+The scheduling part is comprised of a ``\textbf{cloud broker}" that is responsible for VM placement \textbf{transparent to users} providing a single uniform interface to the cloud resources.
+Users can provide to the system a ``\textbf{service description template}'' to specify the number of VMs to provision and some constraints.
+The cloud broker architecture is composed of two major components: the \textbf{scheduler} and the \textbf{cloud manager} \cite{Simarro_2011}. The former is responsible for placement decision across multiple cloud providers, while the latter is responsible for the actual management of the VMs in the cloud providers. More precisely, the cloud manager is represented by the OpenNebula (ONE) virtual infrastructure manager \cite{Simarro_2011}.
+OpenNebula is an open-source platform that aims to provide a unified management interface for multiple virtualization technologies and cloud providers \cite{open_nebula}.
+
+\subsection{Cloud service brokers}
+A CSB is a system that acts as an \textbf{intermediary} between cloud service providers and consumers, providing a \textbf{unified interface} to manage cloud resources across multiple providers \cite{Wadhwa_2013}.
+Cloud service brokers (CSBs) were described and categorized by Wadhwa et al. \cite{Wadhwa_2013} in their work of 2013.
+The emerging market of cloud computing led to the proliferation of cloud services and providers, and by consequence the need for mechanisms to manage costs, capacity and resources \cite{Wadhwa_2013}. 
+
+An interesting CSB example in the literature is the \textbf{STRATOS} system by Pawluk et al. proposed in 2012. The work can be considered a pioneer in the field of multi-cloud resource management since it can be framed in the first years of cloud computing \cite{STRATOS} but the proposed paradigms and concepts are relevant today.
+STRATOS tried to \textbf{avoid the assumption of resource homogeneity} and represented an initial attempt to provide a ``\textbf{cross-cloud resource provisioning}'' system \cite{STRATOS}.
+The proposed architecture enables the specification of high-level objectives that can be assessed in a standardized manner across different providers. The decision-making process is fully automated, shifting the decision point from deployment to runtime \cite{STRATOS}.
+Users first submit a topology document, triggering the Cloud Manager to communicate with the Broker for topology instantiation. The Broker (implemented in Java) then conducts the initial resource acquisition decision (RAD), optimizing the allocation of resources across multiple providers (configured beforehand) \cite{STRATOS}.
+Experiments indicate that distributing workloads across different cloud providers can reduce the overall cost of the topology. The approach taken by the authors primarily focuses on two objectives: \textbf{cost efficiency} and \textbf{avoiding vendor lock-in}. The application environment was deployed on public cloud platforms, specifically AWS and Rackspace \cite{STRATOS}.
+
+\subsection{AI-based resource management in cloud computing}
+\label{sec:ai_based_resource_management}
+
+More recent works have focused on the development of systems that leverage AI techniques for the optimization of resource management in cloud computing environments.
+
+[Machine learning (ML)-centric resource management in cloud computing: A review and future directions]
+% https://www.sciencedirect.com/science/article/abs/pii/S1084804522000649
+
+[HUNTER: AI based holistic resource management for sustainable cloud computing]
+% https://www.sciencedirect.com/science/article/abs/pii/S0164121221002211
+
+\subsection{Policy-driven resource management systems}
+
+[SLA-driven dynamic cloud resource management]
+% https://www.sciencedirect.com/science/article/abs/pii/S0167739X1300215X
+
+[Deadline-aware Dynamic Resource Management in Serverless Computing Environments]
+% https://ieeexplore.ieee.org/abstract/document/9499407
+
+[Policy-Based Cloud Management Through Resource Usage Prediction]
+% https://link.springer.com/chapter/10.1007/978-3-319-13464-2_14
+
+[Amazon Web Services Cloud Compliance Automation with Open Policy Agent]
+% https://ieeexplore.ieee.org/abstract/document/10612535
+
+
+---
+
+% Optimizing Cost and Maximizing Profit for Multi-Cloud-Based Big Data Computing by Deadline-Aware Optimize Resource Allocation
+% https://link.springer.com/chapter/10.1007/978-981-15-8469-5_3
+
+\section{GreenOps landscape}
+
+what is greenops
+
+greenops landscape 
+
+In the context of cloud-native sustainability,
+the Technical Advisory Group (TAG) Environmental Sustainability is a XYZ that supports and advocates for environmental sustainability initiatives in cloud native technologies.
+
+% https://hbr.org/2020/09/how-green-is-your-software
+
+% https://www.usenix.org/publications/loginonline/slos-and-ghgs
+
+\subsection{Green Software foundation}
+
+green software foundation
+very important actor in the field of green software
+
+sci: https://sci.greensoftware.foundation/
+
+proposed a standard for data like the FOCUS standard available 
+trying to push a specification similar to what focus is for FinOps
+as per 2025 this standard is not yet adopted by cloud providers
+``real time cloud" proposed standard (not yet adopted): https://github.com/Green-Software-Foundation/real-time-cloud?tab=readme-ov-file
+
+the foundation also developed the Impact Framework which will be described in section XY
+could be potentially integrated in our system
+
+https://patterns.greensoftware.foundation/catalog/cloud/choose-region-closest-to-users
+[which patterns are used in our system]
+
 \section{Carbon-aware systems for resource management}
 
-An analysis of existing systems have been made in order to understand the state of the art in the field of carbon-aware resource management.
+Having provided an overview of the existing works in the field of multi-cloud resource management and having introduced the GreenOps landscape, we now focus on the state of the art in the field of carbon-aware systems for resource management.
 
 The work of 2023 by Sukprasert et al. named ``\textit{Spatiotemporal Carbon-aware Scheduling in the Cloud: Limits and Benefits}'' \cite{10.1145/3599733.3606301} is a comprehensive analysis on the limits and benefits of the employment of geographical shifting and time shifting for cloud workloads.
 The authors highlight the fact that different workloads have different characteristics and therefore different degrees of flexibility. Those include, for instance: \textbf{execution deadlines}, \textbf{data protection laws}, and \textbf{latency requirements}. Therefore, carbon savings are constrained by a complex set of factors that need to be taken into account when designing a carbon-aware system \cite{10.1145/3599733.3606301}.
@@ -294,29 +311,34 @@ The system is not adopting time-shifting since it is dealing with web services t
 
 \subsection{CASPIAN}
 
-most important ptobably
+[TO BE ADDED]
 
 \subsection{Let'sWaitAwhile}
 
-test
+[TO BE ADDED]
 
 \subsection{CarbonScaler}
+
+[TO BE ADDED]
 
 https://dl.acm.org/doi/abs/10.1145/3626788
 CarbonScaler: Leveraging Cloud Workload Elasticity for Optimizing Carbon-Efficiency
 
 \subsection{Microsoft's Carbon-Aware Kubernetes}
 
+[TO BE ADDED]
 [https://devblogs.microsoft.com/sustainable-software/carbon-aware-kubernetes/]
 
 
-[A Low Carbon Kubernetes Scheduler]
+\subsection{A Low Carbon Kubernetes Scheduler}
+[TO BE ADDED]
 https://ceur-ws.org/Vol-2382/ICT4S2019_paper_28.pdf
 
 It provisions entire K8s clusters on the selected regions.
 Interesting feature: they use local air temperature and solar irradiance as tiebreaker for 2 datacenters with similar carbon intense grid. The claim is that: “Solar irradiance varies more widely than carbon intensity across global regions” and that “Local air temperature surrounding a datacentre affects the amount of energy needed for cooling”. 
 
 
+---
 
 Data-driven Algorithm Selection for Carbon-Aware Scheduling
 https://hotcarbon.org/assets/2024/pdf/hotcarbon24-final23.pdf
