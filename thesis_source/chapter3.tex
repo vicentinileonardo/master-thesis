@@ -2,6 +2,7 @@
 \label{cha:design}
 
 This chapter presents the design and implementation of our system, focusing on the integration of the various components and the overall architecture. The system is designed to be modular, scalable, and extensible, enabling the integration of additional components as needed.
+It must be said the the following is a description of a first iteration of the system. 
 
 \section{Assumptions}
 
@@ -9,8 +10,8 @@ In this section we present the assumptions made during the design and implementa
 
 \subsection{Workload definition}
 In this work, workloads has been modeled as \textbf{Virtual Machines (VMs)}, representing the \textbf{primary use case} considered during the system's initial design phase. 
-It is possible to define as interrupible workloads, those workloads that can be stopped and restarted without losing the work done. 
-For this first iteration of the system only \textbf{non-interruptible workloads} are considered.
+It is possible to define as ``interrupible workloads", those workloads that can be stopped and restarted without losing the work done. 
+For this first iteration of the system only ``\textbf{non-interruptible workloads}" are considered.
 This choice was driven by the fact the Virtual Machines are both a common and widely used cloud and one of the simplest cloud resources to provision and therefore ideal for the first iteration of the system.
 Having said that, for the purpose of this work, a formalization can be done.
 
@@ -106,18 +107,18 @@ All the components listed in the above table must be deployed inside a Kubernete
 
 \section{Krateo PlatformOps integration}
 
-Krateo PlatformOps is utilized in this system for \textbf{multi-cloud resource management}, allowing for the declarative orchestration of cloud resources across different cloud providers leveragin Kubernetes as a control plane. 
+Krateo PlatformOps is utilized in this system for \textbf{multi-cloud resource management}, allowing for the declarative orchestration of cloud resources across different cloud providers leveraging Kubernetes as a control plane. 
 This section highlights the differences between two approaches for resource synchronization:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
   \item[$\bullet$] The \textbf{Custom Kubernetes ``Synchronization Operator"} approach
   \item[$\bullet$] The \textbf{Krateo PlatformOps} approach
 \end{itemize}
 
-It is deemed interesting to describe both approaches in order to identify the several trade-offs between implementing a custom synchronization operator and leveraging a template-based abstraction for cloud resource provisioning.
+It is deemed interesting to describe both approaches in order to identify the several \textbf{trade-offs} between implementing a custom synchronization operator and leveraging a template-based abstraction for cloud resource provisioning.
 
 \subsection{Resource management: the Custom Kubernetes ``Synchronization Operator" approach}
 
-When dealing with multi-cloud workloads with Kubernetes as a control plane, a synchronization and mapping mechanism (broker) is required to bridge the gap between:
+When dealing with multi-cloud workloads with Kubernetes as a control plane, a \textb{synchronization and mapping mechanism} (broker) is required to bridge the gap between:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
   \item[$\bullet$] \textbf{Generic Kubernetes Custom Resources}, which represent generic provider-agnostic workloads.
   \item[$\bullet$] \textbf{Cloud provider-specific Custom Resources}, which correspond to the actual cloud resources provisioned through the respective Kubernetes operators provided by Azure, AWS or GCP (in our case).
@@ -164,22 +165,25 @@ A mechanism must be in place to link the generic CR to the cloud provider-specif
 
 \subsubsection{Termination Logic}
 
-The operator must handle the deletion of cloud resources correctly in a variety of scenarios:
+The operator must handle the deletion of cloud resources correctly in a variety of scenarios, including:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
   \item[$\bullet$] When the provider-specific CR is deleted from Kubernetes, the corresponding cloud resource is de-provisioned and the custom operator should ensure the deletion process is handled gracefully, avoiding orphaned generic CRs.
-  \item[$\bullet$] If the provider-specific CR is deleted directly on the cloud provider, the operator should detect the change and update the generic CR accordingly.
-  \item[$\bullet$] In the event of a generic CR deletion, the custom operator should ensure the provider specific resource is removed, troggering a deletion process on the cloud provider side (de-provisioning).
+  \item[$\bullet$] If the provider-specific resource is deleted directly on the cloud provider (e.g., on the provider console), the operator should detect the change and update the generic CR accordingly.
+  \item[$\bullet$] In the event of a generic CR deletion, the custom operator should ensure the provider specific resource is removed, triggering a deletion process on the cloud provider side (de-provisioning).
 \end{itemize}
 
 \subsubsection{Managing cloud provider-specific fields}
+
 Each cloud provider has unique resource configurations and constraints that must be managed.
-Some differences are purely syntactic (e.g., AWS uses instanceType, whereas Azure uses vmSize).
-Others require additional provider-specific metadata (e.g., Azure requires a resourceGroup field which represent a logical container for resources in Azure).
-A custom synchronization operator must encode this logic explicitly, making it more complex to maintain especially when supporting several cloud providers.
+Some differences are purely syntactic (e.g., AWS uses \textit{instanceType}, whereas Azure uses \textit{vmSize}).
+Others require additional provider-specific metadata (e.g., Azure requires a \textit{resourceGroup} field which represent a logical container for resources in Azure).
+A custom synchronization operator must take into account and encode this logic explicitly, making it more complex to maintain especially when supporting several cloud providers.
 
 \subsubsection{Limitations of a Custom ``Synchronization Operator''}
-Another major challenge with a custom synchronization operator is that some cloud providers do not support time scheduling metadata within their Custom Resources. In particular, no cloud operator among the ones we used for the system (AWS, Azure, GCP) provides a dedicated field for scheduling time.
-This means that the Kubernetes operator itself must handle time scheduling logic, delaying CR creation until the scheduled time.
+
+Another major challenge with a custom synchronization operator is that some cloud providers do not support time scheduling metadata within their Custom Resources. 
+In particular, no cloud provider operator among the ones we used for the system (AWS, Azure, GCP) currently provides a dedicated field for scheduling time.
+This means that the custom Kubernetes operator itself must handle a time scheduling logic, delaying CR creation until the scheduled time.
 If the operator, upon the creation of a generic CR, immediately creates the cloud-provider specific CR (without a ``waiting logic''), the cloud provider Operator will trigger and provision the VM immediately, ignoring scheduling constraints.
 Due to these limitations and complexities, we explored and leveraged an \textbf{alternative template-driven approach} using Krateo PlatformOps, described in the next section.
 
@@ -1176,7 +1180,7 @@ The following is an example of the structure of the self-contained directory cre
 
 \subsubsection{MLflow deployment configuration}
 
-In the context of our system, MLflow is deployed on a Kubernetes cluster with a loosely coupled architecture as can be seen in Figure \ref{mlflow_config}, where the MLflow Tracking Server is decoupled from its storage: the metadata store (backend store) and the artifact store.
+In the context of our system, MLflow is deployed on a Kubernetes cluster with a loosely coupled architecture as can be seen in Figure \ref{fig:mlflow_config}, where the MLflow Tracking Server is decoupled from its storage: the metadata store (backend store) and the artifact store.
 This configuration is the most common in production environments, as it allows for better scalability and environment flexibility.
 The metadata store chosen for the system is \textbf{CrateDB}, while the artifact store is the \textbf{SeaweedFS} object storage service. \\
 
@@ -1217,7 +1221,7 @@ spec:
       modelFormat:
         name: mlflow
       protocolVersion: v2  
-      storageUri: s3://mlartifacts/forecaster-1
+      storageUri: s3://mlartifacts/forecaster-IT-NO
 \end{lstlisting}
 
 % https://kserve.github.io/website/master/modelserving/v1beta1/mlflow/v2/
@@ -1228,8 +1232,9 @@ spec:
 \subsubsection{Open Inference Protocol}
 
 Interoperability is key in a fast-moving environment as the one of machine learning and AI. 
-Therefore KServe has introduced the Open Inference Protocol specification to standardize the communication between inference servers and clients. 
-The Open Inference Protocol has been adopted by several inference servers, including NVIDIA's Triton and Seldon MLserver
+Therefore KServe has introduced the \textbf{Open Inference Protocol specification} to standardize the communication between inference servers and clients. 
+The Open Inference Protocol has been adopted by several inference servers, including NVIDIA's Triton and Seldon MLserver.
+As mentioned in the previous section, the InferenceService CRs used in the system are leveraging the ``kserve-mlserver" ClusterServingRuntime, which under the hood uses MLserver that is compliant with the Open Inference Protocol.
 
 % https://github.com/kserve/open-inference-protocol
 
@@ -1284,13 +1289,11 @@ In particular, MLflow is used for model tracking, model selection, and model sto
 
 \newpage
 
-\section{Measurements}
+\section{Cloud resource metrics}
 
+[TO BE FIXED]
 
 % https://dynamorio.org/google_workload_traces.html
-
-
-\subsection{System / performance metrics}
 
 
 how to measuere cloud resource systems
@@ -1402,7 +1405,10 @@ Impact framework (by green software foundation)
 \section{End-to-End workflow}
 \label{sec:e2eflow}
 
-[TO BE CHANGED]
+[TO BE CHANGED and formatted]
+
+
+
 A user request for a workload arrives in Kubernetes / Krateo. 
 The request shape is VM1 = (MinCPU=4vCPU, MinRAM=4GiB, D=12h)
 As we can see the request is generic: it does not contain a specific cloud provider or a specific cloud region.
@@ -1419,35 +1425,6 @@ Krateo core provider / cdc
   \caption{Example of a full-page rotated image}
   \label{fig:rotated_image}
 \end{sidewaysfigure}
-
-
-\newpage
-
-
-
-
-
-
-
-Table for recap of all tools used
-
-Kubernetes
-- Krateo
-Helm
-    Helm charts
-    Helm templating
-    Helm lookup function
-
-- VmTemplate Krateo Composition Definition
-- Azure K8s Operator
-- GCP K8s Operator
-- AWS K8s Operator
-- K8s mutating webhook configuration
-- OPA server
-- opa policies
-- OPA bundles
-- MLflow tracking server (+ metadata store & artifact store)
-- Forecaster (deployed as KServe InferenceService)
 
 
 \newpage

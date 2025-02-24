@@ -6,3 +6,5 @@ pdflatex -interaction=nonstopmode vicentini_leonardo_cs_23-24.tex
 bibtex vicentini_leonardo_cs_23-24
 pdflatex -interaction=nonstopmode vicentini_leonardo_cs_23-24.tex
 pdflatex -interaction=nonstopmode vicentini_leonardo_cs_23-24.tex
+pdflatex -interaction=nonstopmode vicentini_leonardo_cs_23-24.tex
+
