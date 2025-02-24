@@ -1136,64 +1136,44 @@ In particular, \textbf{MLflow} is used for model tracking, model selection, and 
 
 \subsection{MLflow}
 
-MLflow Tracking Server
+MLflow is an open-source platform designed to facilitate and enhance the overall machine learning lifecycle. 
+In particular, it offers tooling for \textbf{experiment tracking}, \textbf{model management} and \textbf{model storage}.
+It is compatible with various ML frameworks, including scikit-learn, PyTorch, TensorFlow, and XGBoost.
+In particular, in the case of our system, PyTorch is the ML framework used for the forecasting models making MLflow a suitable choice for model management.
+For what concerns model deployment, MLflow does not provide a built-in solution, but it is compatible with other tools like KServe which will be described in section \ref{sec:kserve}.
+\subsubsection{MLflow Tracking Server}
+MLflow Tracking Server is the central component of the MLflow platform which is responsible for logging and storing model training data, parameters, and metrics. 
+It enables ML practitioners to track experiments, compare results, and reproduce models easily in a collaborative environment.
+MLflow Tracking Server revolves around the concepts of \textbf{experiments}, which are collections of \textbf{runs}. 
+Each run represents a single model training session, and it contains information such as parameters, metrics, and artifacts (e.g., model files).
+Selected models can then be registered in the MLflow Model Registry, which is essentially an optional subset of the selected models that are ready for deployment.
+Model selection can done with the aid of a user interface that allows ML practitioners to visualize and compare the results of different experiments, making it easier to select the best model for deployment.
+MLflow Tracking Server, as the name suggest, is a server that is constantly waiting for new data to be logged. 
+Said data comes from the various training scripts that are executed by the data scientists or machine learning engineers which are run in  training environments.
+In particular the training scripts must be instrumented with the \textbf{MLflow API calls} to log the data in the remote MLflow Tracking Server.
+This setting is very flexible since the training scripts can be run in any environment (e.g., local environment, Universities' HPC clusters), as long as they have access to the MLflow Tracking Server.
 
-mlflow is compatible with many ML frameworks like sklearn, pythorch, tensorflow, xgboost, etc
+It is deemed important to mention some of the MLflow API calls that are used in the training scripts: the \textit{infer\_signature} and \textit{autolog} functions.
 
-what is a model tracking server
-what is a model registry
+The \textit{infer\_signature} function captures the \textbf{input and output schema of the model}, which is important for the deployment of the model.
+The \textit{autolog} function is used to automatically log the parameters and metrics of the model training session, without the need to manually log them. In particular, each supported ML framework has its own autolog function which is used to automatically log the parameters and metrics of the model training session.
 
-Mlflow API calls
-autolog function
-infer signature 
-important since store 
+The final phase of a model training session is the automatic creation of a \textbf{self-contained directory}, named after the experiment and run IDs, that contains all the necessary files to deploy the model. In particular, the folder contains: the serialized model with model weights, the configuration files (conda.yaml, requirements.txt), and the MLmodel file that contains additional configuration, among which, the model signature.
+This self-contained folder is then automatically uploaded to the MLflow Tracking Server as an artifact.
 
-the end result is a self contained fodler with everythiong needed to deploy the model
-it allows reproducibility 
+\subsubsection{MLflow deployment configuration}
 
-The training script will also serialise our trained model, leveraging the MLflow Model format.
+In the context of our system, MLflow is deployed on a Kubernetes cluster with a loosely coupled architecture as can be seen in Figure \ref{mlflow_config}, where the MLflow Tracking Server is decoupled from its storage: the metadata store (backend store) and the artifact store.
+This configuration is the most common in production environments, as it allows for better scalability and environment flexibility.
+The metadata store chosen for the system is \textbf{CrateDB}, while the artifact store is the \textbf{SeaweedFS} object storage service. \\
 
-model/
-├── MLmodel
-├── model.pkl
-├── conda.yaml
-└── requirements.tx
-
-additional challenge: CrateDB is not supported natively by mlflow framework
-a CrateDB adapter / wrapper is devoloped and mantianed by cratedb community
-CrateDB as metadata stoere
-
-SeaweedFS as artifact store
-MINio could be an alternative  
- 
-
-MODEL signature
-important for the deployment
-it is used by the inference server to validate the input data and be sure that the output is correct
-
-
-\subsubsection{Alternative configuration 1}
-
-an alternative solution
-
-watchdog
-watchdog (pyhton package)
-
-sidecar container
-
-artifact store not needed
-
-\subsubsection{Alternative configuration 2}
-
-Another possible configuration could be the adoption of just CrateDB as both Metadata Store and Artifact Store.
-
-This would be possible if
-CrateDB supports blob storage but not object storage
-
-This solution cannot be implemented yet due to 
+During the design phase, \textbf{alternative configurations} were considered.
+One of the alternative configurations was to use a single CrateDB instance as both the metadata store and the artifact store. This configuration was not implemented due to the lack of native support of object storage in CrateDB.
+A second theorized approach was to use a sidecar container with the duty of watching the MLflow Tracking Server local directory in the container filesystem (e.g., using \textit{watchdog} Python package), packaging the model artifacts as an OCI image, and uploading them to an image registry. This approach could be implemented to offer an alternative to the MLflow Tracking Server artifact store in environment where adding a new storage service is not feasible.
 
 
 \subsection{KServe}
+\label{sec:kserve}
 
 
 Kserve extedns kubernetes with a set of CRDs to deploy, scale and manage ML models in production.
