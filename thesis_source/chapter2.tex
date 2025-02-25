@@ -27,7 +27,7 @@ An hyperscaler is ...
 
 Figure \ref{fig:pcp} shows the worldwide market share of leading cloud infrastructure service providers as of Q3 2024 \cite{statista}.
 
-\begin{figure}[htb]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.75\linewidth]{images/pcp.jpeg}
     \caption{Worldwide market share of leading cloud infrastructure service providers as of Q3 2024 \cite{statista}}
@@ -54,7 +54,7 @@ for instance a region located in london is called eu-west-2 in AWS, uk-west in A
 
 Figure \ref{fig:azure_data_centers} shows the geo-distribution of Azure cloud regions (data centers) and the country Grid Carbon Intensity (year 2024) as reported by Electricity Maps \cite{electricity_maps}. Data center coordinates were retrieved by an Azure CLI command dump \cite{azure_data_centers_information}.
 
-\begin{figure}[htb]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=1\linewidth]{images/azure_data_centers.png}
     \caption{Geo-distribution of Azure data centers with country Grid Carbon Intensity}
@@ -248,28 +248,53 @@ Experiments indicate that distributing workloads across different cloud provider
 
 More recent works have focused on the development of systems that leverage AI techniques for the optimization of resource management in cloud computing environments.
 
-[Machine learning (ML)-centric resource management in cloud computing: A review and future directions]
-% https://www.sciencedirect.com/science/article/abs/pii/S1084804522000649
+The work of 2022 by Khan et al. \cite{KHAN2022103405} provides a comprehensive review of the state of the art in the field of machine learning (ML)-centric resource management in cloud computing.
+Although this works focuses on the cloud provider side (\textbf{resource management in data centers}), it provides some interesting insights that can be leveraged also at different levels of the cloud computing stack.
+The authors highlight the fact that traditionally, only static policies were used for resource management in cloud computing, but the advent of ML techniques has enabled the development of more dynamic and adaptive resource management systems \cite{KHAN2022103405}. \newline
+% maybe add some more insights from this work
 
-[HUNTER: AI based holistic resource management for sustainable cloud computing]
-% https://www.sciencedirect.com/science/article/abs/pii/S0164121221002211
+Tuli et al. in their work of 2021 \cite{TULI2022111124} propose a system named \textbf{HUNTER} which stands for ``Holistic resoUrce
+maNagemenT technique for Energy-efficient cloud computing using aRtificial intelligence''. 
+In particular, in this work, tasks are modeled as \textbf{containers instances}.
+For the purpose of this thesis, we can describe how this system was implemented from a infrastructural point of view.
+The system is composed of four main components \cite{TULI2022111124}:
+\begin{itemize}[itemsep=0.2pt, topsep=1pt]
+    \item[$\bullet$] \textbf{Cloud Workload Management Portal}: a web-based portal that allows users to submit their workloads and specify the requirements (SLA constraints, QoS constraints, etc.).
+    \item[$\bullet$] \textbf{Workload Manager}: a component that is responsible for the processing of incoming workloads.
+    \item[$\bullet$] \textbf{Cloud Broker}:  the component that is responsible for the allocation of resources to cloud worker nodes
+    \item[$\bullet$] \textbf{Cloud Hosts}: set of cloud worker nodes (in the form of both private and public cloud)
+\end{itemize}
+The Cloud Broker is the core of the system and is further divided into three sub-managers: Service Manager, CDC Manager, and Resource Manager.
+The Service Manager is responsible for SLAs and QoS constraints, the CDC Manager is responsible for the actual allocation (provisioning) and migration of resources to cloud worker nodes and resource monitoring and the Resource Manager is responsible for the scheduling of tasks and contains the actual sustainability models (energy, thermal, cooling.) \cite{TULI2022111124}.
 
 \subsection{Policy-driven resource management systems}
 
-[SLA-driven dynamic cloud resource management]
-% https://www.sciencedirect.com/science/article/abs/pii/S0167739X1300215X
+García García et al. (2014) propose \textbf{Cloudcompaas} \cite{GARCIAGARCIA20141}, a Service Level Agreement (SLA)-driven platform for dynamic cloud resource management, focusing on the automation of resource provisioning, scheduling, and monitoring
+The aim of the work is to provide a SLA-aware Platform-as-a-Service platform for the entire management of cloud resource lifecycle \cite{GARCIAGARCIA20141}.
+The targeted resource to be manages spans from IaaS to PaaS and SaaS.
+Their approach leverage the WS-Agreement specification, a standard for SLA negotiation in web services, to define the SLA between the cloud provider and the cloud consumer \cite{GARCIAGARCIA20141}.
+Leveraging this representation, they propose a SLA-driven architecture with three main components: the \textbf{SLA Manager}, the \textbf{Orchestrator}, and the \textbf{Infrastructure Connector} \cite{GARCIAGARCIA20141}.
+The SLA Manager is the entry point for users and essentially builds and register agreements starting from the user requirements.
+The Orchestrator, having a complete view of all the available cloud backends, performs the critical task of scheduling and resource allocation, considering the SLA constraints.
+The Infrastructure Connector is the component that actually interacts with the cloud providers, performing the actual resource allocation and deallocation (provisioning and deprovisioning) \cite{GARCIAGARCIA20141}.
+An interesting feature of the Infrastructure Connector is the ``configuration step'' in which arbitrary actions can be performed such as the \textbf{injection of a monitoring agent on a Virtual Machine}.
 
-[Deadline-aware Dynamic Resource Management in Serverless Computing Environments]
+
+
+%[Deadline-aware Dynamic Resource Management in Serverless Computing Environments]
 % https://ieeexplore.ieee.org/abstract/document/9499407
+test
+\cite{9499407}
 
-[Policy-Based Cloud Management Through Resource Usage Prediction]
+
+%[Policy-Based Cloud Management Through Resource Usage Prediction]
 % https://link.springer.com/chapter/10.1007/978-3-319-13464-2_14
 
-[Amazon Web Services Cloud Compliance Automation with Open Policy Agent]
+%[Amazon Web Services Cloud Compliance Automation with Open Policy Agent]
 % https://ieeexplore.ieee.org/abstract/document/10612535
 
 
----
+%---
 
 % Optimizing Cost and Maximizing Profit for Multi-Cloud-Based Big Data Computing by Deadline-Aware Optimize Resource Allocation
 % https://link.springer.com/chapter/10.1007/978-981-15-8469-5_3
@@ -324,8 +349,6 @@ what microsoft is already doing with alternative energy sources apart from grid
 https://blog.google/inside-google/infrastructure/data-centers-work-harder-sun-shines-wind-blows/
 
 Google CFE\%: “This is the average percentage of carbon free energy consumed in a particular location on an hourly basis, while taking into account the investments we have made in carbon-free energy in that location. This means that in addition to the carbon free energy that's already supplied by the grid, we have added carbon-free energy generation in that location”.
-
-
 
 \section{Carbon-aware systems for resource management}
 

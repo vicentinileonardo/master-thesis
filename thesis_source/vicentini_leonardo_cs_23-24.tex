@@ -133,8 +133,7 @@
     tabsize=2                             % Set tab size to 2 spaces
 }
 
-% Define YAML language for listings
-\lstdefinelanguage{YAML}{
+\lstdefinelanguage{yaml_1}{
     keywords={true, false, null, Yes, No, On, Off}, % YAML booleans
     keywordstyle=\color{blue}\bfseries,            % Highlight keywords in blue & bold
     comment=[l]{\#},                               % Line comments start with #
@@ -154,6 +153,70 @@
     moredelim=[s][\color{red}]{:}{\ },            % Highlight keys in red before the colon
     moredelim=[s][\bfseries]{---}{...}            % YAML document delimiters in bold
 }
+
+% Define YAML language for listings with line highlighting
+\lstdefinelanguage{YAML}{
+    keywords={true, false, null, Yes, No, On, Off}, % YAML booleans
+    keywordstyle=\color{blue}\bfseries,            % Highlight keywords in blue & bold
+    comment=[l]{\#},                               % Line comments start with #
+    morecomment=[l]{\#},                           % Comments in gray
+    commentstyle=\color{gray},                     
+    stringstyle=\color{green},                     % Strings in green
+    numberstyle=\tiny\color{gray},                 % Line numbers in tiny gray
+    basicstyle=\ttfamily\footnotesize,             % Small monospace font
+    numbers=left,                                  % Line numbers on the left
+    stepnumber=1,                                  % Number every line
+    breaklines=true,                               % Break long lines
+    frame=lines,                                   % Adds lines above and below the code
+    captionpos=b,                                  % Captions below the code
+    showspaces=false,                              % Do not show spaces
+    showstringspaces=false,                        % Do not mark spaces in strings
+    tabsize=2,                                     % Set tab size to 2 spaces (YAML standard)
+    moredelim=[s][\color{red}]{:}{\ },            % Highlight keys in red before the colon
+    moredelim=[s][\bfseries]{---}{...},           % YAML document delimiters in bold
+    escapechar=@,                                  % Define escape character for custom highlighting
+}
+
+% Define Shell Script language for listings
+\lstdefinelanguage{sh}{
+    keywords={if, then, else, elif, fi, case, esac, for, while, until, do, done, in, function, select, time, 
+              break, continue, return, exit, shift, source, alias, unalias, declare, set, export, unset, readonly,
+              trap, eval, exec, cd, pwd, echo, printf, test, true, false},
+    keywordstyle=\color{blue}\bfseries,
+    ndkeywords={grep, sed, awk, cut, find, ls, cat, cp, mv, rm, mkdir, rmdir, chmod, chown, ps, kill, 
+                sleep, wait, read, basename, dirname, head, tail, sort, uniq, wc, ssh, scp, tar, gzip, 
+                gunzip, zip, unzip, curl, wget},
+    ndkeywordstyle=\color{purple}\bfseries,
+    comment=[l]{\#},
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{red},
+    string=[b]",
+    string=[b]',
+    morestring=[d]`,
+    basicstyle=\ttfamily\footnotesize,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=5pt,
+    backgroundcolor=\color{white},
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    frame=single,
+    tabsize=2,
+    captionpos=b,
+    breaklines=true,
+    breakatwhitespace=false,
+    escapeinside={(*@}{@*)},
+    morekeywords={[2]sudo, apt, apt-get, yum, dnf, pacman, brew, npm, pip, git},
+    keywordstyle={[2]\color{brown}},
+    sensitive=true,
+    escapechar=@,
+}
+
+% Define the yellow highlighting command
+\newcommand{\yellowhl}[1]{\colorbox{yellow}{#1}}
+
 
 
 

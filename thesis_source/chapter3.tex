@@ -215,7 +215,7 @@ Reduced maintenance overhead: Operators typically require constant updates and r
 
 
 
-\begin{lstlisting}[language=yaml, caption={values.yaml}, label={lst:values.yaml}, float=htpb]
+\begin{lstlisting}[language=yaml_1, caption={values.yaml}, label={lst:values.yaml}, float=htpb]
 # @param {string} vmName Name of the VM
 vmName: test-vm
 
@@ -318,10 +318,9 @@ maxLatency: 100
   
 \end{lstlisting}
 
+[TO BE FIXED]
 
 Helm template engine (how to map to cloud provider specific resources, why is better)
-
-
 Multi-cloud VMs list and mapping
 We need to know which VMs (instance types) are actually available on Azure, AWS, GCP.
 What to actually use to fetch the list and where to store it
@@ -332,15 +331,255 @@ Requested VM (generic): (2 vCPU, 16 GiB)
 Chosen VM instance: Azure Standard E2as v4
 What are the steps of the process to identify the correct VM instance?
 
-Use Cloud Providers API / CLI and store the records in a local DB. Regular scheduled updates.
-For our PoC we could maybe use a small subset of all the available instance types.
+For our PoC we use a small subset of all the available instance types.
 
 Current approach:
 Map (CPU, RAM) => InstanceType
 
-This mapping is done through Helm templating when creating 
+This mapping is done through Helm templating 
 
-compostion definition
+\section{Multi-Cloud Integration through Kubernetes Operators}
+
+The integration of operators from different cloud providers has enabled the development of an effective \textbf{multi-cloud system}, allowing seamless orchestration and provisioning of cloud resources across various cloud platforms. Namely, the system leverages Kubernetes operators from \textbf{Microsoft Azure}, \textbf{Google Cloud Platform (GCP)}, and \textbf{Amazon Web Services (AWS)}.
+
+\subsection{Role of Kubernetes Operators}
+
+Kubernetes operators work on the principle of Continuous Reconciliation, ensuring, in this case, that the desired state of the system, as defined by users, aligns with the actual state of provisioned cloud resources. In particular, Operators act as controllers that monitor, adjust, and manage external cloud resources within a Kubernetes-native environment. Inside the K8s lie the \textbf{representation of the cloud resources}, which are managed by the operators.
+Key characteristics of operators include:
+\begin{itemize}[itemsep=0.2pt, topsep=1pt]
+  \item[$\bullet$] Managing external cloud resources within a Kubernetes cluster with Kubernetes resources.
+  \item[$\bullet$] Maintaining a \textbf{real-time representation} of provisioned cloud resources within Kubernetes.
+  \item[$\bullet$] Using Custom Resources (CRs) to define cloud-specific resources in a \textbf{declarative} manner.
+\end{itemize}
+
+It must be noted that different cloud provider adopts \textbf{different design choices} for their Kubernetes operators and more in general for their overall infrastructure management. Therefore, for the creation of logically similar resources, like a virtual machine, the structure and the field of the resources can be different. 
+These resources typically include:
+\begin{itemize}[itemsep=0.2pt, topsep=1pt]
+  \item[$\bullet$] Compute resources (e.g., VM instances, virtual machine templates)
+  \item[$\bullet$] Networking components (e.g., virtual networks, subnets, security groups)
+  \item[$\bullet$] Storage allocations (e.g., persistent volumes, cloud disks)
+  \item[$\bullet$] Access management (e.g., resource groups, roles, authentication credentials)
+\end{itemize}
+
+For the purpose of this work we defined a \textbf{baseline infrastructure} for each cloud provider taken into account in order to have a common ground for the system to work. 
+This baseline infrastructure is composed by the minimum set of resources needed for a VM provisioning.
+Each public cloud provider has its complexities and nuances when it comes to managing cloud resources.
+In the following sections, we provide an overview of the minimum set of resources needed for VM provisioning on each cloud provider, as well as some of the specific configurations required for each resource.
+We deem useful to provide a table summarizing some of the key fields that are needed for VM provisioning.
+This fields are labeled with an ID which will be attached to the resources in the following sections.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|l|l|}
+  \hline
+  \textbf{ID} & \textbf{VM field} \\ \hline
+  1           & Scheduling region \\ \hline
+  2           & VM size           \\ \hline
+  3           & Operating System           \\ \hline
+  \end{tabular}
+  \caption{Key fields for VM provisioning}
+  \label{tab:vm_fields}
+\end{table}
+
+\subsection{Azure Kubernetes Operator}
+
+Microsoft Azure provides a Kubernetes operator called \textbf{Azure Service Operator v2} (ASO).
+Currently, ASO supports more than 150 different Azure resources.
+The minimum set of resources needed for vm provisioning on Azure throgh Azure service operator is is:
+
+\begin{itemize}[itemsep=0.2pt, topsep=1pt] 
+\item[$\bullet$] Virtual Network 
+\item[$\bullet$] Virtual Network Subnet
+\item[$\bullet$] Network Interface
+\item[$\bullet$] Virtual Machine
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\linewidth]{images/azure.png}
+\caption{Minimum set of Azure resources for VM provisioning}
+\label{fig:azure}
+\end{figure}
+
+
+An example of a Azure-specific custoum resource is the one illustrated in listing \ref{lst:azure}. \\
+
+\begin{lstlisting}[language=yaml, caption={Azure Instance Custom Resource}, label={lst:azure}]
+apiVersion: compute.azure.com/v1api20220301
+kind: VirtualMachine
+metadata:
+  name: {{ .Values.vmName }}
+  namespace: {{ .Values.namespace | default "greenops" }}
+spec:
+  hardwareProfile:
+   @\yellowhl{    vmSize: \{\{{ \$vmSize \}\}} \#[2] }@
+   @\yellowhl{    location: \{\{{ .Values.schedulingLocation \}\}} \#[1] }@
+  networkProfile:
+    networkInterfaces:
+    - reference:
+        group: network.azure.com
+        kind: NetworkInterface
+        name: {{ .Values.vmName }}-{{ $av.networkInterface.suffix }}
+  osProfile: {{ $av.virtualMachine.osProfile | toYaml | nindent 4 }}
+  owner:
+    armId: {{ $av.resourceGroup.armId }}
+  storageProfile:
+   @\yellowhl{    imageReference: \#[3] }@
+      publisher: Canonical
+      offer: 0001-com-ubuntu-server-jammy
+      sku: 22_04-lts
+      version: latest
+\end{lstlisting}
+
+\subsection{GCP Operator}
+
+For what concerns the GCP Operator, the minimum set of resources needed for VM provisioning is:
+
+\begin{itemize}[itemsep=0.2pt, topsep=1pt] 
+  \item[$\bullet$] Compute Network
+  \item[$\bullet$] Compute SubNetwork
+  \item[$\bullet$] Compute Instance
+  \end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\linewidth]{images/gcp.png}
+\caption{Minimum set of GCP resources for VM provisioning}
+\label{fig:gcp}
+\end{figure}
+
+
+%some fields are based on regions
+%some fields are based on zones
+%networkinterface is directly defined in the instance manifest,
+%no additional networkinterface resource neededv to be created
+
+\begin{lstlisting}[language=yaml, caption={GCP Intance Custom Resource}, label={lst:gcp}]
+  apiVersion: compute.cnrm.cloud.google.com/v1beta1
+  kind: ComputeInstance
+  metadata:
+    name: {{ .Values.vmName }}
+    namespace: {{ .Values.namespace | default "greenops" }}
+  spec:
+   @\yellowhl{    machineType: \{\{{ \$vmSize \}\}} \#[2] }@
+    machineType: {{ $vmSize }} [2]
+   @\yellowhl{    zone: \{\{{ \$zone \}\}} \#[1] }@
+    zone: {{ $zone }} [1]
+    bootDisk:
+      initializeParams:
+        size: 24
+        type: pd-ssd
+        sourceImageRef:
+         @\yellowhl{    external: debian-cloud/debian-11 \#[3] }@
+          external: debian-cloud/debian-11
+    networkInterface:
+      - subnetworkRef:
+          name: {{ .Values.vmName }}-subnetwork
+        aliasIpRange:
+          - ipCidrRange: /24
+            subnetworkRangeName: cloudrange
+\end{lstlisting}
+
+\subsection{AWS Operator}
+
+AWS provides an entire collection of operators that are part of the AWS controllers for Kubernetes (ACK) project.
+Each controller is responsible for managing a specific AWS service, such as EC2, EBS, RDS, S3, and more. In the context of this research, the EC2 controller is used to manage virtual machine (EC2 Instances) provisioning on AWS.
+The minimum set of resources needed for VM provisioning is:
+\begin{itemize}[itemsep=0.2pt, topsep=1pt] 
+\item[$\bullet$] VPC
+\item[$\bullet$] Subnet
+\item[$\bullet$] Instance
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\linewidth]{images/aws.png}
+\caption{Minimum set of AWS resources for VM provisioning}
+\label{fig:aws}
+\end{figure}
+
+As described at the beginning of this section, the implementation approach adopted in our system ensures compatibility with diverse cloud provider design choices. Cloud providers may impose different constraints and best practices when managing Kubernetes-native resources, and the system is designed to adapt to these variations seamlessly.
+One notable design choice observed with the AWS operator is the restriction on referencing some Kubernetes objects inside a Custom Resource (CR) manifest. This limitation means that developers cannot directly link a resource (e.g., a Virtual Machine) to another Kubernetes object (e.g., a Subnet) using built-in object references.
+To overcome this limitation, our system leverages \textbf{Helm’s \textit{lookup function}}, which dynamically retrieves Kubernetes object details at runtime. This method allows us to fetch required parameters without directly referencing Kubernetes objects in the CR, ensuring compatibility with the AWS operator’s design constraints. The following example demonstrates how the lookup function can be used to resolve subnet IDs dynamically and inject them into the CR manifest. \newline
+
+\begin{lstlisting}[language=yaml, caption={Helm Lookup example: dynamically resolving SubnetIDs}, label={lst:helm_lookup}, float=htpb]
+...
+apiVersion: ec2.services.k8s.aws/v1alpha1
+kind: Instance
+metadata:
+  name: {{ .Values.vmName }}
+  namespace: {{ .Values.namespace | default "greenops" }}
+...
+spec:
+  ...
+  subnetID: {{ (lookup "ec2.services.k8s.aws/v1alpha1" "Subnet" (.Values.namespace | default "greenops") (printf "%s-subnet" .Values.vmName)).status.subnetID }}
+...
+\end{lstlisting}
+
+The Helm lookup function can be used to look up resources in a running cluster and its synopsis is: ``lookup apiVersion, kind, namespace, name -> resource or resource list'' \cite{helm_lookup}.
+In the listing \ref{lst:helm_lookup}, the Helm lookup function retrieves the subnetID from a Subnet Custom Resource dynamically, based on the VM name and namespace. Then, the subnetID is injected into the Instance Custom Resource manifest, ensuring that the VM is provisioned in the correct subnet.
+An example by the same AWS Operator where instead a direct reference to a resource is allowed is the one illustrated in listing \ref{lst:aws_direct_reference}. \\
+
+\begin{lstlisting}[language=yaml, caption={AWS Operator direct reference example}, label={lst:aws_direct_reference}]
+...
+apiVersion: ec2.services.k8s.aws/v1alpha1
+kind: Subnet
+metadata:
+  name: {{ .Values.vmName }}-subnet
+...
+spec:
+  vpcRef: 
+    from: 
+      name: {{ .Values.vmName }}-vpc
+      namespace: {{ .Values.namespace | default "greenops" }}
+...
+\end{lstlisting}
+
+In thr case of Listing \ref{lst:aws_direct_reference}, the Subnet Custom Resource manifest directly references in a conveneint way the VPC Custom Resource using its name and namespace since the Operator is designed to support this type of relationship. As explained before, this is determined by Operator design choices but our system is able to handle both scenarios.
+
+\subsubsection{Provider specific configurations}
+
+An Amazon Machine Image (AMI) is a pre-configured image that provides the necessary software environment to set up and boot an Amazon EC2 instance \cite{aws_AMIs}. In other words, AMIs serve as a blueprint for launching virtual machines (VMs) in AWS.
+When launching an instance, specifying an AMI is \textbf{mandatory}. The AMI must be compatible with the chosen EC2 instance type, ensuring that the selected image supports the required hardware and software configurations.
+The following attributes define an AMI:
+\begin{itemize}[itemsep=0.2pt, topsep=1pt] 
+  \item[$\bullet$] Region: AMIs are region-specific
+  \item[$\bullet$] Operating System: Determines the base OS (e.g., Ubuntu, Windows, RHEL) installed on the AMI.
+  \item[$\bullet$] Processor Architecture: e.g., x86, ARM
+  \item[$\bullet$] Root Device Type: Specifies whether the AMI uses an EBS-backed volume (Elastic Block Store) or Instance Store for storage.
+  \item[$\bullet$] Virtualization Type: Defines whether the AMI supports paravirtual (PV) or hardware virtual machine (HVM) instances.
+\end{itemize}
+
+The most important attribute for our system is the \textbf{Operating System} since it determines the software environment for the VM.
+For the purpose of this research, only \textbf{Ubuntu-based AMIs} have been considered for provisioning virtual machines. Official Ubuntu AMIs were collected from a dedicated Ubuntu repository.
+In order to select the most suitable AMI for a given VM, the system leverages Helm template engine to dynamically select the appropriate AMI ID based on the region and other parameters specified in the VmTemplate Kubernetes Custom Resource (CR).
+
+\begin{lstlisting}[language=yaml, caption={AWS}, label={lst:aws}]
+apiVersion: ec2.services.k8s.aws/v1alpha1
+kind: Instance
+metadata:
+  name: {{ .Values.vmName }}
+  namespace: {{ .Values.namespace | default "greenops" }}
+  annotations:
+   @\yellowhl{    services.k8s.aws/region: \{\{{ .Values.schedulingLocation \}\}} \#[1] }@
+spec:
+ @\yellowhl{    imageID: \{\{{ \$imageID\}\}} \#[3] }@
+ @\yellowhl{    instanceType: \{\{{ \$vmSize \}\}} \#[2] }@
+  subnetID: {{ (lookup "ec2.services.k8s.aws/v1alpha1" "Subnet" (.Values.namespace | default "greenops") (printf "%s-subnet" .Values.vmName)).status.subnetID }}
+\end{lstlisting}
+
+
+
+
+
+
+
+
+
+
+
+
+\newpage
 
 \section{Kubernetes Mutating Webhook Configuration}
 
@@ -379,7 +618,7 @@ The webhook server is deployed as a Kubernetes Deployment (with 1 Pod), with a c
 The webhook server is responsible for receiving The AdmissionReview Request, applying custom logic, and returning an AdmissionReview Response to the Kubernetes API server describing the mutation to be applied to the resource.
 The custom logic in this simple example is to add a label "mutated: true" to the resource.
 
-\begin{figure}[htb]
+\begin{figure}[H]
   \centering
   \includegraphics[width=1\linewidth]{images/k8s_webhook_example.png}
   \caption{Kubernetes Mutating Webhook example \cite{kubernetes_mutating_webhook_example}}
@@ -388,184 +627,6 @@ The custom logic in this simple example is to add a label "mutated: true" to the
 
 In the context of our system, a Kubernetes Mutating Webhook is used to enforce policies for workload scheduling by modifying K8s custom resources (VmTemplates) with the data from policies. 
 The K8s mutating webhook intercepts a CREATE or UPDATE API request, asks about policies (with also scheduling decision) and mutates the resource.
-
-\section{Multi-Cloud Integration through Kubernetes Operators}
-
-The integration of operators from different cloud providers has enabled the development of an effective \textbf{multi-cloud system}, allowing seamless orchestration and provisioning of cloud resources across various cloud platforms. Namely, the system leverages Kubernetes operators from \textbf{Microsoft Azure}, \textbf{Google Cloud Platform (GCP)}, and \textbf{Amazon Web Services (AWS)}.
-
-\subsection{Role of Kubernetes Operators}
-
-Kubernetes operators work on the principle of Continuous Reconciliation, ensuring, in this case, that the desired state of the system, as defined by users, aligns with the actual state of provisioned cloud resources. In particular, Operators act as controllers that monitor, adjust, and manage external cloud resources within a Kubernetes-native environment. Inside the K8s lie the representation of the cloud resources, which are managed by the operators.
-Key characteristics of operators include:
-\begin{itemize}[itemsep=0.2pt, topsep=1pt]
-  \item[$\bullet$] Managing external cloud resources within a Kubernetes cluster, providing a \textbf{unified interface} for multi-cloud deployments.
-  \item[$\bullet$] Maintaining a \textbf{real-time representation} of provisioned cloud resources within Kubernetes.
-  \item[$\bullet$] Using Custom Resources (CRs) to define cloud-specific resources in a \textbf{declarative} manner.
-\end{itemize}
-
-
-
-It must be noted that different cloud provider adopts different design choices for their Kubernetes operators and more in general for their overall infrastructure management. Therefore, for the creation of logically similar resources, like a virtual machine, the structure and the field of the resources can be different. 
-These resources typically include:
-\begin{itemize}[itemsep=0.2pt, topsep=1pt]
-  \item[$\bullet$] Compute resources (e.g., VM instances, virtual machine templates)
-  \item[$\bullet$] Networking components (e.g., virtual networks, subnets, security groups)
-  \item[$\bullet$] Storage allocations (e.g., persistent volumes, cloud disks)
-  \item[$\bullet$] Access management (e.g., resource groups, roles, authentication credentials)
-\end{itemize}
-
-For the purpose of this work we defined a \textbf{baseline infrastructure} for each cloud provider taken into account in order to have a common ground for the system to work. This baseline infrastructure is composed by the minimum set of resources needed for a VM provisioning.
-Each public cloud provider has its complexities and nuances when it comes to managing cloud resources.
-In the following sections, we provide an overview of the minimum set of resources needed for VM provisioning on each cloud provider, as well as some of the specific configurations required for each resource.
-
-
-\newpage
-
-\subsection{Azure Kubernetes Operator}
-
-Microsoft Azure provides a Kubernetes operator called \textbf{Azure Service Operator v2} (ASO).
-Currently, ASO supports more than 150 different Azure resources.
-minimum set of resources needed for vm provisioning on Azure throgh Azure service operator is is:
-
-\begin{itemize}[itemsep=0.2pt, topsep=1pt] \item[$\bullet$] Virtual Network 
-\item[$\bullet$] Virtual Network Subnet
-\item[$\bullet$] Network Interface
-\item[$\bullet$] Virtual Machine
-\end{itemize}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.75\linewidth]{images/azure.png}
-\caption{Minimum set of Azure resources for VM provisioning}
-\label{fig:azure}
-\end{figure}
-
-
-
-
-
-
-INSTANCE CR example
-
-
-
-
-
-
-
-
-
-
-
-\subsection{GCP Operator}
-
-minimum set of resources needed for vm deployment
-
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.75\linewidth]{images/gcp.png}
-\caption{Minimum set of GCP resources for VM provisioning}
-\label{fig:gcp}
-\end{figure}
-
-
-
-
-INSTANCE CR example
-
-some fields are based on regions
-some fields are based on zones
-
-
-networkinterface is directly defined in the instance manifest,
-no additional networkinterface resource neededv to be created
-
-
-
-\subsection{AWS Operator}
-
-this is a collection of operators that are part of the AWS controllers for Kubernetes (ACK) project.
-
-The minimum set of resources needed for vm provisioning
-
-\begin{itemize}[itemsep=0.2pt, topsep=1pt] 
-\item[$\bullet$] VPC
-\item[$\bullet$] Subnet
-\item[$\bullet$] EC2 Instance
-\end{itemize}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.75\linewidth]{images/aws.png}
-\caption{Minimum set of AWS resources for VM provisioning}
-\label{fig:aws}
-\end{figure}
-
-As described at the beginning of this section, the implementation approach adopted in our system ensures compatibility with diverse cloud provider design choices. Cloud providers may impose different constraints and best practices when managing Kubernetes-native resources, and the system is designed to adapt to these variations seamlessly.
-
-One notable design choice observed with the AWS operator is the restriction on referencing some Kubernetes objects inside a Custom Resource (CR) manifest. This limitation means that developers cannot directly link a resource (e.g., a Virtual Machine) to another Kubernetes object (e.g., a Subnet) using built-in object references.
-
-To overcome this limitation, our system leverages \textbf{Helm’s \textit{lookup function}}, which dynamically retrieves Kubernetes object details at runtime. This method allows us to fetch required parameters without directly referencing Kubernetes objects in the CR, ensuring compatibility with the AWS operator’s design constraints. The following example demonstrates how the lookup function can be used to resolve subnet IDs dynamically and inject them into the CR manifest. \\
-
-\begin{lstlisting}[language=yaml, caption={Helm Lookup example: dynamically resolving SubnetIDs}, label={lst:helm_lookup}, float=htpb]
-...
-apiVersion: ec2.services.k8s.aws/v1alpha1
-kind: Instance
-metadata:
-  name: {{ .Values.vmName }}
-  namespace: {{ .Values.namespace | default "greenops" }}
-...
-spec:
-  ...
-  subnetID: {{ (lookup "ec2.services.k8s.aws/v1alpha1" "Subnet" (.Values.namespace | default "greenops") (printf "%s-subnet" .Values.vmName)).status.subnetID }}
-...
-\end{lstlisting}
-
-The Helm lookup function can be used to look up resources in a running cluster and its synopsis is: ``lookup apiVersion, kind, namespace, name -> resource or resource list'' \cite{helm_lookup}.
-In the listing \ref{lst:helm_lookup}, the Helm lookup function retrieves the subnetID from a Subnet Custom Resource dynamically, based on the VM name and namespace. Then, the subnetID is injected into the Instance Custom Resource manifest, ensuring that the VM is provisioned in the correct subnet.
-
-An example by the same AWS Operator where instead a direct reference to a resource is allowed is the one illustrated in listing \ref{lst:aws_direct_reference}. \\
-
-\begin{lstlisting}[language=yaml, caption={AWS Operator direct reference example}, label={lst:aws_direct_reference}]
-...
-apiVersion: ec2.services.k8s.aws/v1alpha1
-kind: Subnet
-metadata:
-  name: {{ .Values.vmName }}-subnet
-...
-spec:
-  vpcRef: 
-    from: 
-      name: {{ .Values.vmName }}-vpc
-      namespace: {{ .Values.namespace | default "greenops" }}
-...
-\end{lstlisting}
-
-In thr case of Listing \ref{lst:aws_direct_reference}, the Subnet Custom Resource manifest directly references in a conveneint way the VPC Custom Resource using its name and namespace since the Operator is designed to support this type of relationship. As explained before, this is determined by Operator design choices but our system is able to handle both scenarios.
-
-\subsubsection{Provider specific configurations}
-
-An Amazon Machine Image (AMI) is a pre-configured image that provides the necessary software environment to set up and boot an Amazon EC2 instance \cite{aws_AMIs}. In other words, AMIs serve as a blueprint for launching virtual machines (VMs) in AWS.
-
-When launching an instance, specifying an AMI is \textbf{mandatory}. The AMI must be compatible with the chosen EC2 instance type, ensuring that the selected image supports the required hardware and software configurations.
-
-The following attributes define an AMI:
-\begin{itemize}[itemsep=0.2pt, topsep=1pt] 
-  \item[$\bullet$] Region: AMIs are region-specific
-  \item[$\bullet$] Operating System: Determines the base OS (e.g., Ubuntu, Windows, RHEL) installed on the AMI.
-  \item[$\bullet$] Processor Architecture: e.g., x86, ARM
-  \item[$\bullet$] Root Device Type: Specifies whether the AMI uses an EBS-backed volume (Elastic Block Store) or Instance Store for storage.
-  \item[$\bullet$] Virtualization Type: Defines whether the AMI supports paravirtual (PV) or hardware virtual machine (HVM) instances.
-\end{itemize}
-
-
-For the purpose of this research, only \textbf{Ubuntu-based AMIs} have been considered for provisioning virtual machines. Official Ubuntu AMIs were collected from a dedicated Ubuntu repository.
-In order to select the most suitable AMI for a given VM, the system leverages Helm template engine to dynamically select the appropriate AMI ID based on the region and other parameters specified in the VmTemplate Kubernetes Custom Resource (CR).
-
-
-
-\newpage
 
 \section{Open Policy Agent (OPA)}
 
@@ -629,22 +690,29 @@ and  Like query inputs, your policies can generate arbitrary structured data as 
 
 \subsection{OPA and external data}
 
+[TO BE FIXED]
+
 types of external data strategies
 
 http.send()
-paramters 
+parameters
 
-/ # curl -X POST -H "Content-Type: application/json" \
-> -d '{
->   "number_of_jobs" : 1,
->   "eligible_regions": ["FR", "IT", "FI"],
->   "deadline": "2025-06-09T10:00:00",
->   "duration": 6,
->   "cpu": 4,
->   "memory": 8,
->   "req_timeout": 180
-> }' http://greenops-scheduler.greenops-scheduler-system.svc.cluster.local/scheduling
-{"scheduling_location":"FR","scheduling_time":"2025-02-06T17:42:11Z"}
+\begin{lstlisting}[language=sh, caption={Shell Script Example}, label={lst:shellscript}]
+#!/bin/bash
+curl -X POST -H "Content-Type: application/json" \
+  -d '{
+      "number_of_jobs" : 1,
+      "eligible_regions": ["FR", "IT", "FI"],
+      "deadline": "2025-06-09T10:00:00",
+      "duration": 6,
+      "cpu": 4,
+      "memory": 8,
+      "req_timeout": 180
+ }' http://greenops-scheduler.greenops-scheduler-system.svc.cluster.local/scheduling
+
+# Response: 
+# {"scheduling_location":"FR","scheduling_time":"2025-02-06T17:42:11Z"}
+\end{lstlisting}
 
 \subsection{OPA integration with Kubernetes}
 
@@ -988,8 +1056,20 @@ It must be noted that this policy is \textbf{not intended to be a comprehensive 
 
 main policy
 
-Mutation policy
-dedicated to 
+Mutation policy dedicated to 
+
+
+• Mutation policy: triggered by the Kubernetes webhook to receive scheduling information to be patched to VmTemplate K8s resource
+• Given:
+◦ {CPU, RAM, duration, deadline, max latency}: set at request time
+◦ eligible cloud providers: set at request time
+◦ origin region: set in policies
+◦ GDPR compliancy: set in policies
+◦ inter-region latency matrix: stored in policy data
+• Output decision:
+◦ schedulingLocation ◦ schedulingTime
+provider
+
 
 
 
