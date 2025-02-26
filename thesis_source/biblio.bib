@@ -148,6 +148,35 @@
   howpublished = {https://opennebula.io/discover/},
   note = {Last access: 27/01/2025}
 }
+
+@misc{green_software_foundation,
+  title = {Green Software Foundation},
+  howpublished = {https://greensoftware.foundation/},
+  note = {Last access: 20/02/2025}
+}
+
+@misc{sci,
+  title = {Software Carbon Intensity Specification},
+  howpublished = {https://sci.greensoftware.foundation/},
+  note = {Last access: 20/02/2025}
+}
+
+@misc{impact_framework,
+  title = {Green Software Foundation Impact Framework},
+  howpublished = {https://if.greensoftware.foundation/intro/},
+  note = {Last access: 20/02/2025}
+}
+
+@misc{microsoft_carbon_aware_k8s,
+  title = {Microsoft Carbon-Aware Kubernetes},
+  howpublished = {https://devblogs.microsoft.com/sustainable-software/carbon-aware-kubernetes/},
+  note = {Last access: 18/02/2025}
+}
+
+
+
+
+
 @misc{azure_data_centers_information,
   title = {Azure data center information},
   howpublished = {https://gist.github.com/lpellegr/8ed204b10c2589a1fb925a160191b974},
@@ -330,3 +359,41 @@ abstract = {As the size and complexity of Cloud systems increase, the manual man
   pages={483-492},
   keywords={Cloud computing;Processor scheduling;Meetings;Dynamic scheduling;Delays;Resource management;Time factors;serverless computing;function placement;dy-namic resource management;resource efficiency},
   doi={10.1109/CCGrid51090.2021.00058}}
+
+@inproceedings{low_carbon_k8s_scheduler,
+author = {James, Aled and Schien, Daniel},
+year = {2019},
+month = {07},
+pages = {},
+title = {A Low Carbon Kubernetes Scheduler}
+}
+
+@INPROCEEDINGS{10786568,
+  author={Bahreini, Tayebeh and Tantawi, Asser N. and Tardieu, Olivier},
+  booktitle={2024 32nd International Conference on Modeling, Analysis and Simulation of Computer and Telecommunication Systems (MASCOTS)}, 
+  title={Caspian: A Carbon-aware Workload Scheduler in Multi-Cluster Kubernetes Environments}, 
+  year={2024},
+  volume={},
+  number={},
+  pages={1-8},
+  keywords={Renewable energy sources;Energy consumption;Data centers;Computational modeling;Quality of service;Carbon dioxide;Dispatching;Telecommunications;Surges;Optimization;cloud sustainability;green computing;Kubernetes;multi-cluster management;placement;scheduling},
+  doi={10.1109/MASCOTS64422.2024.10786568}}
+
+@article{10.1145/3626788,
+author = {Hanafy, Walid A. and Liang, Qianlin and Bashir, Noman and Irwin, David and Shenoy, Prashant},
+title = {CarbonScaler: Leveraging Cloud Workload Elasticity for Optimizing Carbon-Efficiency},
+year = {2023},
+issue_date = {December 2023},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {7},
+number = {3},
+url = {https://doi.org/10.1145/3626788},
+doi = {10.1145/3626788},
+abstract = {Cloud platforms are increasing their emphasis on sustainability and reducing their operational carbon footprint. A common approach for reducing carbon emissions is to exploit the temporal flexibility inherent to many cloud workloads by executing them in periods with the greenest energy and suspending them at other times. Since such suspend-resume approaches can incur long delays in job completion times, we present a new approach that exploits the elasticity of batch workloads in the cloud to optimize their carbon emissions. Our approach is based on the notion of "carbon scaling," similar to cloud autoscaling, where a job dynamically varies its server allocation based on fluctuations in the carbon cost of the grid's energy. We develop a greedy algorithm for minimizing a job's carbon emissions via carbon scaling that is based on the well-known problem of marginal resource allocation. We implement a CarbonScaler prototype in Kubernetes using its autoscaling capabilities and an analytic tool to guide the carbon-efficient deployment of batch applications in the cloud. We then evaluate CarbonScaler using real-world machine learning training and MPI jobs on a commercial cloud platform and show that it can yield i) 51\% carbon savings over carbon-agnostic execution; ii) 37\% over a state-of-the-art suspend-resume policy; and iii) 8 over the best static scaling policy.},
+journal = {Proc. ACM Meas. Anal. Comput. Syst.},
+month = dec,
+articleno = {57},
+numpages = {28},
+keywords = {sustainable computing, carbon efficiency, auto scaling}
+}

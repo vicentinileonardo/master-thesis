@@ -236,6 +236,7 @@ OpenNebula is an open-source platform that aims to provide a unified management 
 A CSB is a system that acts as an \textbf{intermediary} between cloud service providers and consumers, providing a \textbf{unified interface} to manage cloud resources across multiple providers \cite{Wadhwa_2013}.
 Cloud service brokers (CSBs) were described and categorized by Wadhwa et al. \cite{Wadhwa_2013} in their work of 2013.
 The emerging market of cloud computing led to the proliferation of cloud services and providers, and by consequence the need for mechanisms to manage costs, capacity and resources \cite{Wadhwa_2013}. 
+\newline
 
 An interesting CSB example in the literature is the \textbf{STRATOS} system by Pawluk et al. proposed in 2012. The work can be considered a pioneer in the field of multi-cloud resource management since it can be framed in the first years of cloud computing \cite{STRATOS} but the proposed paradigms and concepts are relevant today.
 STRATOS tried to \textbf{avoid the assumption of resource homogeneity} and represented an initial attempt to provide a ``\textbf{cross-cloud resource provisioning}'' system \cite{STRATOS}.
@@ -278,13 +279,10 @@ The SLA Manager is the entry point for users and essentially builds and register
 The Orchestrator, having a complete view of all the available cloud backends, performs the critical task of scheduling and resource allocation, considering the SLA constraints.
 The Infrastructure Connector is the component that actually interacts with the cloud providers, performing the actual resource allocation and deallocation (provisioning and deprovisioning) \cite{GARCIAGARCIA20141}.
 An interesting feature of the Infrastructure Connector is the ``configuration step'' in which arbitrary actions can be performed such as the \textbf{injection of a monitoring agent on a Virtual Machine}.
+\newline
 
-
-
-%[Deadline-aware Dynamic Resource Management in Serverless Computing Environments]
-% https://ieeexplore.ieee.org/abstract/document/9499407
-test
-\cite{9499407}
+In the context of serverless computing environments, the work of 2021 by Mampage et al. \cite{9499407} proposes a deadline-aware dynamic resource management system.
+The focus of the research is on both the provider and the consumer perspective, proposing a placement policy and ``dynamic resource management policy" that aims to minimize the cost of the provider while meeting the requirement of the consumer (i.e., the \textbf{deadline}) \cite{9499407}.
 
 
 %[Policy-Based Cloud Management Through Resource Usage Prediction]
@@ -314,21 +312,48 @@ the Technical Advisory Group (TAG) Environmental Sustainability is a XYZ that su
 
 \subsection{Green Software foundation}
 
-green software foundation
-very important actor in the field of green software
+The Green Software Foundation is a non-profit organization, part of the Linux Foundation, that aims to promote the development of green software and to provide a set of standards, tooling and best practices for the industry \cite{green_software_foundation}.
+It is considered useful to provide a quick summary of the foundation's major projects that are relevant to the context of this work.
 
-sci: https://sci.greensoftware.foundation/
+\subsubsection{Software Carbon Intensity Specification}
 
-proposed a standard for data like the FOCUS standard available 
-trying to push a specification similar to what focus is for FinOps
-as per 2025 this standard is not yet adopted by cloud providers
-``real time cloud" proposed standard (not yet adopted): https://github.com/Green-Software-Foundation/real-time-cloud?tab=readme-ov-file
+Software Carbon Intensity Specification (SCI) is a specification that aims to provide a standard way to measure the carbon intensity of software systems.
+SCI is defined as a rate: the amount of carbon emissions per one unit of $R$ where $R$ is a functional unit for the software system (e.g., API call, new user, DB query, etc.) \cite{sci}.
 
-the foundation also developed the Impact Framework which will be described in section XY
-could be potentially integrated in our system
+The SCI can be defined as follows:
+\[
+SCI = C \times R = (O + M) \times R = ((E \times I) + M) \times R
+\]
 
-https://patterns.greensoftware.foundation/catalog/cloud/choose-region-closest-to-users
-[which patterns are used in our system]
+where:
+\begin{itemize}[itemsep=0.2pt, topsep=1pt]
+    \item[$\bullet$] $SCI$ is the Software Carbon Intensity
+    \item[$\bullet$] $C$ is the carbon emissions
+    \item[$\bullet$] $R$ is the functional unit
+    \item[$\bullet$] $O$ is the operational emissions
+    \item[$\bullet$] $M$ is the embodied emissions
+    \item[$\bullet$] $E$ is the energy consumption
+    \item[$\bullet$] $I$ is the carbon intensity
+\end{itemize}
+
+\subsubsection{Real Time Cloud}
+
+The Real Time Cloud project aims to provide a standard for real-time carbon emissions data reporting for cloud providers.
+The goal is to provide real-time access to information about cloud region, PUE, WUE, carbon-free energy from the grid and from CSP
+The concept is similar to FOCUS specification for FinOps but is at a very early stage and is not yet adopted by cloud providers as of 2025 \cite{real_time_cloud}.
+
+https://github.com/Green-Software-Foundation/real-time-cloud?tab=readme-ov-file
+
+\subsubsection{Impact Framework}
+
+The Impact Framework is a flexible framework for measuring and reporting the environmental impact of software systems \cite{impact_framework}.
+The core of the framework is represented by a \textbf{Manifest file} which is a YAML file that is used both for describing \textbf{calculation pipelines} and for storing the results of the calculations.
+Pre-built plugins are available for the most common calculations (e.g., carbon intensity, energy consumption, etc.) but custom plugins can be developed as well \cite{impact_framework}.
+A potential integration of this framework with our system is described in section XYZ.
+
+%---
+%https://patterns.greensoftware.foundation/catalog/cloud/choose-region-closest-to-users
+%[which patterns are used in our system]
 
 \subsection{Computational Sustainability by Public cloud providers}
 
@@ -350,12 +375,18 @@ https://blog.google/inside-google/infrastructure/data-centers-work-harder-sun-sh
 
 Google CFE\%: “This is the average percentage of carbon free energy consumed in a particular location on an hourly basis, while taking into account the investments we have made in carbon-free energy in that location. This means that in addition to the carbon free energy that's already supplied by the grid, we have added carbon-free energy generation in that location”.
 
+
+
+
+usually bug companies levarege financial instruments like PPAs to buy renewable energy therfore their emissions are not zero but they are offset by the renewable energy they buy.
+
 \section{Carbon-aware systems for resource management}
 
-Having provided an overview of the existing works in the field of multi-cloud resource management and having introduced the GreenOps landscape, we now focus on the state of the art in the field of carbon-aware systems for resource management.
+Having provided an overview of the existing works in the field of multi-cloud resource management and having introduced the GreenOps landscape, we now focus on the state of the art in the field of carbon-aware resource management.
 
 The work of 2023 by Sukprasert et al. named ``\textit{Spatiotemporal Carbon-aware Scheduling in the Cloud: Limits and Benefits}'' \cite{10.1145/3599733.3606301} is a comprehensive analysis on the limits and benefits of the employment of geographical shifting and time shifting for cloud workloads.
 The authors highlight the fact that different workloads have different characteristics and therefore different degrees of flexibility. Those include, for instance: \textbf{execution deadlines}, \textbf{data protection laws}, and \textbf{latency requirements}. Therefore, carbon savings are constrained by a complex set of factors that need to be taken into account when designing a carbon-aware system \cite{10.1145/3599733.3606301}.
+The following sections will present systems that have been developed by various research groups to tackle the problem of carbon-aware resource management in cloud computing environments.
 
 \subsection{CASPER}
 
@@ -369,31 +400,44 @@ The system is not adopting time-shifting since it is dealing with web services t
 
 \subsection{CASPIAN}
 
-[TO BE ADDED]
-
-\subsection{Let'sWaitAwhile}
-
-[TO BE ADDED]
+A research on carbon-aware scheduling in Kubernetes environments was conducted by the authors of CASPIAN (A Carbon-aware Workload Scheduler in Multi-Cluster Kubernetes Environments) \cite{10786568}.
+The proposed system leverages Multi Cluster App Dispatcher (MCAD), a multi-cluster management platform, to provision workloads over distributed Kubernetes clusters \cite{10786568}.
+Caspian is a scheduling and placement controller which lives in a master cluster and interacts with the MCAD to provision workloads across multiple geographical distributed clusters \cite{10786568}.
+In particular, two main components are described: the \textbf{carbon tracker} and the \textbf{scheduler}.
+The carbon tracker is responsible for the periodic collection of carbon intensity data along with worker cluster locations.
+The scheduler, taking into account cluster information (carbon intensity, power efficiency, etc.), and workload requirements (e.g, \textbf{run time}, \textbf{deadline}, etc.), is responsible for the scheduling (time) and placement (geographical) of the workloads \cite{10786568}.
 
 \subsection{CarbonScaler}
 
-[TO BE ADDED]
+
+
+\cite{10.1145/3626788}
+
+
+The work proposes a Kubernetes-based architecture
 
 https://dl.acm.org/doi/abs/10.1145/3626788
 CarbonScaler: Leveraging Cloud Workload Elasticity for Optimizing Carbon-Efficiency
 
-\subsection{Microsoft's Carbon-Aware Kubernetes}
 
-[TO BE ADDED]
-[https://devblogs.microsoft.com/sustainable-software/carbon-aware-kubernetes/]
 
 
 \subsection{A Low Carbon Kubernetes Scheduler}
-[TO BE ADDED]
-https://ceur-ws.org/Vol-2382/ICT4S2019_paper_28.pdf
 
-It provisions entire K8s clusters on the selected regions.
-Interesting feature: they use local air temperature and solar irradiance as tiebreaker for 2 datacenters with similar carbon intense grid. The claim is that: “Solar irradiance varies more widely than carbon intensity across global regions” and that “Local air temperature surrounding a datacentre affects the amount of energy needed for cooling”. 
+The work is focused on the extension of the Kubernetes scheduler (``kube-scheduler'') for the ranking and filtering of the ``greenest'' region for the deployment of entire Kubernetes clusters \cite{low_carbon_k8s_scheduler}.
+The system is tailored and tested on Azure but can be extended to other cloud providers.
+Provisioning  operations of the clusters are done by the system leveraging Kubernetes API or IaaS management APIs \cite{low_carbon_k8s_scheduler}.
+Therefore Kubernetes is leveraged as a control plane to provision other Kubernetes clusters.
+An interesting feature proposed is the use of local air temperature and solar irradiance as tiebreaker for two datacenters with a similar carbon intense grid. 
+The claim is that the solar irradiance has a bigger spread than the carbon intensity across global regions and that the local air temperature surrounding a datacentre affects the amount of energy needed for cooling \cite{low_carbon_k8s_scheduler}. 
+
+\subsection{Microsoft's Carbon-Aware Kubernetes strategy}
+
+Referring to the previous work, Microsoft propose a carbon-aware strategy for Kubernetes \cite{microsoft_carbon_aware_k8s}, integrating carbon intensity data into the scheduling process of Kubernetes Pods (rather than entire clusters).
+The Kubernetes scheduler, which allows custom rules for assigning Nodes to Pods, can incorporate carbon metrics like the Marginal Operating Emissions Rate (MOER) as factors in placement decisions. 
+A weighted distribution can be created by normalizing the MOER values across the available Nodes.
+These weightings are encoded in a YAML file and applied as a priority for the Scheduler, which out-of-the-box supports these kind of custom rules to extend the scheduling process.
+The claim is that by combining three elements (i.e., Kubernetes scheduler, carbon intensity data, and a weighting algorithm) any Kubernetes instance can be made carbon-aware, at least in a simplified way \cite{microsoft_carbon_aware_k8s}.
 
 
 ---
@@ -411,14 +455,16 @@ Some examples of flexible workloads are: video processing, training large-scale 
 The components they recognized to be necessary are: accurate carbon intensity data (Tomorrow), Scalable infrastructures (Cloud), Virtualizations and migration mechanisms (VMs), Well identified flexible load, data-driven methodology.
 At Google: the total amount of work that needs to get done per day is quite predictable.
 
-
-
-\subsection{State of the Art analysis outcome}
+\section{State of the Art analysis outcome}
 
 many simulation compared to real-world scenarios
 no much flexibility for what concern variaty of resource managed
 usually tied to one type of resource (e.g., VMs, K8s pods)
 
 usually either time shifting or geographical shifting
+
+
+Many of the concepts described in this chapter will be leveraged in the design and implementation of our system. 
+...
 
 \newpage

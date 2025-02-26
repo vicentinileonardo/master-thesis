@@ -338,6 +338,23 @@ Map (CPU, RAM) => InstanceType
 
 This mapping is done through Helm templating 
 
+
+
+Helm template engine is also leverage to handle the scheduling time logic
+
+\lstset{language=yaml}
+{{ if hasKey .Values "provider" }}
+{{ $provider := .Values.provider }}
+{{ if eq $provider "aws" }}
+
+{{ if hasKey .Values "schedulingTime" }}
+{{ $schedulingTime := .Values.schedulingTime | toDate "2006-01-02T15:04:05Z" }}
+{{ $now := now }}
+{{ if $now.After $schedulingTime }}
+\end{lstlisting}
+
+
+
 \section{Multi-Cloud Integration through Kubernetes Operators}
 
 The integration of operators from different cloud providers has enabled the development of an effective \textbf{multi-cloud system}, allowing seamless orchestration and provisioning of cloud resources across various cloud platforms. Namely, the system leverages Kubernetes operators from \textbf{Microsoft Azure}, \textbf{Google Cloud Platform (GCP)}, and \textbf{Amazon Web Services (AWS)}.
