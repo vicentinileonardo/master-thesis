@@ -97,7 +97,7 @@ For the purpose of this work, we will consider only the 3 major Public Cloud Pro
 \section{Kubernetes}
 
 Kubernetes is an open-source platform for automating the orchestration of containerized applications.
-It is widely used in the industry and became the de-facto standard for container orchestration.
+It is widely used in the industry and became the \textbf{de-facto standard for container orchestration}.
 An extensive description of Kubernetes is out of the scope of this thesis but it is deemed necessary to provide a brief overview of the main concepts of Kubernetes that are relevant for the purpose of this work.
 Figure \ref{fig:kubernetes_architecture} shows the Kubernetes architecture as described by the Cloud Native Computing Foundation (CNCF) \cite{kubernetes_cnfc}.
 
@@ -110,7 +110,7 @@ Figure \ref{fig:kubernetes_architecture} shows the Kubernetes architecture as de
 
 The main components of Kubernetes are:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
-    \item[$\bullet$] \textbf{Kubernetes API server}: the central component that manages the Kubernetes cluster. It exposes the Kubernetes API and is responsible for validating and mutating data for the Kubernetes objects.
+    \item[$\bullet$] \textbf{Kubernetes API server}: the central component that manages the Kubernetes cluster. It exposes the Kubernetes API and is responsible for validating and mutating data related to Kubernetes objects.
     \item[$\bullet$] \textbf{etcd}: a key-value store used to store the cluster state.
     \item[$\bullet$] \textbf{Kubernetes controller manager}: a daemon that embeds the core control loops shipped with Kubernetes.
     \item[$\bullet$] \textbf{Kubernetes scheduler}: a component that assigns Pods to nodes.
@@ -119,26 +119,9 @@ The main components of Kubernetes are:
     \item[$\bullet$] \textbf{Container runtime}: the software that is responsible for running containers on the Node (in this case represented by Docker).
 \end{itemize}
 
-[TO BE FIXED]
-It must be noted that in our system we are not extending the Kubernetes scheduler as described for instance in the work of ..
-since we are not dealing with the scheduling of the in-cluster resources (e.g., Kubernetes Pods). 
-We are instead focusing on the management of external resources on cloud providers.
-As described in the following section, our focus will be on the Kubernetes API sever and in particular on Admission Control 
-
-\subsection{Kubernetes as a platform}
-
-[TO BE FIXED]
-Kubernetes as a platform to manage external resources
-representing resources as kubernetes objects to leverage the powerful kubernetes API and tooling
-
-This concept is widely used 
-(cloud provider operators for example)
-% https://aws.amazon.com/it/blogs/containers/kubernetes-as-a-platform-vs-kubernetes-as-an-api-2/
-
-Many cloud-native development teams work with a mix of configuration systems, APIs, and tools to manage their infrastructure. This mix is often difficult to understand, leading to reduced velocity and expensive mistakes. Config Connector provides a method to configure many Google Cloud services and resources using Kubernetes tooling and APIs.
-%(https://cloud.google.com/config-connector/docs/overview)
-
-%https://cloud.google.com/config-connector/docs/concepts/resources#managing_resources_with_kubernetes_objects
+It must be noted that in our system we are not extending the Kubernetes scheduler as described for instance in the works described in section \ref{sec:low_carbon_k8s_scheduler} and \ref{sec:microsoft_carbon_aware_k8s}, since we are not dealing with the scheduling of in-cluster resources (e.g., Kubernetes Pods) nor with the provisioning of entire Kubernetes clusters.
+We are instead focusing on the \textbf{management of external resources on cloud providers} (only VMs in this first iteration), leveraging Kubernetes as a control plane for the management of these resources.
+As described in the following section, our focus will be on the Kubernetes API server and in particular on Kubernetes Admission Control.
 
 \subsection{Kubernetes extendability}
 
@@ -159,6 +142,25 @@ An high-level overview of the Operator paradigm is depicted in Figure \ref{fig:o
     \caption{Operator paradigm}
     \label{fig:operator_paradigm}
 \end{figure}
+
+\subsection{Kubernetes as a platform}
+
+With the time, the paradigm of leveraging Kubernetes as a platform to manage external resources has become more and more popular.
+Therefore, Kubernetes use cases have expanded beyond the management of containerized applications to the management of any desired resource on any infrastructure.
+The idea is to \textbf{represent external resources as Kubernetes objects} and leverage Kubernetes' declarative paradigm and robust API to achieve unified and efficient infrastructure management.
+This approach can be exemplified by the public cloud providers' operators which extend Kubernetes to manage their cloud resources as described in section \ref{sec:cloud_providers_operators}.
+
+Config Connector is a Kubernetes operator developed by Google Cloud that allows to configure numerous Google Cloud services and resources using Kubernetes tooling and APIs \cite{gcp_config_connector}.
+The idea general idea is that organizations might have to deal with a \textbf{heterogeneous infrastructure} composed of different cloud providers and on-premises resources. 
+By \textbf{unifying infrastructure management under Kubernetes}, complexity is reduced and velocity is increased because the same tools and APIs can be used to manage all the resources in a consistent way \cite{gcp_config_connector}.
+
+
+%(https://cloud.google.com/config-connector/docs/overview)
+
+%https://cloud.google.com/config-connector/docs/concepts/resources#managing_resources_with_kubernetes_objects
+
+% https://aws.amazon.com/it/blogs/containers/kubernetes-as-a-platform-vs-kubernetes-as-an-api-2/
+
 
 \subsection{Helm}
 
@@ -283,14 +285,11 @@ An interesting feature of the Infrastructure Connector is the ``configuration st
 
 In the context of serverless computing environments, the work of 2021 by Mampage et al. \cite{9499407} proposes a deadline-aware dynamic resource management system.
 The focus of the research is on both the provider and the consumer perspective, proposing a placement policy and ``dynamic resource management policy" that aims to minimize the cost of the provider while meeting the requirement of the consumer (i.e., the \textbf{deadline}) \cite{9499407}.
+\newline
 
 
 %[Policy-Based Cloud Management Through Resource Usage Prediction]
 % https://link.springer.com/chapter/10.1007/978-3-319-13464-2_14
-
-%[Amazon Web Services Cloud Compliance Automation with Open Policy Agent]
-% https://ieeexplore.ieee.org/abstract/document/10612535
-
 
 %---
 
@@ -358,7 +357,8 @@ A potential integration of this framework with our system is described in sectio
 \subsection{Computational Sustainability by Public cloud providers}
 
 what are they already doing
-
+improving energy efficiency by reducing their PUE
+(Power Usage Effectiveness (PUE) is the ratio of the total energy used by a data center to the energy used for computing.)
 ---
 
 We assume that a cloud data center will likely rely on the same energy sources that characterize a specific geographical region (grid).
@@ -371,6 +371,15 @@ what microsoft is already doing with alternative energy sources apart from grid
 
 ---
 
+Carbon aware computing at Google
+https://www.performance2021.deib.polimi.it/www.performance2021.deib.polimi.it/wp-content/uploads/2021/11/Carbon-Aware-Computing-%40-Google-and-Beyond.pdf
+Year: 2021
+Description: 
+It states that Carbon-aware computing is: exploiting flexibility in when and where and how computing is done to reduce carbon emissions.
+Some examples of flexible workloads are: video processing, training large-scale machine learning models, simulation pipelines.
+The components they recognized to be necessary are: accurate carbon intensity data (Tomorrow), Scalable infrastructures (Cloud), Virtualizations and migration mechanisms (VMs), Well identified flexible load, data-driven methodology.
+At Google: the total amount of work that needs to get done per day is quite predictable.
+
 https://blog.google/inside-google/infrastructure/data-centers-work-harder-sun-shines-wind-blows/
 
 Google CFE\%: “This is the average percentage of carbon free energy consumed in a particular location on an hourly basis, while taking into account the investments we have made in carbon-free energy in that location. This means that in addition to the carbon free energy that's already supplied by the grid, we have added carbon-free energy generation in that location”.
@@ -378,11 +387,13 @@ Google CFE\%: “This is the average percentage of carbon free energy consumed i
 
 
 
-usually bug companies levarege financial instruments like PPAs to buy renewable energy therfore their emissions are not zero but they are offset by the renewable energy they buy.
+usually big companies levarege financial instruments like PPAs to buy renewable energy therfore their emissions are not zero but they are offset by the renewable energy they buy.
 
 \section{Carbon-aware systems for resource management}
 
 Having provided an overview of the existing works in the field of multi-cloud resource management and having introduced the GreenOps landscape, we now focus on the state of the art in the field of carbon-aware resource management.
+In particular, implementation choices and design patterns that can be leveraged for the development of a carbon-aware resource management system will be discussed.
+\newline
 
 The work of 2023 by Sukprasert et al. named ``\textit{Spatiotemporal Carbon-aware Scheduling in the Cloud: Limits and Benefits}'' \cite{10.1145/3599733.3606301} is a comprehensive analysis on the limits and benefits of the employment of geographical shifting and time shifting for cloud workloads.
 The authors highlight the fact that different workloads have different characteristics and therefore different degrees of flexibility. Those include, for instance: \textbf{execution deadlines}, \textbf{data protection laws}, and \textbf{latency requirements}. Therefore, carbon savings are constrained by a complex set of factors that need to be taken into account when designing a carbon-aware system \cite{10.1145/3599733.3606301}.
@@ -409,20 +420,16 @@ The scheduler, taking into account cluster information (carbon intensity, power 
 
 \subsection{CarbonScaler}
 
-
-
-\cite{10.1145/3626788}
-
-
-The work proposes a Kubernetes-based architecture
-
-https://dl.acm.org/doi/abs/10.1145/3626788
-CarbonScaler: Leveraging Cloud Workload Elasticity for Optimizing Carbon-Efficiency
-
-
-
+The work by Hanafy et al. ``\textit{CarbonScaler: Leveraging Cloud Workload Elasticity for Optimizing Carbon-Efficiency}" proposes a system that leverages the elasticity of batch cloud workloads to optimize carbon efficiency \cite{10.1145/3626788}.
+The targeted workloads are for instance \textbf{MPI jobs} and \textbf{Machine Learning training jobs}.
+The system is entirely Kubernetes-based and it is composed of three main components: the \textbf{Carbon Profiler}, the \textbf{Carbon AutoScaler}, and the \textbf{Carbon Advisor} \cite{10.1145/3626788}.
+The Carbon Profiler main duty is to estimate energy usage of jobs.
+The Carbon AutoScaler component is the core of the system and is a Kubernetes controller that leverage the \textbf{Kubeflow training operator}.
+Kubeflow is effectively used for the resource management of batch jobs.
+Finally, the Carbon Advisor simulates jobs execution in different configuration and allow the carbon reduction estimation \cite{10.1145/3626788}.
 
 \subsection{A Low Carbon Kubernetes Scheduler}
+\label{sec:low_carbon_k8s_scheduler}
 
 The work is focused on the extension of the Kubernetes scheduler (``kube-scheduler'') for the ranking and filtering of the ``greenest'' region for the deployment of entire Kubernetes clusters \cite{low_carbon_k8s_scheduler}.
 The system is tailored and tested on Azure but can be extended to other cloud providers.
@@ -432,30 +439,18 @@ An interesting feature proposed is the use of local air temperature and solar ir
 The claim is that the solar irradiance has a bigger spread than the carbon intensity across global regions and that the local air temperature surrounding a datacentre affects the amount of energy needed for cooling \cite{low_carbon_k8s_scheduler}. 
 
 \subsection{Microsoft's Carbon-Aware Kubernetes strategy}
+\label{sec:microsoft_carbon_aware_k8s}
 
-Referring to the previous work, Microsoft propose a carbon-aware strategy for Kubernetes \cite{microsoft_carbon_aware_k8s}, integrating carbon intensity data into the scheduling process of Kubernetes Pods (rather than entire clusters).
+Citing to the previous work, Microsoft proposes a simple carbon-aware strategy for Kubernetes \cite{microsoft_carbon_aware_k8s}, integrating carbon intensity data into the scheduling process of Kubernetes Pods (rather than entire clusters).
 The Kubernetes scheduler, which allows custom rules for assigning Nodes to Pods, can incorporate carbon metrics like the Marginal Operating Emissions Rate (MOER) as factors in placement decisions. 
 A weighted distribution can be created by normalizing the MOER values across the available Nodes.
 These weightings are encoded in a YAML file and applied as a priority for the Scheduler, which out-of-the-box supports these kind of custom rules to extend the scheduling process.
 The claim is that by combining three elements (i.e., Kubernetes scheduler, carbon intensity data, and a weighting algorithm) any Kubernetes instance can be made carbon-aware, at least in a simplified way \cite{microsoft_carbon_aware_k8s}.
 
-
----
-
-Data-driven Algorithm Selection for Carbon-Aware Scheduling
-https://hotcarbon.org/assets/2024/pdf/hotcarbon24-final23.pdf
-
-
-Carbon aware computing at Google
-https://www.performance2021.deib.polimi.it/www.performance2021.deib.polimi.it/wp-content/uploads/2021/11/Carbon-Aware-Computing-%40-Google-and-Beyond.pdf
-Year: 2021
-Description: 
-It states that Carbon-aware computing is: exploiting flexibility in when and where and how computing is done to reduce carbon emissions.
-Some examples of flexible workloads are: video processing, training large-scale machine learning models, simulation pipelines.
-The components they recognized to be necessary are: accurate carbon intensity data (Tomorrow), Scalable infrastructures (Cloud), Virtualizations and migration mechanisms (VMs), Well identified flexible load, data-driven methodology.
-At Google: the total amount of work that needs to get done per day is quite predictable.
-
 \section{State of the Art analysis outcome}
+
+
+
 
 many simulation compared to real-world scenarios
 no much flexibility for what concern variaty of resource managed
@@ -465,6 +460,9 @@ usually either time shifting or geographical shifting
 
 
 Many of the concepts described in this chapter will be leveraged in the design and implementation of our system. 
-...
+We can list some of the recurrent elements that are generally needed in order to build a system for resource management
+representation of a workload (with its characteristics and constraints)
+cloud service broker / orchestrator
+modules to directly interact with the cloud providers
 
 \newpage
