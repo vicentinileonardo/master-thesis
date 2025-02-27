@@ -105,10 +105,12 @@ The following table provides an overview of the main components of the system an
 
 All the components listed in the above table must be deployed inside a Kubernetes cluster. The only exception are the OPA Policies and data which lies outside the cluster as described in section \ref{sec:opa_bundles}.
 
+\newpage
+
 \section{Krateo PlatformOps integration}
 
 Krateo PlatformOps is utilized in this system for \textbf{multi-cloud resource management}, allowing for the declarative orchestration of cloud resources across different cloud providers leveraging Kubernetes as a control plane. 
-This section highlights the differences between two approaches for resource synchronization:
+This section highlights the differences between two approaches that were considered for resource synchronization:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
   \item[$\bullet$] The \textbf{Custom Kubernetes ``Synchronization Operator"} approach
   \item[$\bullet$] The \textbf{Krateo PlatformOps} approach
@@ -125,7 +127,8 @@ When dealing with multi-cloud workloads with Kubernetes as a control plane, a \t
 \end{itemize}
 
 A custom Kubernetes Operator would be responsible for the mapping and synchronization of the above resource types. This approach is based on the principle of \textbf{Continuous Reconciliation}, where the operator continuously monitors and adjusts the system to maintain consistency between the desired and actual states.
-Candidate solutions for the development of the K8s Operator includes: Operator SDK, Kubebuilder, or writing the operator from scratch using the Kubernetes client libraries. For the purpose of this work, Kubebuilder was used to develop a Proof of Concept (PoC) for the custom synchronization operator.
+Candidate solutions for the development of a Kubernetes Operator includes: Operator SDK, Kubebuilder, or writing the operator from scratch using the Kubernetes client libraries. 
+For the purpose of this work, Kubebuilder was used to develop a Proof of Concept (PoC) for the custom synchronization operator.
 
 \subsubsection{Responsibilities of the Custom Operator}
 
@@ -204,15 +207,33 @@ Due to these limitations and complexities, we explored and leveraged an \textbf{
 \end{figure}
 
 
-In our approach, we opted to replace a custom Kubernetes operator (``Synchronization Operator''), originally designed to handle the \textbf{mapping} from generic to cloud-specific resources, with \textbf{Krateo Core Provider}. This decision was motivated by the need for greater flexibility and maintainability in defining multi-cloud infrastructure components. As a matter of fact, the custom operator was originally designed to handle only virtual machines (VMs) mappings and extensions to support additional cloud resources would have required significant code changes and maintenance overhead for each additional resource type added.
+In our approach, we opted to replace a custom Kubernetes operator (``Synchronization Operator''), originally designed to handle the \textbf{mapping} from generic to cloud-specific resources, with \textbf{Krateo Core Provider}. 
+This decision was motivated by the need for greater flexibility and maintainability in defining multi-cloud infrastructure components. 
+As a matter of fact, the custom operator was originally designed to handle only virtual machines (VMs) mappings and extensions to support additional cloud resources would have required significant code changes and maintenance overhead for each additional resource type added.
+Therefore instead of embedding business logic directly within a custom Kubernetes operator, in the current system implementation, we leverage the capabilities of \textbf{Helm templating} to dynamically generate cloud-provider-specific resources. 
+More precisely, another Krateo component, the \textbf{Krateo composition-dynamic-controller} is leveraging Helm templating under the hood to generate Kubernetes resources starting from helm templates.
+By adopting an Helm-based resource generation, we can reduce the maintenance overhead and simplify the system architecture.
 
-Therefore instead of embedding business logic directly within a custom Kubernetes operator, in the current system implementation, we leverage the capabilities of \textbf{Helm templating} to dynamically generate cloud-provider-specific resources. More precisely, another Krateo component, the \textbf{Krateo composition-dynamic-controller} is leveraging Helm templating under the hood to generate Kubernetes resources starting from helm templates.
-This approach, further described in the following sections, offers several advantages:
+This approach, further described in this section, offers several advantages:
+\begin{itemize}[itemsep=0.2pt, topsep=1pt]
+  \item[$\bullet$] Simplified resource management: Helm enables a standardized way define resources without maintaining complex operator logic.
+  \item[$\bullet$] Greater extensibility: By externalizing the logic from the Custom Operator (effectively removing it), future modifications and integrations on the system with additional cloud providers become easier.
+  \item[$\bullet$] Reduced maintenance overhead: Custom operators typically require constant updates and refinements, especially if they are responsible for complex business logic. 
+\end{itemize}
 
-Simplified resource management:  Helm enables a standardized way define resources without maintaining complex operator logic.
-Greater extensibility:  By externalizing the logic from the operator, future modifications and integrations with additional cloud providers become easier.
-Reduced maintenance overhead: Operators typically require constant updates and refinements, while Helm-based resource generation minimizes the need for frequent code changes.
 
+\subsubsection{Generic VM resource definition}
+
+%n pratica, la prima fase è la creazione del composition-dynamic-controller (cdc), fatta dal core-provider
+%Il core-provider non ha bisogno dei valori nella composition resource ma solo delle Custom Resource Definition, poi il cdc crea la composition facendo il templating
+%Nel caso in cui si aggiornasse la composition resource con valori aggiuntivi (dal mutating webhook per esempio), sarà rifatto il templating e farà l'Helm upgrade
+
+In order to define a generic VM resource, we leverage Krateo Core Provider by creating a VmTemplate CompositionDefinition
+
+Effectively 
+
+
+Listing \ref{lst:values.yaml} shows an example of 
 
 
 \begin{lstlisting}[language=yaml_1, caption={values.yaml}, label={lst:values.yaml}, float=htpb]
@@ -318,10 +339,12 @@ maxLatency: 100
   
 \end{lstlisting}
 
-[TO BE FIXED]
+\subsubsection{Generic VM to Cloud Provider Specific VM mapping}
+
+
+VM size selection is a crucial step in the VM provisioning process.
 
 Helm template engine (how to map to cloud provider specific resources, why is better)
-Multi-cloud VMs list and mapping
 We need to know which VMs (instance types) are actually available on Azure, AWS, GCP.
 What to actually use to fetch the list and where to store it
 How frequent the elements changes and how to update the list (this is done with policy updates (updates to contextual data))
@@ -340,20 +363,41 @@ This mapping is done through Helm templating
 
 
 
-Helm template engine is also leverage to handle the scheduling time logic
 
-\lstset{language=yaml}
+
+
+
+
+Helm template engine is also leveraged to handle the \textbf{scheduling time waiting logic}.
+As described in section XYZ, this logic is crucial for the system duo to the fact that cloud provider operators do not support scheduling time metadata in their CRs and therefore as soon as a CR is created the cloud provider operator will provision the resource immediately.
+We leverage a set of ``\textbf{guards}'' to effectively block manifest creation until the scheduling time is reached. 
+As a result, only when the scheduling time is reached the manifest is created and applied by Helm and finally the resource is provisioned by the cloud provider operator.
+
+
+Krateo cdc will periodically perform an ``helm upgrade'' and if the 
+
+
+Listing \ref{lst:sched} shows an example of how guards are used to handle the scheduling time logic and other scheduling constraints.
+We also make sure, for instance, that the generic CR contains a ``provider'' field that specifies the cloud provider where the resource should be provisioned.
+
+\begin{lstlisting}[language=yaml, caption={Scheduling time}, label={lst:sched}]
 {{ if hasKey .Values "provider" }}
 {{ $provider := .Values.provider }}
-{{ if eq $provider "aws" }}
+{{ if eq $provider "azure" }}
 
 {{ if hasKey .Values "schedulingTime" }}
 {{ $schedulingTime := .Values.schedulingTime | toDate "2006-01-02T15:04:05Z" }}
 {{ $now := now }}
 {{ if $now.After $schedulingTime }}
+...
+apiVersion: compute.azure.com/v1api20220301
+kind: VirtualMachine
+metadata:
+  name: {{ .Values.vmName }}
+...
 \end{lstlisting}
 
-
+In order to take into account the time needed for the cloud provider operator to provision the resource, additional logic could be added to the guards to anticipate the scheduling time (e.g, using a \textit{provisioningTimeOffset}).
 
 \section{Multi-Cloud Integration through Kubernetes Operators}
 
