@@ -1070,35 +1070,45 @@ It must be noted that this policy is \textbf{not intended to be a comprehensive 
 
 \subsection{Scheduling outcome policy}
 
-main policy
+In the context of this work, the ``Scheduling outcome policy'' is a policy that determines the scheduling decision for a given workload based on the output of the GreenOps Scheduler. 
 
-Mutation policy dedicated to 
+
+It is therefore a mutation policy that has the duty to create 
 
 
 • Mutation policy: triggered by the Kubernetes webhook to receive scheduling information to be patched to VmTemplate K8s resource
-• Given:
-◦ {CPU, RAM, duration, deadline, max latency}: set at request time
-◦ eligible cloud providers: set at request time
-◦ origin region: set in policies
-◦ GDPR compliancy: set in policies
-◦ inter-region latency matrix: stored in policy data
-• Output decision:
-◦ schedulingLocation ◦ schedulingTime
-provider
 
+\begin{itemize}[itemsep=0.2pt, topsep=0.2pt]
+  \item[$\bullet$] Given:
+  \begin{itemize}[label=$\circ$]
+    \item \{CPU, RAM, duration, deadline, max latency\}: set at request time
+    \item eligible cloud providers: set at request time or in policies
+    \item origin region: set in policies
+    \item GDPR compliancy: set in policies
+    \item inter-region latency matrix: stored in policy data
+  \end{itemize}
+  \item[$\bullet$] Output decision:
+  \begin{itemize}[label=$\circ$]
+    \item provider
+    \item schedulingLocation
+    \item schedulingTime
+  \end{itemize}
+\end{itemize}
 
-
+OPA, assuming the role of a webhook server, has the duty of ..
 
 JSON Patch is a format for describing changes to a JSON document which avoid the need to send the entire document when only a part of it has changed. Effectively, only deltas are sent back to the requester which are themselves JSON documents.
 The format is defined in RFC 6902 from the IETF \cite{json_patch}.
 
 As an example, a single patch operation 
 
-
-OPA, assuming the role of a webhook server, has the duty of ..
-
-
-
+\begin{lstlisting}[language=rego, caption={JSON Patch example}, label={lst:json_patch}]
+patchCode = {
+	"op": "add",
+	"path": "/spec/schedulingTime",
+	"value": schedulingTime,
+}
+\end{lstlisting}
 
 
 \subsection{OPA Data mapping}
@@ -1309,11 +1319,14 @@ In particular, \textbf{MLflow} is used for model tracking, model selection, and 
 \subsection{MLflow}
 
 MLflow is an open-source platform designed to facilitate and enhance the overall machine learning lifecycle. 
-In particular, it offers tooling for \textbf{experiment tracking}, \textbf{model management} and \textbf{model storage}.
+In particular, it offers tooling for \textbf{experiment tracking}, \textbf{model management}, and \textbf{model storage}.
 It is compatible with various ML frameworks, including scikit-learn, PyTorch, TensorFlow, and XGBoost.
 In particular, in the case of our system, PyTorch is the ML framework used for the forecasting models making MLflow a suitable choice for model management.
 For what concerns model deployment, MLflow does not provide a built-in solution, but it is compatible with other tools like KServe which will be described in section \ref{sec:kserve}.
+
 \subsubsection{MLflow Tracking Server}
+\label{sec:mlflow_tracking_server}
+
 MLflow Tracking Server is the central component of the MLflow platform which is responsible for logging and storing model training data, parameters, and metrics. 
 It enables ML practitioners to track experiments, compare results, and reproduce models easily in a collaborative environment.
 MLflow Tracking Server revolves around the concepts of \textbf{experiments}, which are collections of \textbf{runs}. 
@@ -1328,7 +1341,8 @@ It is deemed important to mention some of the MLflow API calls that are used in 
 The \textit{infer\_signature} function captures the \textbf{input and output schema of the model}, which is important for the deployment of the model.
 The \textit{autolog} function is used to automatically log the parameters and metrics of the model training session, without the need to manually log them. In particular, each supported ML framework has its own autolog function which is used to automatically log the parameters and metrics of the model training session.
 
-The final phase of a model training session is the automatic creation of a \textbf{self-contained directory}, named after the experiment and run IDs, that contains all the necessary files to deploy the model. In particular, the folder contains: the serialized model with model weights, the configuration files (conda.yaml, requirements.txt), and the MLmodel file that contains additional configuration, among which, the model signature.
+The final phase of a model training session is the automatic creation of a \textbf{self-contained directory}, named after the experiment and run IDs, that contains all the necessary files to deploy the model. 
+In particular, the folder contains: the serialized model with model weights, the configuration files (conda.yaml, requirements.txt), and the MLmodel file that contains additional configuration, among which, the model signature.
 The self-contained folder is then automatically uploaded to the MLflow Tracking Server as an artifact.
 The following is an example of the structure of the self-contained directory created by MLflow after a PyTorch model training session: \\
 
@@ -1342,7 +1356,6 @@ The following is an example of the structure of the self-contained directory cre
 .3 model.pth.
 .3 pickle\_module\_info.txt.
 }
-
 
 \subsubsection{MLflow deployment configuration}
 
@@ -1361,14 +1374,14 @@ During the design phase, \textbf{alternative configurations} were considered.
 One of the alternative configurations was to use a single CrateDB instance as both the metadata store and the artifact store. This configuration was not implemented due to the lack of native support of object storage in CrateDB.
 A second theorized approach was to use a sidecar container with the duty of watching the MLflow Tracking Server local directory in the container filesystem (e.g., using \textit{watchdog} Python package), packaging the model artifacts as an OCI image, and uploading them to an image registry. This approach could be implemented to offer an alternative to the MLflow Tracking Server artifact store in environment where adding a new storage service is not feasible.
 
-
 \subsection{KServe}
 \label{sec:kserve}
 
-KServe is an open-source model inference platform that extends Kubernetes with a set of Custom Resource Definitions (CRDs) to \textbf{deploy} and scale machine learning models in production environments.
+KServe is an open-source model inference platform that extends Kubernetes with a set of Custom Resource Definitions (CRDs) to \textbf{deploy} and scale machine learning models in production environments \cite{kserve}.
 KServe can be deployed in several ways, one of which is the ``Serverless mode'' which is built on top of Istio and Knative, leveraging their powerful capabilities such as automatic scaling. 
 There are two main CRs that can be used to set up a model serving environment: \textit{\textbf{ServingRuntimes}} (or \textit{\textbf{ClusterServingRuntimes}}) and \textit{\textbf{InferenceServices}}.
-The former are abstractions that define model serving environments, specifying the templates for Kubernetes Pods capable of serving particular model formats. The latter are actually leveraging the available ServingRuntimes to deploy the models in the system.  
+The former are abstractions that define model serving environments, specifying the templates for Kubernetes Pods capable of serving particular model formats. 
+The latter are actually leveraging the available ServingRuntimes to deploy the models in the system.  
 KServe provides several out-of-the-box ClusterServingRuntimes for common model formats, such as TensorFlow, PyTorch, and XGBoost, which can be used to deploy models without the need to define and configure the runtimes themselves.
 In particular, in our specific use case, since the forecasting models are PyTorch models, packaged by MLflow as described in the previous section, InferenceServices with ``kserve-mlserver" ClusterServingRuntime are used. 
 As a matter of fact, this runtime is the one that supports models packaged with MLflow.
@@ -1395,11 +1408,7 @@ spec:
 We can see that the InferenceService CR is quite simple and self-explanatory. 
 The most important fields are the \textit{model} field, which specifies the model format, the protocol version, and the storage URI.
 The storage URI is the location of the model artifacts in the artifact store, which in the case of the system is the SeaweedFS object storage service with S3 compatibility. 
-At the location specified by the storage URI, the model artifacts are stored in the self-contained directory created by MLflow after the model training session as described in the previous section.
-
-
-
-
+At the location specified by the storage URI, the model artifacts are stored in the self-contained directory created by MLflow after the model training session as described in section \ref{sec:mlflow_tracking_server}.
 
 \subsubsection{Open Inference Protocol}
 
@@ -1407,6 +1416,7 @@ Interoperability is key in a fast-moving environment as the one of machine learn
 Therefore KServe has introduced the \textbf{Open Inference Protocol specification} to standardize the communication between inference servers and clients. 
 The Open Inference Protocol has been adopted by several inference servers, including NVIDIA's Triton and Seldon MLserver.
 As mentioned in the previous section, the InferenceService CRs used in the system are leveraging the ``kserve-mlserver" ClusterServingRuntime, which under the hood uses MLserver that is compliant with the Open Inference Protocol.
+The list of API endpoints specified by the Open Inference Protocol is shown in Table \ref{tab:oip_endpoints}.
 
 % https://github.com/kserve/open-inference-protocol
 
@@ -1422,6 +1432,8 @@ Server Ready    & GET           & v2/health/ready                               
 Server Live     & GET           & v2/health/live                                                                                        \\ \hline
 Server Metadata & GET           & v2                                                                                                    \\ \hline
 \end{tabular}
+\caption{Open Inference Protocol API endpoints specification}
+\label{tab:oip_endpoints}
 \end{table}
 
 \subsubsection{Model deployment}
@@ -1463,12 +1475,16 @@ In particular, MLflow is used for model tracking, model selection, and model sto
 
 \section{Cloud resource metrics}
 
-[TO BE FIXED]
-
 % https://dynamorio.org/google_workload_traces.html
 
-
-how to measure cloud resource systems
+How to measure the carbon footprint of a resource managed in the cloud is a complex and challenging task.
+The carbon footprint of a cloud resource is influenced by several factors, such as the energy efficiency of the data center where the resource is hosted (PUE), the carbon intensity of the electricity grid in the region where the data center is located, whether the data center uses additional energy sources off the grid, and finally the energy consumption of the resource itself.
+The last factor is probably the most difficult to measure, as a cloud resource is an \textbf{entity that is abstracted from the physical infrastructure}, and therefore it is not straightforward to measure its power consumption. 
+In this first iteration of the system we are dealing for instance with virtual machines (VMs).
+On the other hand, an on-premises server, for instance, could be potentially equipped with physical sensors that measure the direct power consumption of the server, but this is not the case for any cloud resource, especially since this work is focused on the consumer side of the cloud, where the consumer does not have access to any physical infrastructure.
+Moreover, public cloud providers do not provide fine grained and real-time data about the carbon footprint of a resource, as they do not adhere yet to a common standard for carbon footprint calculation (e.g., Real Time Cloud proposed by the Green Software Foundation), like they instead do for the FOCUS standard for FinOps.
+In this section we want to give an brief overview of several metrics and methodologies that can be used totextbf{estimate the carbon footprint of a cloud resource}.
+In addition, we will also discuss the \textbf{challenges and limitations} that can be encountered when dealing with this kind of task.
 
 
 \subsection{System performance metrics}

@@ -3,9 +3,9 @@
 
 In this chapter, we provide an overview of the main concepts, paradigms and technologies that are relevant for the purpose of this work.
 We start by introducing the concept of \textbf{Public Cloud Providers} and the \textbf{Multi Cloud paradigm}.
-We then provide a brief overview of \textbf{Kubernetes}, the de-facto standard for container orchestration. 
+We then provide a brief overview of \textbf{Kubernetes}, in particular focusing on the concept of \textbf{Kubernetes as a platform} and the \textbf{Helm} package manager.
 After that, \textbf{Krateo PlatformOps}, an open-source Kubernetes-based platform that is a fundamental part of our system, is introduced.
-We deemed also valuable to provide an overview of the existing works in the field of \textbf{multi-cloud resource management}. 
+We deemed also valuable to provide an overview of the existing works in the field of \textbf{multi-cloud resource management} to highlight recurrent patterns and design choices.
 Finally, the \textbf{GreenOps landscape} is introduced, focusing on the the \textbf{Computational Sustainability} initiatives by Public Cloud Providers and on \textbf{carbon-aware systems for resource management}. 
 
 \section{Public cloud providers}
@@ -34,25 +34,43 @@ Figure \ref{fig:pcp} shows the worldwide market share of leading cloud infrastru
     \label{fig:pcp}
 \end{figure}
   
+\subsection{Regions and Availability Zones}
 
-
-% https://www.statista.com/chart/18819/worldwide-market-share-of-leading-cloud-infrastructure-service-providers/
-
-
-\subsection{Regions and zones}
 cloud regions
-regions vs availability zones
-Cloud providers usually further divide region into ...
+Cloud providers usually further divide region into availability zones
+For the purpuse of this work, we will consider the concept of \textbf{cloud region} as the primary unit of deployment of cloud resources.
 Each Region supports a subset of the available instance types.
 We could safely assume that our workload specs are quite standard and therefore can be scheduled on any cloud region.
 
-each provider has a different number of regions and zones and different naming conventions
+As of late 2024, the three major cloud service providers have established extensive global infrastructures.
+Table \ref{tab:cloud_regions_azs} shows the number of regions and availability zones (AZs) for each provider as of 2024.
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|l|c|c|}
+    \hline
+    \textbf{Cloud Provider} & \textbf{Regions} & \textbf{Availability Zones} \\
+    \hline
+    Amazon Web Services (AWS) & 34 & 105 \\
+    \hline
+    Microsoft Azure & 33 & 93 \\
+    \hline
+    Google Cloud Platform (GCP) & 40 & 121 \\
+    \hline
+    \end{tabular}
+    \caption{Number of Cloud Regions and Availability Zones by Provider as of 2024 \cite{stat}}
+    \label{tab:cloud_regions_azs}
+\end{table}
+
+% https://www.statista.com/statistics/1491357/microsoft-azure-availability-zones-global-by-region/
+    
+each provider has a different number of regions and zones and also different naming conventions
 there is no standardization in the industry for this. 
-for instance a region located in london is called eu-west-2 in AWS, uk-west in Azure and europe-west2 in GCP
+for instance a region located in London is called eu-west-2 in AWS, uk-west in Azure and europe-west2 in GCP
 
-[table how many regions per cloud provider]
 
-Figure \ref{fig:azure_data_centers} shows the geo-distribution of Azure cloud regions (data centers) and the country Grid Carbon Intensity (year 2024) as reported by Electricity Maps \cite{electricity_maps}. Data center coordinates were retrieved by an Azure CLI command dump \cite{azure_data_centers_information}.
+To give an idea of the geo-distribution of cloud regions, Figure \ref{fig:azure_data_centers} shows the location of \textbf{Azure cloud data centers} around the world and the country Grid Carbon Intensity as reported by Electricity Maps (year 2024) \cite{electricity_maps}.
+Data center coordinates are retrieved by an Azure CLI command dump \cite{azure_data_centers_information}.
 
 \begin{figure}[htbp]
     \centering
@@ -125,15 +143,15 @@ As described in the following section, our focus will be on the Kubernetes API s
 
 \subsection{Kubernetes extendability}
 
-[TO BE FIXED]
 % https://www.cncf.io/blog/2022/06/15/kubernetes-operators-what-are-they-some-examples/
 
 Kubernetes allows for the extension of its functionalities through the use of \textbf{Custom Resource Definitions (CRDs)} and \textbf{Kubernetes Operators}, effectively adopting the so-called \textbf{Operator paradigm}.
-Simply put, Custom Resource Definitions are a way to instruct Kubernetes to manage a new resource type. They are a schema that defines the structure of the resource and the Kubernetes API server will validate the resource against the schema.
+Simply put, Custom Resource Definitions are a way to instruct Kubernetes to manage new resource types. 
+They are a \textbf{schema} that defines the structure of the resource and the Kubernetes API server will validate the resource against the schema.
 \textbf{Custom Resources (CRs)} are actually instances of the resources defined by CRDs and are managed by an Operator.
-The Operator is a piece of software that is responsible for managing the lifecycle of the resources defined by the CRD.
+The Operator is a piece of software (controller) that is responsible for managing the lifecycle of the resources defined by the CRD.
 Effectively the code of an Operator is usually deployed on the Kubernetes cluster in the form of a Deployment.
-This concept is not different of what actually happens for standard built-in Kubernetes resources which are however manged by built-in controllers.
+This concept is not much different of what actually happens for standard built-in Kubernetes resources which are however manged by built-in controllers (e.g., Deployment controller, ReplicaSet controller, part of Kubernetes controller manager).
 An high-level overview of the Operator paradigm is depicted in Figure \ref{fig:operator_paradigm}.
 
 \begin{figure}[H]
@@ -145,7 +163,7 @@ An high-level overview of the Operator paradigm is depicted in Figure \ref{fig:o
 
 \subsection{Kubernetes as a platform}
 
-With the time, the paradigm of leveraging Kubernetes as a platform to manage external resources has become more and more popular.
+Recently, the paradigm of leveraging Kubernetes as a platform to manage external resources has become more and more popular.
 Therefore, Kubernetes use cases have expanded beyond the management of containerized applications to the management of any desired resource on any infrastructure.
 The idea is to \textbf{represent external resources as Kubernetes objects} and leverage Kubernetes' declarative paradigm and robust API to achieve unified and efficient infrastructure management.
 This approach can be exemplified by the public cloud providers' operators which extend Kubernetes to manage their cloud resources as described in section \ref{sec:cloud_providers_operators}.
@@ -154,10 +172,6 @@ Config Connector is a Kubernetes operator developed by Google Cloud that allows 
 The idea general idea is that organizations might have to deal with a \textbf{heterogeneous infrastructure} composed of different cloud providers and on-premises resources. 
 By \textbf{unifying infrastructure management under Kubernetes}, complexity is reduced and velocity is increased because the same tools and APIs can be used to manage all the resources in a consistent way \cite{gcp_config_connector}.
 
-
-%(https://cloud.google.com/config-connector/docs/overview)
-
-%https://cloud.google.com/config-connector/docs/concepts/resources#managing_resources_with_kubernetes_objects
 
 % https://aws.amazon.com/it/blogs/containers/kubernetes-as-a-platform-vs-kubernetes-as-an-api-2/
 
@@ -245,6 +259,11 @@ STRATOS tried to \textbf{avoid the assumption of resource homogeneity} and repre
 The proposed architecture enables the specification of high-level objectives that can be assessed in a standardized manner across different providers. The decision-making process is fully automated, shifting the decision point from deployment to runtime \cite{STRATOS}.
 Users first submit a topology document, triggering the Cloud Manager to communicate with the Broker for topology instantiation. The Broker (implemented in Java) then conducts the initial resource acquisition decision (RAD), optimizing the allocation of resources across multiple providers (configured beforehand) \cite{STRATOS}.
 Experiments indicate that distributing workloads across different cloud providers can reduce the overall cost of the topology. The approach taken by the authors primarily focuses on two objectives: \textbf{cost efficiency} and \textbf{avoiding vendor lock-in}. The application environment was deployed on public cloud platforms, specifically AWS and Rackspace \cite{STRATOS}.
+\newline
+
+[TO BE ADDED]
+A Kubernetes 'Bridge' operator between cloud and external resources
+% https://arxiv.org/abs/2207.02531
 
 \subsection{AI-based resource management in cloud computing}
 \label{sec:ai_based_resource_management}
