@@ -41,7 +41,6 @@ Cloud providers usually further divide region into availability zones
 For the purpuse of this work, we will consider the concept of \textbf{cloud region} as the primary unit of deployment of cloud resources.
 Each Region supports a subset of the available instance types.
 We could safely assume that our workload specs are quite standard and therefore can be scheduled on any cloud region.
-
 As of late 2024, the three major cloud service providers have established extensive global infrastructures.
 Table \ref{tab:cloud_regions_azs} shows the number of regions and availability zones (AZs) for each provider as of 2024.
 
@@ -66,13 +65,11 @@ Table \ref{tab:cloud_regions_azs} shows the number of regions and availability z
     
 each provider has a different number of regions and zones and also different naming conventions
 there is no standardization in the industry for this. 
-for instance a region located in London is called eu-west-2 in AWS, uk-west in Azure and europe-west2 in GCP
-
-
-To give an idea of the geo-distribution of cloud regions, Figure \ref{fig:azure_data_centers} shows the location of \textbf{Azure cloud data centers} around the world and the country Grid Carbon Intensity as reported by Electricity Maps (year 2024) \cite{electricity_maps}.
+for instance a region located in London is called eu-west-2 in AWS, uk-west in Azure and europe-west2 in GCP.
+For what concerns the geo-distribution of cloud regions, Figure \ref{fig:azure_data_centers} shows the location of \textbf{Azure cloud data centers} around the world and the country Grid Carbon Intensity as reported by Electricity Maps (year 2024) \cite{electricity_maps}.
 Data center coordinates are retrieved by an Azure CLI command dump \cite{azure_data_centers_information}.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=1\linewidth]{images/azure_data_centers.png}
     \caption{Geo-distribution of Azure data centers with country Grid Carbon Intensity}
