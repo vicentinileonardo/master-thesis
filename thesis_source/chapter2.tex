@@ -11,23 +11,17 @@ Finally, the \textbf{GreenOps landscape} is introduced, focusing on the the \tex
 \section{Public cloud providers}
 
 The Cloud Computing definition by the National Institute of Standards and Technology (NIST) \cite{nist} states that ``\textit{Cloud Computing is a model for enabling ubiquitous, convenient, on-demand network access to a shared pool of configurable computing resources (e.g., networks, servers, storage, applications, and services) that can be rapidly provisioned and released with minimal management effort or service provider interaction}" \cite{nist}.
-\textbf{Public Cloud Providers} or Cloud Service Providers (CSPs) are companies that have as their core business the provisioning of cloud computing services. These services, which are growing in number and complexity, range from computing resources to storage, networking, databases, machine learning, and more. 
-
-
-%Public cloud is a deployment model opposed to private cloud.
-%The former deployment model allows organizations to consume cloud services without having to build and maintain their own physical infrastructure, therefore reducing capital expenditure (CapEx) and shifting to an operational expense model (OpEx). 
-
-%The public cloud represents a multi-tenant environment where resources are shared among multiple customers.
+\textbf{Public Cloud Providers} or Cloud Service Providers (CSPs) are companies that have as their core business the provisioning of cloud computing services. 
+These services, which are growing in number and complexity, range from computing resources to storage, networking, databases, machine learning, and more. 
+Public cloud is a deployment model that allows organizations to consume cloud services without having to build and maintain their own physical infrastructure (e.g., private cloud), therefore reducing capital expenditure (CapEx) and shifting to an operational expense model (OpEx). 
+The public cloud model is actually a multi-tenant environment where physical resources maintained and operated by the cloud provider are shared among multiple customers (tenants).
+These resources are offered in the form of various services at different levels of abstraction (e.g., Infrastructure as a Service, Platform as a Service, Software as a Service) and are provided on-demand on a pay-as-you-go basis.
 %Doing so requires public cloud provider to leverage paradigm and technique which were known in the industry well before the advent of cloud computing: virtualization and isolation.
-
-
-
 Currently, as of 2024, the public cloud market is dominated by three main hyperscalers: \textbf{Amazon Web Services (AWS)}, \textbf{Microsoft Azure}, and \textbf{Google Cloud Platform (GCP)}.
-An hyperscaler is ...
-
+An hyperscaler is a company (cloud service provider) that operates a data center infrastructure at a massive scale and is able to provide cloud services to a global audience.
 Figure \ref{fig:pcp} shows the worldwide market share of leading cloud infrastructure service providers as of Q3 2024 \cite{statista}.
 
-\begin{figure}[htbp]
+\begin{figure}[htb]
     \centering
     \includegraphics[width=0.75\linewidth]{images/pcp.jpeg}
     \caption{Worldwide market share of leading cloud infrastructure service providers as of Q3 2024 \cite{statista}}
@@ -42,15 +36,17 @@ For the purpuse of this work, we will consider the concept of \textbf{cloud regi
 Each Region supports a subset of the available instance types.
 We could safely assume that our workload specs are quite standard and therefore can be scheduled on any cloud region.
 As of late 2024, the three major cloud service providers have established extensive global infrastructures.
-Table \ref{tab:cloud_regions_azs} shows the number of regions and availability zones (AZs) for each provider as of 2024.
+Table \ref{tab:cloud_regions_azs} shows the number of regions and availability zones (AZs) for each provider as of Q4 2024 - Q1 2025
+\cite{statista_cloud_regions} \cite{aws_infrastructure}.
+We must note that the number of regions and availability zones is constantly changing as cloud providers are expanding their global infrastructure
 
-\begin{table}[h]
+\begin{table}[H]
     \centering
     \begin{tabular}{|l|c|c|}
     \hline
     \textbf{Cloud Provider} & \textbf{Regions} & \textbf{Availability Zones} \\
     \hline
-    Amazon Web Services (AWS) & 34 & 105 \\
+    Amazon Web Services (AWS) & 36 & 114 \\
     \hline
     Microsoft Azure & 33 & 93 \\
     \hline
@@ -61,15 +57,13 @@ Table \ref{tab:cloud_regions_azs} shows the number of regions and availability z
     \label{tab:cloud_regions_azs}
 \end{table}
 
-% https://www.statista.com/statistics/1491357/microsoft-azure-availability-zones-global-by-region/
-    
 each provider has a different number of regions and zones and also different naming conventions
 there is no standardization in the industry for this. 
 for instance a region located in London is called eu-west-2 in AWS, uk-west in Azure and europe-west2 in GCP.
 For what concerns the geo-distribution of cloud regions, Figure \ref{fig:azure_data_centers} shows the location of \textbf{Azure cloud data centers} around the world and the country Grid Carbon Intensity as reported by Electricity Maps (year 2024) \cite{electricity_maps}.
 Data center coordinates are retrieved by an Azure CLI command dump \cite{azure_data_centers_information}.
 
-\begin{figure}[H]
+\begin{figure}[htb]
     \centering
     \includegraphics[width=1\linewidth]{images/azure_data_centers.png}
     \caption{Geo-distribution of Azure data centers with country Grid Carbon Intensity}

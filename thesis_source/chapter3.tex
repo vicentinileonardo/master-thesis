@@ -1,7 +1,9 @@
 \chapter{System design and implementation}
 \label{cha:design}
 
-This chapter presents the design and implementation of our system, focusing on the integration of the various components and the overall architecture. The system is designed to be modular, scalable, and extensible, enabling the integration of additional components as needed.
+This chapter presents the design and implementation of our system, focusing on the integration of the various components and the overall architecture. 
+A general description of some of the key components is provided to better explain their role in the system and the reasons for their inclusion.
+The system is designed to be modular, scalable, and extensible, enabling the integration of additional components as needed.
 It must be said the the following is a description of a first iteration of the system. 
 
 \section{Assumptions}
@@ -112,8 +114,8 @@ All the components listed in the above table must be deployed inside a Kubernete
 Krateo PlatformOps is utilized in this system for \textbf{multi-cloud resource management}, allowing for the declarative orchestration of cloud resources across different cloud providers leveraging Kubernetes as a control plane. 
 This section highlights the differences between two approaches that were considered for resource synchronization:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
-  \item[$\bullet$] The \textbf{Custom Kubernetes ``Synchronization Operator"} approach
-  \item[$\bullet$] The \textbf{Krateo PlatformOps} approach
+  \item[$\bullet$] The \textbf{Custom Kubernetes ``Synchronization Operator"} approach (initially considered)
+  \item[$\bullet$] The \textbf{Krateo PlatformOps} approach (adopted in the final system design) \\
 \end{itemize}
 
 It is deemed interesting to describe both approaches in order to identify the several \textbf{trade-offs} between implementing a custom synchronization operator and leveraging a template-based abstraction for cloud resource provisioning.
@@ -197,7 +199,7 @@ Due to these limitations and complexities, we explored and leveraged an \textbf{
   \label{fig:k8s_operator}
 \end{figure}
 
-\subsection{Resource management: the Krateo approach}
+\subsection{Resource management: the Krateo PlatformOps approach}
 
 \begin{figure}[htb]
   \centering
@@ -208,7 +210,7 @@ Due to these limitations and complexities, we explored and leveraged an \textbf{
 
 In our approach, we opted to replace a custom Kubernetes operator (``Synchronization Operator''), originally designed to handle the \textbf{mapping} from generic to cloud-specific resources, with \textbf{Krateo Core Provider}. 
 This decision was motivated by the need for greater flexibility and maintainability in defining multi-cloud infrastructure components. 
-As a matter of fact, the custom Kubernetes operator was originally designed to handle only virtual machines (VMs).
+As a matter of fact, a custom Kubernetes operator was originally designed to handle only virtual machines (VMs).
 Mappings and extensions to support additional cloud resources would have required significant code changes and maintenance overhead for each additional resource type added.
 Therefore instead of embedding business logic directly within a custom Kubernetes operator, in the current system implementation, we leverage the capabilities of \textbf{Helm templating} to dynamically generate cloud-provider-specific resources. 
 More precisely, another Krateo component, the \textbf{Krateo composition-dynamic-controller} is leveraging \textbf{Helm Template Engine} under the hood to generate Kubernetes resources starting from Helm templates.
@@ -230,6 +232,24 @@ This approach, further described in this section, offers several advantages:
 %Nel caso in cui si aggiornasse la composition resource con valori aggiuntivi (dal mutating webhook per esempio), sarà rifatto il templating e farà l'Helm upgrade
 
 In order to define a generic VM resource, we leverage Krateo Core Provider to define a \textbf{CompositionDefinition} resource that specifies the structure of the VM resource.
+Effectively a CompositionDefinition is a Kubernetes Custom Resource that defines the structure of a Composition Custom Resource (instance) which is an Helm chart comprised of Helm templates and values.
+As a matter of fact, a CompositionDefinition is pointing to a versioned Helm chart that is stored in a Helm repository.
+
+\begin{lstlisting}[language=yaml, caption={CompositionDefinition}, label={lst:composition_definition}]
+apiVersion: core.krateo.io/v1alpha1
+kind: CompositionDefinition
+metadata:
+  name: vmtemplate
+  namespace: greenops
+spec:
+  chart:
+    repo: vm-template
+    url: https://leonardovicentini.com/helm-charts/charts
+    version: 1.2.0
+\end{lstlisting}
+
+The Helm chart referenced in the CompositionDefinition contains the Helm templates and values needed to define the resource named \textit{VmTemplate}.
+
 
 
 Listing \ref{lst:values.yaml} shows an example of the VmTemplate values.yaml file, which defines the fields of the VM resource.
@@ -340,6 +360,29 @@ maxLatency: 100
 
 \subsubsection{Generic VM to Cloud Provider Specific VM mapping}
 
+The Krateo composition-dynamic-controller (Krateo cdc) is responsible for creating the Composition Custom Resource (instance) by templating the Helm chart referenced in the CompositionDefinition.
+For the purpose of the system, we levareged Helm templating to dynamically generate cloud-provider-specific resources from a generic VM resource.
+As a matter of fact, the Helm chart contains all the three cloud provider specific set of templates necessary for a VM provisioning but only one set of templates is used at a time.
+The Krateo cdc will generate the cloud-provider-specific VM resources based on the cloud provider specified in the generic VM resource.
+Therefore, for each generic VM resource, the Krateo cdc will use \textbf{only one set of templates} to generate the cloud provider specific VM resource.
+This ``brokering mechanism'' (routing through Helm templates) is implemented in the Helm templates using ``\textbf{guards}'' as reported in listing \ref{lst:guards}
+The manifest will be created only if the cloud provider specified in the generic VM resource is the same as the cloud provider specified in the generic VM resource.
+This flexibility allows the system to be cloud-agnostic and to support multiple cloud providers as soon as the cloud provider specific templates are available in the Helm chart.
+
+\begin{lstlisting}[language=yaml, caption={Scheduling time}, label={lst:sched}]
+{{ if hasKey .Values "provider" }}
+{{ $provider := .Values.provider }}
+{{ if eq $provider "azure" }}
+...
+apiVersion: compute.azure.com/v1api20220301
+kind: VirtualMachine
+metadata:
+  name: {{ .Values.vmName }}
+...
+\end{lstlisting}
+
+
+
 
 VM size selection is a crucial step in the VM provisioning process.
 
@@ -446,7 +489,7 @@ This fields are labeled with an ID which will be attached to the resources' list
 
 Microsoft Azure provides a Kubernetes operator called \textbf{Azure Service Operator v2} (ASO).
 Currently, ASO supports more than 150 different Azure resources.
-The minimum set of resources needed for vm provisioning on Azure throgh Azure service operator is is:
+The minimum set of resources needed for vm provisioning on Azure through Azure service operator is is:
 
 \begin{itemize}[itemsep=0.2pt, topsep=1pt] 
 \item[$\bullet$] Virtual Network 
@@ -601,8 +644,10 @@ In thr case of Listing \ref{lst:aws_direct_reference}, the Subnet Custom Resourc
 
 \subsubsection{Provider specific configurations}
 
-An Amazon Machine Image (AMI) is a pre-configured image that provides the necessary software environment to set up and boot an Amazon EC2 instance \cite{aws_AMIs}. In other words, AMIs serve as a blueprint for launching virtual machines (VMs) in AWS.
-When launching an instance, specifying an AMI is \textbf{mandatory}. The AMI must be compatible with the chosen EC2 instance type, ensuring that the selected image supports the required hardware and software configurations.
+When launching an Amazon EC2 instance, specifying an AMI is \textbf{mandatory}. 
+An Amazon Machine Image (AMI) is a pre-configured image that provides the necessary software environment to set up and boot an Amazon EC2 instance \cite{aws_AMIs}. 
+In other words, AMIs serve as a blueprint for launching virtual machines (VMs) in AWS.
+The AMI must be compatible with the chosen EC2 instance type, ensuring that the selected image supports the required hardware and software configurations.
 The following attributes define an AMI:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt] 
   \item[$\bullet$] Region: AMIs are region-specific
@@ -753,6 +798,7 @@ OPA accepts arbitrary structured data as input.
 and  Like query inputs, your policies can generate arbitrary structured data as output.
 
 \subsection{OPA and external data sources}
+\label{sec:opa_external_data}
 
 In order to get data from external sources, OPA provides several options that can be chosen based on size and frequency of update \cite{opa_external_data}.
 For the use case of this work, external data to be pulled is the \textbf{scheduling decision} from the GreenOps Scheduler in a synchronous way.
@@ -960,7 +1006,7 @@ else := {"allowed": true, "uid": uid}
 
 Therefore, in this specific case, the creation of the Kubernetes Pod will be \textbf{denied}. OPA is responsible for \textbf{decision-making}, determining that the request do not complies with the defined policies, while the Kubernetes API server, using the AdmissionReview response generated by OPA, handles \textbf{policy enforcement}, effectively rejecting the CREATE request since it violates the specified rules.
 
-\subsection{OPA Policy bundles}
+\subsection{OPA policy bundles}
 \label{sec:opa_bundles}
 
 An OPA policy bundle is a collection of policies and optional associated contextual data. More precisely, a bundle is a standardized way to package policies, facilitating version control and distribution \cite{opa_bundles}. As a matter of fact, a single policy bundle can be potentially used by multiple OPA instances.
@@ -1070,13 +1116,8 @@ It must be noted that this policy is \textbf{not intended to be a comprehensive 
 
 \subsection{Scheduling outcome policy}
 
-In the context of this work, the ``Scheduling outcome policy'' is a policy that determines the scheduling decision for a given workload based on the output of the GreenOps Scheduler. 
-
-
-It is therefore a mutation policy that has the duty to create 
-
-
-• Mutation policy: triggered by the Kubernetes webhook to receive scheduling information to be patched to VmTemplate K8s resource
+In the context of this work, the ``Scheduling outcome policy'' is a policy that determines the scheduling decision for a given workload based on the output of the GreenOps Scheduler which is queried in real-time, as described in section \ref{sec:opa_external_data}.
+The inputs and outputs of this policy are as follows:
 
 \begin{itemize}[itemsep=0.2pt, topsep=0.2pt]
   \item[$\bullet$] Given:
@@ -1095,21 +1136,22 @@ It is therefore a mutation policy that has the duty to create
   \end{itemize}
 \end{itemize}
 
-OPA, assuming the role of a webhook server, has the duty of ..
-
-JSON Patch is a format for describing changes to a JSON document which avoid the need to send the entire document when only a part of it has changed. Effectively, only deltas are sent back to the requester which are themselves JSON documents.
+It is therefore a policy that has the duty to mutate (patch) the VmTemplate Kubernetes resource (Generic VM), adding the scheduling information (provider, schedulingLocation, schedulingTime) to the resource.
+According to Kubernetes documentation, this can be done using ``\textit{patch}'' and ``\textit{patchType}" fields in the AdmissionReview response \cite{kubernetes_dynamic_admission_control}.
+The ``\textit{patchType}'' field must be ``\textit{JSONPatch}'' and the ``\textit{patch}'' field must contain a base64-encoded array of JSON patch operations to be applied to the resource.
+JSON Patch is a format for describing changes to a JSON document which avoid the need to send the entire document when only a part of it has changed. 
+Effectively, only deltas are sent back to the requester which are themselves JSON documents.
 The format is defined in RFC 6902 from the IETF \cite{json_patch}.
-
-As an example, a single patch operation 
+As an example, a single patch operation is the one shown in listing \ref{lst:json_patch}, where a new field ``schedulingTime'' is added to the resource.
 
 \begin{lstlisting}[language=rego, caption={JSON Patch example}, label={lst:json_patch}]
+# schedulingTime is data coming from the GreenOps Scheduler
 patchCode = {
 	"op": "add",
 	"path": "/spec/schedulingTime",
 	"value": schedulingTime,
 }
 \end{lstlisting}
-
 
 \subsection{OPA Data mapping}
 
@@ -1161,7 +1203,7 @@ map_from_electricitymaps(em_region, provider) = cloud_region if {
 
 \end{lstlisting}
 
-\subsection{OPA end-to-end workflow}
+\subsection{OPA integration end-to-end workflow}
 
  (K8s mutating webhook)
 
@@ -1209,11 +1251,15 @@ In particular,
 
 
 
+\subsubsection{Day 2 operations}
+\label{sec:day2_operations}.
 
-Day 2 operations
-what are day 2 operations: in this case (VMs) resize a VM (scale up or down) based on the load
+We can define as \textbf{\textit{Day 2 operations}} all the management operations that are performed after the deployment of a resource.
+These operations comprise tasks such as scaling up or down a VM based on the load, stopping a VM during off-peak hours, or migrating a VM to a different region to optimize costs.
+
+
+
 The mutating webhook configuration is set on the CREATE and UPDATE operations
-
 UPDATE operation trigger
 K8s Cronjob that attach a label to the custom resoruce 
 
@@ -1477,6 +1523,10 @@ In particular, MLflow is used for model tracking, model selection, and model sto
 
 % https://dynamorio.org/google_workload_traces.html
 
+Metrics are data points that provide information about a system.
+This information could be related to performance, behavior, resource utilization or any other aspect of the system that could be relevant.
+In the context of cloud resource management, metrics are essential for monitoring the \textbf{performance and health of cloud resources}, enabling organizations to make informed decisions about resource allocation, scaling, and optimization.
+Focusing on the first use case of the proposed system (i.e., VM scheduling for carbon footprint optimization), carbon metrics could be used to determine the carbon footprint of a scheduled VM.
 How to measure the carbon footprint of a resource managed in the cloud is a complex and challenging task.
 The carbon footprint of a cloud resource is influenced by several factors, such as the energy efficiency of the data center where the resource is hosted (PUE), the carbon intensity of the electricity grid in the region where the data center is located, whether the data center uses additional energy sources off the grid, and finally the energy consumption of the resource itself.
 The last factor is probably the most difficult to measure, as a cloud resource is an \textbf{entity that is abstracted from the physical infrastructure}, and therefore it is not straightforward to measure its power consumption. 
@@ -1486,16 +1536,27 @@ Moreover, public cloud providers do not provide fine grained and real-time data 
 In this section we want to give an brief overview of several metrics and methodologies that can be used totextbf{estimate the carbon footprint of a cloud resource}.
 In addition, we will also discuss the \textbf{challenges and limitations} that can be encountered when dealing with this kind of task.
 
-
 \subsection{System performance metrics}
 
-especially useful for ``day 2 operations''
-scaling down a VM
+This category of metrics provides information about the health and performance of a system.
+Usually these metrics are related to bare-metal servers or virtual machines.
+Other cloud resources that have a higher level of abstraction (e.g., containers, Kuberneteds Pods, serverless functions) expose a different set of metrics.
+This category of metrics are also useful for the ``\textbf{day 2 operations}'', which are operations that are performed after the resource has been deployed and monitored for a certain period of time, briefly described in section \ref{sec:day2_operations}.
 
-Metrics collected could be:
-CPU usage
-memory usage.
-These metrics are especially useful for the 2nd use case for instance: scaling down a VM.
+System performance metrics comprise, for instance:
+\begin{itemize}[itemsep=0.2pt, topsep=1pt]
+  \item[$\bullet$] CPU usage
+  \item[$\bullet$] Memory usage
+  \item[$\bullet$] Disk usage
+  \item[$\bullet$] Network usage
+  \item[$\bullet$] Processes related metrics
+\end{itemize}
+
+
+A standard strategy
+Standard agents/deamons manually installed the VMs (e.g. Prometheus node exporter, 
+many metrics restricted by public cloud providers
+not straightforward to automate the deployment
 
 
 Prometheus exporters (https://prometheus.io/docs/instrumenting/exporters/) + Prometheus scrapers for data collection.
@@ -1507,35 +1568,33 @@ From the Krateo Composable FinOps document:
 
 - “the optimization is automatically encoded in a CR for the finops-operator-vm-manager, which then analyzes it and decides how to manage the Virtual Machine. For example, it could scale up or down the virtual machine, stop it for the night, etc.”
 
-From my current understanding, only Azure is available for now on the finops-operator-vm-manager. 
-This operator is only able to: start; stop; deallocate; scale-up; scale-down.
-So finops-operator-vm-manager operates on already provisioned virtual machines and it applies optimizations.
-
-
 
 Cloud providers API (“hypervisor” / host level) to get CPU usage, memory usage
 Azure monitoring REST API: https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/rest-api-walkthrough?tabs=rest%2Cportal
 https://learn.microsoft.com/en-us/rest/api/monitor/metrics/list?view=rest-monitor-2023-10-01&tabs=HTTP
 https://learn.microsoft.com/en-us/azure/virtual-machines/monitor-vm 
+Metrics collected at hypervsisor level are not fine-grained
+e.g. an hypervisor could be able to provide the memory allocated to a VM, but not the memory actually used by the VM
+
+some metrcis can only be gathered by specific agents installed on the VMs
+
+\subsubsection{Cloud providers agents}
+
+To support the collection of metrics, several cloud providers offer agents that can be installed on the provider-specific VMs they manage.
+One of the goal of these agents comparared to standard cloud-agnostic agents is to provide a more convenient ..
 
 
-Cloud providers agents
 Azure Monitor Agent (https://learn.microsoft.com/en-us/azure/azure-monitor/agents/azure-monitor-agent-overview)
-Google Ops Agent: “the primary agent for collecting telemetry from your Compute Engine instances” (https://cloud.google.com/monitoring/agent/ops-agent)
 
 
-Standard agents/deamons manually installed the VMs (e.g. Prometheus node exporter, 
-many metrics restricted by public cloud providers
-not straightforward to automate the deployment
-
-
----
-
-Challenges
-Public Cloud Providers do not provide data about carbon intensity of a VM instance
-Public Cloud Providers do not provide data about power consumption of a VM instance
+\textbf{Google Ops Agent}: “the primary agent for collecting telemetry from your Compute Engine instances” (https://cloud.google.com/monitoring/agent/ops-agent)
+Can be installed in various ways: manual installation, Usining Google Cloud Agent policies from glcoud CLI or using a configuration management tool like Terraform
 
 \subsection{Power consumption metrics}
+
+In the context of the system, power consumption metrcis could be used to estimate the carbon footprint of a VM instance.
+
+Public Cloud Providers do not provide data about power consumption of a VM instance
 
 scaphandre: NOT supported by public cloud providers. “Public cloud providers do not expose the underlying RAPL sensors that scaphandre and other measurement tools rely on to track consumption”. (https://github.com/hubblo-org/scaphandre/issues/142)
 https://hubblo-org.github.io/scaphandre-documentation/index.html
@@ -1547,11 +1606,12 @@ https://sustainable-computing.io/design/architecture/
 manually estimate power consumption based on CPU utilization, memory usage. Could be a very difficult task. 
 there is the TEADS metodology like 
 
-
 \subsection{Carbon metrics}
 
-Carbon metrics:
-there is no adopted standard, there is not something similar to FOCUS yet;
+Challenges
+Public Cloud Providers do not provide data about carbon intensity of a VM instance
+
+As briefly mentioned in the beginning of this section, there is no adopted standard, there is not something similar to FOCUS yet;
 there is a proposal for a specification (work in progress, not supported yet by Public Cloud Providers): 
 https://github.com/Green-Software-Foundation/real-time-cloud 
 https://github.com/Green-Software-Foundation/real-time-cloud/blob/main/Cloud_Region_Metadata_specification.md 
@@ -1582,8 +1642,6 @@ so in this case, probably not useful
 Example of a manual approach (not scalable due to tech specs research): https://devblogs.microsoft.com/sustainable-software/how-can-i-calculate-co2eq-emissions-for-my-azure-vm/ 
 
 The critical point here is to get/calculate the energy consumed by a cloud instance, since there are a huge number of technical configurations to find, retrieve and use for calculations.
-
-
 
 \subsection{Impact framework}
 
