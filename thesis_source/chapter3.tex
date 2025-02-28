@@ -249,11 +249,8 @@ spec:
 \end{lstlisting}
 
 The Helm chart referenced in the CompositionDefinition contains the Helm templates and values needed to define the resource named \textit{VmTemplate}.
-
-
-
 Listing \ref{lst:values.yaml} shows an example of the VmTemplate values.yaml file, which defines the fields of the VM resource.
-
+Listing \ref{lst:values.schema.json} shows the corresponding JSON schema for the values.yaml file.
 
 \begin{lstlisting}[language=yaml_1, caption={values.yaml}, label={lst:values.yaml}, float=htpb]
 # @param {string} vmName Name of the VM
@@ -368,6 +365,32 @@ Therefore, for each generic VM resource, the Krateo cdc will use \textbf{only on
 This ``brokering mechanism'' (routing through Helm templates) is implemented in the Helm templates using ``\textbf{guards}'' as reported in listing \ref{lst:guards}
 The manifest will be created only if the cloud provider specified in the generic VM resource is the same as the cloud provider specified in the generic VM resource.
 This flexibility allows the system to be cloud-agnostic and to support multiple cloud providers as soon as the cloud provider specific templates are available in the Helm chart.
+The directory structure of the Helm chart is the following:
+
+\dirtree{%
+.1 chart/.
+.2 [several utilities files for mappings (omitted)].
+.2 templates/.
+.3 aws/.
+.4 instance.yaml.
+.4 subnet.yaml.
+.4 vpc.yaml.
+.3 azure/.
+.4 networkinterface.yaml.
+.4 virtualmachine.yaml.
+.4 virtualnetwork.yaml.
+.4 virtualnetworksubnet.yaml.
+.3 gcp/.
+.4 computeinstance.yaml.
+.4 computenetwork.yaml.
+.4 computesubnetwork.yaml.
+.3 \_helpers.tpl.
+.2 Chart.yaml.
+.2 values.schema.json.
+.2 values.yaml.
+}
+
+\vspace{0.5cm}
 
 \begin{lstlisting}[language=yaml, caption={Scheduling time}, label={lst:sched}]
 {{ if hasKey .Values "provider" }}
@@ -382,9 +405,11 @@ metadata:
 \end{lstlisting}
 
 
-
-
 VM size selection is a crucial step in the VM provisioning process.
+
+Helm allows the definition of \textbf{helper functions} which resides in the \textit{\_helpers.tpl} file.
+In our case, we defined a helper function called \textit{findBestVmSize} that takes as input the CPU and RAM requirements of the VM and returns the best provider-specific VM size available.
+A prerequisite for that is to have a mapping between the tuple (CPU, RAM) and the VM sizes (a string) for each cloud provider.
 
 Helm template engine (how to map to cloud provider specific resources, why is better)
 We need to know which VMs (instance types) are actually available on Azure, AWS, GCP.
@@ -506,7 +531,7 @@ The minimum set of resources needed for vm provisioning on Azure through Azure s
 \end{figure}
 
 
-An example of a Azure-specific custoum resource is the one illustrated in listing \ref{lst:azure}. \\
+An example of a Azure-specific custom resource is the one illustrated in listing \ref{lst:azure}. \\
 
 \begin{lstlisting}[language=yaml, caption={Azure Instance Custom Resource}, label={lst:azure}]
 apiVersion: compute.azure.com/v1api20220301
@@ -659,7 +684,9 @@ The following attributes define an AMI:
 
 The most important attribute for our system is the \textbf{Operating System} since it determines the software environment for the VM.
 For the purpose of this research, only \textbf{Ubuntu-based AMIs} have been considered for provisioning virtual machines. Official Ubuntu AMIs were collected from a dedicated Ubuntu repository.
-In order to select the most suitable AMI for a given VM, the system leverages Helm template engine to dynamically select the appropriate AMI ID based on the region and other parameters specified in the VmTemplate Kubernetes Custom Resource (CR).
+In order to select the most suitable AMI for a given VM, the system leverages a function that 
+
+to dynamically select the appropriate AMI ID based on the region and other parameters specified in the VmTemplate Kubernetes Custom Resource (CR).
 
 \begin{lstlisting}[language=yaml, caption={AWS}, label={lst:aws}]
 apiVersion: ec2.services.k8s.aws/v1alpha1
@@ -674,17 +701,6 @@ spec:
  @\yellowhl{    instanceType: \{\{{ \$vmSize \}\}} \#[2] }@
   subnetID: {{ (lookup "ec2.services.k8s.aws/v1alpha1" "Subnet" (.Values.namespace | default "greenops") (printf "%s-subnet" .Values.vmName)).status.subnetID }}
 \end{lstlisting}
-
-
-
-
-
-
-
-
-
-
-
 
 \newpage
 
@@ -732,8 +748,11 @@ The custom logic in this simple example is to add a label "mutated: true" to the
   \label{fig:k8s_webhook_example}
 \end{figure}
 
-In the context of our system, a Kubernetes Mutating Webhook is used to enforce policies for workload scheduling by modifying K8s custom resources (VmTemplates) with the data from policies. 
-The K8s mutating webhook intercepts a CREATE or UPDATE API request, asks about policies (with also scheduling decision) and mutates the resource.
+In the context of our system, a \textbf{\textit{MutatingWebhookConfiguration}} is set to intercept CREATE and UPDATE Kubernetes API requests for VmTemplate Custom Resources.
+In this case, the Kubernetes Mutating Webhook server that is the target of the MutatingWebhookConfiguration is Open Policy Agent (OPA).
+OPA is used to assign scheduling decisions to VmTemplates based on policies. 
+OPA sends back to the API server the mutation (patches) to be applied to the VmTemplate Custom Resource.
+This process is further described in the next section.
 
 \section{Open Policy Agent (OPA)}
 
@@ -1540,7 +1559,7 @@ In addition, we will also discuss the \textbf{challenges and limitations} that c
 
 This category of metrics provides information about the health and performance of a system.
 Usually these metrics are related to bare-metal servers or virtual machines.
-Other cloud resources that have a higher level of abstraction (e.g., containers, Kuberneteds Pods, serverless functions) expose a different set of metrics.
+Other cloud resources that have a higher level of abstraction (e.g., containers, Kubernetes Pods, serverless functions) expose a different set of metrics.
 This category of metrics are also useful for the ``\textbf{day 2 operations}'', which are operations that are performed after the resource has been deployed and monitored for a certain period of time, briefly described in section \ref{sec:day2_operations}.
 
 System performance metrics comprise, for instance:
