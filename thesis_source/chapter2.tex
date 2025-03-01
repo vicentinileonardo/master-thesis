@@ -308,19 +308,20 @@ The focus of the research is on both the provider and the consumer perspective, 
 
 \section{GreenOps landscape}
 
-what is greenops
-
-greenops landscape 
-
-In the context of cloud-native sustainability,
-the Technical Advisory Group (TAG) Environmental Sustainability is a XYZ that supports and advocates for environmental sustainability initiatives in cloud native technologies.
+GreenOps is the abbreviation for ``\textbf{Green Operations}" and is the term used to describe an operational model that aims to integrate sustainable practices into an organization's digital operations, with a particular focus on cloud computing and data centers.
+The interest in GreenOps has been growing in the last years due to the increasing awareness of the environmental impact of data centers and cloud infrastructures.
+As a matter of fact according to various sources, the carbon footprint of data centers is [...]
+The rising interest in the GreenOps ecosystem is also influenced by political and regulatory factors as the European Union's ambitious goals for the reduction of greenhouse gas emissions.
+In particular, the \textit{Climate Neutral Data Centre Pact in Europe}, is an EU initiative which aims for making climate-neutral data centers by 2030 \cite{climate_neutral_data_centre_pact}.
+Being the work of this thesis focused on the cloud ecosystem, we deem useful to cite the Technical Advisory Group (TAG) on Environmental Sustainability which is focused on the cloud-native sustainability landscape.
+The TAG is part of the Cloud Native Computing Foundation (CNCF) and aims to provide guidance, standards, and best practices for the industry \cite{tag_env_sustainability}.
 
 % https://hbr.org/2020/09/how-green-is-your-software
-
 % https://www.usenix.org/publications/loginonline/slos-and-ghgs
 
 \subsection{Green Software foundation}
 
+Another pivotal actor in the GreenOps landscape is the Green Software Foundation.
 The Green Software Foundation is a non-profit organization, part of the Linux Foundation, that aims to promote the development of green software and to provide a set of standards, tooling and best practices for the industry \cite{green_software_foundation}.
 It is considered useful to provide a quick summary of the foundation's major projects that are relevant to the context of this work.
 
@@ -346,21 +347,21 @@ where:
 \end{itemize}
 
 \subsubsection{Real Time Cloud}
+\label{sec:real_time_cloud}
 
 The Real Time Cloud project aims to provide a standard for real-time carbon emissions data reporting for cloud providers.
-The goal is to provide real-time access to information about cloud region, PUE, WUE, carbon-free energy from the grid and from CSP
+The goal is to provide real-time access to information about cloud region, PUE, WUE, carbon-free energy from the grid and from Cloud provider individual initiatives.
 The concept is similar to FOCUS specification for FinOps but is at a very early stage and is not yet adopted by cloud providers as of 2025 \cite{real_time_cloud}.
 
-https://github.com/Green-Software-Foundation/real-time-cloud?tab=readme-ov-file
+%https://github.com/Green-Software-Foundation/real-time-cloud?tab=readme-ov-file
 
 \subsubsection{Impact Framework}
 
 The Impact Framework is a flexible framework for measuring and reporting the environmental impact of software systems \cite{impact_framework}.
 The core of the framework is represented by a \textbf{Manifest file} which is a YAML file that is used both for describing \textbf{calculation pipelines} and for storing the results of the calculations.
 Pre-built plugins are available for the most common calculations (e.g., carbon intensity, energy consumption, etc.) but custom plugins can be developed as well \cite{impact_framework}.
-A potential integration of this framework with our system is described in section XYZ.
+A potential integration of this framework with our system is described in section \ref{sec:impact_framework_integration}.
 
-%---
 %https://patterns.greensoftware.foundation/catalog/cloud/choose-region-closest-to-users
 %[which patterns are used in our system]
 
@@ -371,7 +372,7 @@ improving energy efficiency by reducing their PUE
 (Power Usage Effectiveness (PUE) is the ratio of the total energy used by a data center to the energy used for computing.)
 ---
 
-We assume that a cloud data center will likely rely on the same energy sources that characterize a specific geographical region (grid).
+For the purpose of ths work, we assume that a cloud data center will likely rely on the same energy sources that characterize a specific geographical region (grid).
 For example, if data from Electricity Maps tell us that Finland is producing energy with low carbon emissions then we assume that the data centers in that area will likely be powered with energy from low carbon sources.
 However, some cloud providers may have better access to renewable energy sources in certain regions due to their individual initiatives e.g. wind farms that feed directly into their data centers.
 
@@ -393,9 +394,6 @@ At Google: the total amount of work that needs to get done per day is quite pred
 https://blog.google/inside-google/infrastructure/data-centers-work-harder-sun-shines-wind-blows/
 
 Google CFE\%: “This is the average percentage of carbon free energy consumed in a particular location on an hourly basis, while taking into account the investments we have made in carbon-free energy in that location. This means that in addition to the carbon free energy that's already supplied by the grid, we have added carbon-free energy generation in that location”.
-
-
-
 
 usually big companies levarege financial instruments like PPAs to buy renewable energy therfore their emissions are not zero but they are offset by the renewable energy they buy.
 
@@ -457,22 +455,18 @@ A weighted distribution can be created by normalizing the MOER values across the
 These weightings are encoded in a YAML file and applied as a priority for the Scheduler, which out-of-the-box supports these kind of custom rules to extend the scheduling process.
 The claim is that by combining three elements (i.e., Kubernetes scheduler, carbon intensity data, and a weighting algorithm) any Kubernetes instance can be made carbon-aware, at least in a simplified way \cite{microsoft_carbon_aware_k8s}.
 
-\section{State of the Art analysis outcome}
+\section{Multi-cloud resource management - takeaways}
 
-
-
-
-many simulation compared to real-world scenarios
-no much flexibility for what concern variaty of resource managed
-usually tied to one type of resource (e.g., VMs, K8s pods)
-
-usually either time shifting or geographical shifting
-
-
-Many of the concepts described in this chapter will be leveraged in the design and implementation of our system. 
-We can list some of the recurrent elements that are generally needed in order to build a system for resource management
-representation of a workload (with its characteristics and constraints)
-cloud service broker / orchestrator
-modules to directly interact with the cloud providers
+%many simulation compared to real-world scenarios
+%no much flexibility for what concern variaty of resource managed
+%usually tied to one type of resource (e.g., VMs, K8s pods)
+%usually either time shifting or geographical shifting
+Many of the concepts described in this chapter are leveraged in the design and implementation of our system. 
+We can list some of the major recurrent elements that are generally needed in order to build a system for multi-cloud resource management:
+\begin{enumerate}
+    \item representation of a generic workload (with its characteristics and constraints)
+    \item cloud service broker / orchestrator
+    \item modules to directly interact with the cloud providers
+\end{enumerate}
 
 \newpage

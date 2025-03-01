@@ -1568,72 +1568,73 @@ System performance metrics comprise, for instance:
   \item[$\bullet$] Memory usage
   \item[$\bullet$] Disk usage
   \item[$\bullet$] Network usage
-  \item[$\bullet$] Processes related metrics
+  \item[$\bullet$] Processes related metrics \\
 \end{itemize}
 
+A standard strategy to collect these metrics is to use \textbf{agents} that are directly installed on the VMs and operate at the Operating System level.
+Some examples of this kind of agents are the \textbf{Prometheus Node exporter} and the \textbf{Prometheus Process exporter}.
+Figure \ref{fig:prometheus} shows an example of a standard Prometheus architecture used to collect system performance metrics using the Node exporter and the Process exporter on a set of Linux VMs.
+In particular, the Node exporter collects metrics such as CPU usage, memory usage, disk usage, and network usage, while the Process exporter collects metrics about the various processes running on the VM (e.g., CPU and memory usage per process group).
+Metrics are pulled by the Prometheus server, which stores them in a time-series database and makes them available for querying and visualization (e.g., using Grafana). 
+In addition, the Prometheus server can be configured to send alerts based on the collected metrics leveraging the Alertmanager component.
 
-A standard strategy
-Standard agents/deamons manually installed the VMs (e.g. Prometheus node exporter, 
-many metrics restricted by public cloud providers
-not straightforward to automate the deployment
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=1\linewidth]{images/prometheus.png}
+  \caption{Standard Prometheus architecture for system performance metrics collection}
+  \label{fig:prometheus}
+\end{figure}
 
+%Prometheus exporters (https://prometheus.io/docs/instrumenting/exporters/) + Prometheus scrapers for data collection.
+%Generic Prometheus exporters and scrapers already used for Krateo Composable FinOps leveraging specific K8s Custom Resources. These exporters are generic and can scrape arbitrary metrics configured in specific CRs (for instance, collecting VMs CPU consumption though Azure APIs).
+%From the Krateo Composable FinOps document: 
+%- “we transform all optimizations into a set of Kubernetes Custom Resources (CRs) to act upon newly found cost-related deficiencies. This allows us to use Kubernetes operators (explicitly coded to interact with cloud services) to monitor these metrics and act automatically to apply changes to remote resources.”
 
-Prometheus exporters (https://prometheus.io/docs/instrumenting/exporters/) + Prometheus scrapers for data collection.
-Generic Prometheus exporters and scrapers already used for Krateo Composable FinOps leveraging specific K8s Custom Resources. These exporters are generic and can scrape arbitrary metrics configured in specific CRs (for instance, collecting VMs CPU consumption though Azure APIs).
-From the Krateo Composable FinOps document: 
-- “we transform all optimizations into a set of Kubernetes Custom Resources (CRs) to act upon newly found cost-related deficiencies. This allows us to use Kubernetes operators (explicitly coded to interact with cloud services) to monitor these metrics and act automatically to apply changes to remote resources.”
+%- “forward the optimization to the Krateo operator that manages the services that need to be optimized, for example, the Azure Operator to modify the size of a Virtual Machine;”
 
-- “forward the optimization to the Krateo operator that manages the services that need to be optimized, for example, the Azure Operator to modify the size of a Virtual Machine;”
+%- “the optimization is automatically encoded in a CR for the finops-operator-vm-manager, which then analyzes it and decides how to manage the Virtual Machine. For example, it could scale up or down the virtual machine, stop it for the night, etc.”
 
-- “the optimization is automatically encoded in a CR for the finops-operator-vm-manager, which then analyzes it and decides how to manage the Virtual Machine. For example, it could scale up or down the virtual machine, stop it for the night, etc.”
-
-
-Cloud providers API (“hypervisor” / host level) to get CPU usage, memory usage
-Azure monitoring REST API: https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/rest-api-walkthrough?tabs=rest%2Cportal
-https://learn.microsoft.com/en-us/rest/api/monitor/metrics/list?view=rest-monitor-2023-10-01&tabs=HTTP
-https://learn.microsoft.com/en-us/azure/virtual-machines/monitor-vm 
-Metrics collected at hypervsisor level are not fine-grained
-e.g. an hypervisor could be able to provide the memory allocated to a VM, but not the memory actually used by the VM
-
-some metrcis can only be gathered by specific agents installed on the VMs
-
-\subsubsection{Cloud providers agents}
-
+\newline
+As Microsoft Azure documentation describes, there are actually two different categories of metrics that can be collected from a VM: the \textbf{guest-level metrics} and the \textbf{hypervisor-level or host-level metrics} \cite{azure_vm_monitoring}.
+The first category of metrics is collected by agents directly installed on the VMs, as described above.
+The second category of metrics is collected by \textbf{cloud provider APIs}, and they provide information about the VMs from the hypervisor or host level.
+For instance, in the case of Azure Virtual Machines, this date is relaated to the Hyper-V host that runs the VM \cite{azure_vm_monitoring}.
+The difference between these two categories of metrics is that the guest-level metrics are more fine-grained and provide information about the actual resource usage of the VM (being collected at the OS level), while the hypervisor-level metrics are more high-level.
+%Azure monitoring REST API: https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/rest-api-walkthrough?tabs=rest%2Cportal
+%https://learn.microsoft.com/en-us/rest/api/monitor/metrics/list?view=rest-monitor-2023-10-01&tabs=HTTP
+%https://learn.microsoft.com/en-us/azure/virtual-machines/monitor-vm 
+\newline
 To support the collection of metrics, several cloud providers offer agents that can be installed on the provider-specific VMs they manage.
-One of the goal of these agents comparared to standard cloud-agnostic agents is to provide a more convenient ..
-
-
-Azure Monitor Agent (https://learn.microsoft.com/en-us/azure/azure-monitor/agents/azure-monitor-agent-overview)
-
-
-\textbf{Google Ops Agent}: “the primary agent for collecting telemetry from your Compute Engine instances” (https://cloud.google.com/monitoring/agent/ops-agent)
-Can be installed in various ways: manual installation, Usining Google Cloud Agent policies from glcoud CLI or using a configuration management tool like Terraform
+One of the goal of these agents comparared to standard cloud-agnostic agents is to provide a more convenient experience for the user managing the VMs in the context of the cloud provider. 
+Therefore these agents are usually more integrated with other cloud provider services and APIs.
+In particular, we can cite the following agents: \textbf{Azure Monitor Agent} for Azure VMs, the \textbf{Google Ops Agent} for Google Compute Engine instances, and the \textbf{Amazon CloudWatch Agent} for AWS EC2 instances.
+%Azure Monitor Agent (https://learn.microsoft.com/en-us/azure/azure-monitor/agents/azure-monitor-agent-overview)
+%\textbf{Google Ops Agent}: “the primary agent for collecting telemetry from your Compute Engine instances” (https://cloud.google.com/monitoring/agent/ops-agent)
+%Can be installed in various ways: manual installation, Usining Google Cloud Agent policies from glcoud CLI or using a configuration management tool like Terraform
 
 \subsection{Power consumption metrics}
 
-In the context of the system, power consumption metrcis could be used to estimate the carbon footprint of a VM instance.
+In the context of our use case, power consumption metrcis could be theoretically used to estimate the carbon footprint of a VM instance.
+However, Public Cloud Providers do not provide real-time data about power consumption of a VM instance. \\
 
-Public Cloud Providers do not provide data about power consumption of a VM instance
+\textbf{Scaphandre} is an open-source monitoring agent designed to collect energy consumption metrics of a system \cite{scaphandre}.
+Scaphandre represents a promising solution only for on-premises servers, as it relies on the Intel \textbf{Running Average Power Limit (RAPL)} sensors to collect power consumption data.
+As a matter of fact, due to security and privacy concerns, public cloud providers do not expose to tenants the underlying RAPL sensors that Scaphandre relies on to track energy consumption \cite{scaphandre_github_issue}.
+Therefore, Scaphandre is unsuitable for our current use case.
+Another interesting and quite mature project is \textbf{Kepler} \cite{kepler}, which is a tool designed to monitor the energy consumption of Kubernetes resources (e.g., Nodes, Pods).
+Being Kubernetes-centric, Kepler is not suitable for our first use case, as it does not provide real-time data about the power consumption of a generic VM instance.
+However, Kepler could be potentially used in a future iteration of the system.
 
-scaphandre: NOT supported by public cloud providers. “Public cloud providers do not expose the underlying RAPL sensors that scaphandre and other measurement tools rely on to track consumption”. (https://github.com/hubblo-org/scaphandre/issues/142)
-https://hubblo-org.github.io/scaphandre-documentation/index.html
-
-kepler: really interesting and quite mature project but works only with K8s resources inside the cluster (Nodes, Pods). Therefore not good for our use first case.
-https://sustainable-computing.io/design/architecture/
-
-
-manually estimate power consumption based on CPU utilization, memory usage. Could be a very difficult task. 
-there is the TEADS metodology like 
+%manually estimate power consumption based on CPU utilization, memory usage. Could be a very difficult task. 
+%there is the TEADS metodology like 
 
 \subsection{Carbon metrics}
 
-Challenges
-Public Cloud Providers do not provide data about carbon intensity of a VM instance
+As briefly mentioned in the beginning of this section, there is no adopted standard adopted by Public Cloud Providers to calculate and expose the carbon footprint of a cloud resource.
+As described in section \ref{sec:real_time_cloud}, the Green Software Foundation is working on a standard called Real Time Cloud that aims to provide a common standard for carbon footprint calculation.
+However, this standard is not yet adopted by any major Public Cloud Provider.
 
-As briefly mentioned in the beginning of this section, there is no adopted standard, there is not something similar to FOCUS yet;
-there is a proposal for a specification (work in progress, not supported yet by Public Cloud Providers): 
-https://github.com/Green-Software-Foundation/real-time-cloud 
-https://github.com/Green-Software-Foundation/real-time-cloud/blob/main/Cloud_Region_Metadata_specification.md 
+
 
 
 Public Cloud Providers provide monthly reports (probably not useful in this case)
@@ -1653,18 +1654,22 @@ no live Grid Carbon Intensity Coefficient, they extrapolate data from “governa
 https://aether.green/docs/methodologies/#grid-carbon-intensity-coefficient
 
 
-carbond agent (https://gitlab.com/sustainable-computing-systems/carbond)
+A possible approach to estimate the carbon footprint of a VM instance 
+carbond agent
 ,ust installed on the machine
 so in this case, probably not useful 
+\cite{carbond:2023:hotcarbon}
 
 
 Example of a manual approach (not scalable due to tech specs research): https://devblogs.microsoft.com/sustainable-software/how-can-i-calculate-co2eq-emissions-for-my-azure-vm/ 
 
 The critical point here is to get/calculate the energy consumed by a cloud instance, since there are a huge number of technical configurations to find, retrieve and use for calculations.
 
-\subsection{Impact framework}
+\subsection{Impact framework potential integration}
+\label{sec:impact_framework_integration}
 
-Impact framework (by green software foundation)
+A potential integration with the Green Software Foundation's Impact Framework is envisioned for the system.
+Currently, said integration is not implemented, but it is deemed a valuable addition to the system.
 
 \newpage
 
