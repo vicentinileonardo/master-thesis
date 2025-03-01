@@ -367,6 +367,8 @@ The manifest will be created only if the cloud provider specified in the generic
 This flexibility allows the system to be cloud-agnostic and to support multiple cloud providers as soon as the cloud provider specific templates are available in the Helm chart.
 The directory structure of the Helm chart is the following:
 
+\vspace{0.5cm}
+
 \dirtree{%
 .1 chart/.
 .2 [several utilities files for mappings (omitted)].
@@ -1676,26 +1678,44 @@ Currently, said integration is not implemented, but it is deemed a valuable addi
 \section{End-to-End workflow}
 \label{sec:e2eflow}
 
-[TO BE CHANGED and formatted]
+In this section we will provide a complete end-to-end workflow of the system, from the user request to the final provision of the workload.
+First, we will describe the workflow in a high-level manner, and then we will provide a detailed sequence diagram (Figure \ref{fig:sequence_diagram}) that illustrates the interactions between the various components of the system.
+We must note that the workflow described in this section is a simplified version of the actual system, as it does not include some low level details.
 
-
-
-A user request for a workload arrives in Kubernetes / Krateo. 
-The request shape is VM1 = (MinCPU=4vCPU, MinRAM=4GiB, D=12h)
-As we can see the request is generic: it does not contain a specific cloud provider or a specific cloud region.
-A K8s Custom Resource (CR) representing the workload is created.
-mutating webhook intercepts the CREATE API request.
-K8s mutating webhook retrieve and evaluate policies and in particular, the AI model inference is called and should return a decision with the region and scheduling time (time-shifting and geographical shifting).
-OPA will use this decision to mutate the VM specification, adding the provider, the schedulingRegion and schedulingTime fields.
-Krateo core provider / cdc
-
+\begin{enumerate}
+  \item User (Developer, Data Scientist, etc) selects the VmTemplate Composition card on the Krateo PlatformOps Portal (UI)
+  \item User fills in the VmTemplate Composition form with the required fields (e.g., MinCPU, MinRAM, Deadline, Duration, MaxLatency)
+  \item This triggers and Helm install of the VmTemplate Composition on the Cluster
+  \item A VmTemplate Composition CREATE API request is sent to the Kubernetes API server
+  \item Authentication and Authorization checks are performed by the Kubernetes API server
+  \item The VmTemplate Composition CREATE API request is intercepted by a K8s Mutating Webhook configured with OPA as webhook server
+  \item AdmissionReview request is sent to the OPA server
+  \item OPA evaluates the AdmissionReview request against the policies
+  \begin{enumerate}
+    \item Cloud Provider is selected among the available providers
+    \item Eligible regions are calculated based on the selected Cloud Provider and the MaxLatency parameter
+    \item GDPR policy (if enabled) is evaluated and a subset of eligible regions is returned
+    \item A scheduling request is sent to the GreenOps Scheduler along with the eligible regions and a set of parameters
+    \item The GreenOps Scheduler returns a decision with the selected region and scheduling time
+    \item OPA maps the return ElectricityMaps region name to the Cloud Provider region name
+    \item OPA creates the JSON patch with the provider, schedulingRegion, and schedulingTime fields
+    \item OPA crafts and sends the AdmissionReview response to the K8s API server 
+  \end{enumerate}
+  \item The K8s Mutating Webhook receives the AdmissionReview response and mutates the VmTemplate Composition specification
+  \item K8s API server perform resource validation
+  \item The VmTemplate Composition is persisted in the etcd database
+  \item A periodic Helm upgrade operation is done by Krateo Composition Dynamic Controller
+  \item After schedulingTime is reached, an Helm upgrade operation will install the provider-specific manifests for VM provisioning on the K8s Cluster
+  \item Cloud provider Operator (e.g., Azure Operator) that is constantly watching for new provider-specific resources is triggered
+  \item The Cloud provider Operator provisions the VM (and required resources) on the Cloud Provider
+  \item The VM is up and running on the cloud
+\end{enumerate}
 
 \begin{sidewaysfigure}
   \centering
   \includegraphics[width=\textheight]{images/sequence_diagram.png}
-  \caption{Example of a full-page rotated image}
-  \label{fig:rotated_image}
+  \caption{Sequence diagram of the end-to-end workflow}
+  \label{fig:sequence_diagram}
 \end{sidewaysfigure}
-
 
 \newpage
