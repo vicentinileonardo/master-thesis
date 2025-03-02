@@ -28,17 +28,17 @@ Figure \ref{fig:pcp} shows the worldwide market share of leading cloud infrastru
     \label{fig:pcp}
 \end{figure}
   
-\subsection{Regions and Availability Zones}
+\subsection{Cloud Regions and Availability Zones}
 
-cloud regions
-Cloud providers usually further divide region into availability zones
-For the purpuse of this work, we will consider the concept of \textbf{cloud region} as the primary unit of deployment of cloud resources.
-Each Region supports a subset of the available instance types.
-We could safely assume that our workload specs are quite standard and therefore can be scheduled on any cloud region.
+With the term \textbf{cloud region}, cloud providers refer to a geographical area where they have one or more data centers.
+Cloud providers usually further divide regions into availability zones which main purpose is to provide high availability and fault tolerance.
+For the purpose of this work, we will consider the concept of \textbf{cloud region} as the primary unit of deployment of cloud resources.
+Usually, by cloud providers design choice, each cloud region supports a subset of the available cloud services and instance types.
+We could safely assume that our targeted workload specifications are quite standard and therefore can be scheduled on any cloud region.
 As of late 2024, the three major cloud service providers have established extensive global infrastructures.
 Table \ref{tab:cloud_regions_azs} shows the number of regions and availability zones (AZs) for each provider as of Q4 2024 - Q1 2025
 \cite{statista_cloud_regions} \cite{aws_infrastructure}.
-We must note that the number of regions and availability zones is constantly changing as cloud providers are expanding their global infrastructure
+We must note that the number of regions and availability zones is constantly changing as cloud providers are expanding their global infrastructure.
 
 \begin{table}[H]
     \centering
@@ -57,10 +57,11 @@ We must note that the number of regions and availability zones is constantly cha
     \label{tab:cloud_regions_azs}
 \end{table}
 
-each provider has a different number of regions and zones and also different naming conventions
-there is no standardization in the industry for this. 
-for instance a region located in London is called eu-west-2 in AWS, uk-west in Azure and europe-west2 in GCP.
-For what concerns the geo-distribution of cloud regions, Figure \ref{fig:azure_data_centers} shows the location of \textbf{Azure cloud data centers} around the world and the country Grid Carbon Intensity as reported by Electricity Maps (year 2024) \cite{electricity_maps}.
+We must also note that each cloud provider has a different number of regions and zones and also different naming conventions for them.
+There is no standardization nor a convention in the industry for this and cloud providers have chosen their own naming schemes.
+For instance a region located in London is called ``\textit{eu-west-2}'' in AWS, ``\textit{uk-west}'' in Azure and ``\textit{europe-west2}'' in GCP.
+This detail must be taken into acoount when designing and implementing a multi-cloud system.
+For what concerns the geo-distribution of cloud regions, as an example, Figure \ref{fig:azure_data_centers} shows the location of \textbf{Azure cloud data centers} around the world and the country Grid Carbon Intensity as reported by Electricity Maps (year 2024) \cite{electricity_maps}.
 Data center coordinates are retrieved by an Azure CLI command dump \cite{azure_data_centers_information}.
 
 \begin{figure}[htb]
@@ -73,35 +74,29 @@ Data center coordinates are retrieved by an Azure CLI command dump \cite{azure_d
 % https://www.naturalearthdata.com/downloads/110m-cultural-vectors/
 
 
-\subsection{Multi cloud paradigm}
+\subsection{Multi-cloud paradigm}
 
-what is multi cloud paradigm
-
-why is useful
-how to achieve
-
-advantages of multi-cloud
-flexibility
-risk reduction (reduces vendor lock-in)
-
-why it is important for the organizations
-
-
-disadvantages
-increased complexity
-attack surface increased (security)
-
-
-
-
-Why multi-cloud in the context of our system?
-Different cloud providers have data centers in various locations around the world. This diversity allows for more options when geographically shifting workloads to regions with lower carbon intensity.
-However the 3 big players have a big overlap: each one is present almost everywhere.
-Multi-cloud paradigm could be leveraged for lowering costs.
-For basic use cases, we can even set a single cloud provider to be used (e.g., Azure) and therefore just a multi-region environment.
-Being able to work in a multi-cloud environment is also important for accomplishing user / company needs: they can use just a single cloud provider or more than one for different reasons. Therefore if our system supports more cloud providers, it will accomplish more users' needs.
-If the system is designed to be multi-cloud then flexibility is higher for organizations and users.
-For the purpose of this work, we will consider only the 3 major Public Cloud Provider as of today: AWS, Azure, GCP
+The multi-cloud paradigm refers to the strategic utilization of cloud services from multiple public cloud providers within a single, heterogeneous architecture. 
+This approach allows organizations to distribute workloads, applications, and data across multiple public cloud providers \cite{google_multicloud}.
+On the other hand, the hybrid cloud paradigm refers to utilization of both public cloud services and on-premises infrastructure (private cloud).
+The multi-cloud strategy is often adopted by organizations to \textbf{avoid vendor lock-in}, \textbf{increase redundancy}, \textbf{increase flexibility} and \textbf{optimize costs} \cite{google_multicloud}.
+For what concern flexibility and optimization, a multi-cloud strategy allows an organization to select the best service on a case-by-case basis, leveraging the strengths of each provider.
+It could even be the case that, for the end user, the choice of the cloud provider for a service is transparent meaning that the organization itself (or the system) is the one that decides which cloud provider to use for a specific service based on some criteria.
+Vendor lock-in is avoided by designing applications to be \textbf{cloud-agnostic} and by leveraging open-source technologies (e.g., Kubernetes) and standards \cite{google_multicloud}.
+If an application is designed to be cloud-agnostic, it can be relatively easily migrated from one cloud provider to another.
+Multi-cloud is a strategy that might be more difficult to implement compared to a single cloud strategy but the long-term benefits are significant.
+Challenges and disadvantages are also present in a multi-cloud strategy \cite{google_multicloud}.
+As a matter of fact it can be safely said that \textbf{complexity in the overall infrastructure management is increased}.
+Another challenge is the \textbf{integration of services} across different cloud providers.
+An additional consideration could be done in terms of security: a multi-cloud strategy can \textbf{increase the attack surface} of an organization, therefore security measures must be carefully implemented.
+\newline
+For the purpose of this work, adopting a multi-cloud strategy is beneficial for several reasons.
+First and foremost, \textbf{user-centric flexibility} is achieved bringing the benefits described above.
+If a user or organization has a preference for a specific cloud provider, the system can be configured to use only that provider or a specific subset of providers.
+Secondly, the system can be designed to be \textbf{cloud-agnostic}, meaning that the choice of the cloud provider is transparent to the end user. 
+With some specific configurations, the subset of providers to be used can be decided by the system itself based on some criteria.
+Currently, as described in section \ref{sec:scheduling_outcome_policy}, the user can specify a subset of cloud providers (among the 3 major ones) to be used for the deployment of resources.
+Finally, in theory, since different cloud providers have data centers in various locations around the world, some low-carbon regions might be available only on a specific cloud provider.
 
 \section{Kubernetes}
 
@@ -133,6 +128,7 @@ We are instead focusing on the \textbf{management of external resources on cloud
 As described in the following section, our focus will be on the Kubernetes API server and in particular on Kubernetes Admission Control.
 
 \subsection{Kubernetes extendability}
+\label{sec:kubernetes_extendability}
 
 % https://www.cncf.io/blog/2022/06/15/kubernetes-operators-what-are-they-some-examples/
 
@@ -198,26 +194,36 @@ Krateo is composed of three main parts:
 \end{itemize}
 
 For the purpose of this work, we will focus on the \textbf{Krateo Composable Operations} part, which is the core of the Krateo platform and is responsible for managing the lifecycle of resources in a Kubernetes cluster \cite{krateo_docs}.
-Krateo Composable Operations is composed in turn by several components. Due to their core importance in our system, as described in section XYZ we will briefly describe the functionalities of the \textbf{Krateo core-provider} and the \textbf{Krateo composition-dynamic-controller}.
+Krateo Composable Operations is composed in turn by several components. 
+Due to their core importance in our system, we will briefly describe the functionalities of the \textbf{Krateo core-provider} and the \textbf{Krateo composition-dynamic-controller} as described in Krateo official documentation \cite{krateo_core_provider} and \cite{krateo_composition_dynamic_controller}.
 
 \subsection{Krateo core-provider}
 
-The Krateo core-provider is a Kubernetes operator that has the duty of downloading and managing Helm charts. It first checks for the existence of a file named \textit{values.schema.json} in the chart folder and uses it to generate a Kubernetes Custom Resource Definition (CRD), accurately representing the possible values that can be expressed for the installation of the chart \cite{krateo_core_provider}.
-The file \textit{values.schema.json} is a JSON schema that describes the structure of the \textit{values.yaml} file for the related Helm chart and it is considered a standard best practice for Helm charts. It basically provides a way to validate the \textit{values}.yaml file before the Helm chart is installed (i.e., to check if the values are in the correct format).
-In other words, the Krateo core-provider operator is responsible for deploying the Helm chart as a \textbf{native Kubernetes resource}, which allows for the management of the Helm chart lifecycle through Kubernetes APIs \cite{krateo_docs}.
+The Krateo core-provider, as its name suggests, is the core component of the Krateo platform.
+It is a \textbf{Kubernetes operator} that has the duty of downloading and managing Helm charts. 
+It first checks for the existence of a file named \textit{values.schema.json} in the chart folder and uses it to generate a Kubernetes Custom Resource Definition (CRD), accurately representing the possible values that can be expressed for the installation of the chart \cite{krateo_core_provider}.
+The file \textit{values.schema.json} is a JSON schema that describes the structure of the \textit{values.yaml} file for the related Helm chart and it is considered a standard best practice for Helm charts. 
+It basically provides a way to validate the \textit{values}.yaml file before the Helm chart is installed (i.e., to check if the values are in the correct format and if all the required values are present) \cite{krateo_core_provider}.
+Therefore the file \textit{values.schema.json} could be useful in the context of DevOps practices and CI/CD pipelines but in the case of Krateo it is pivotal for the generation of the CRD.
+In other words, the Krateo core-provider operator is responsible for deploying the Helm chart as a \textbf{native Kubernetes resource}, which allows for the management of the whole Helm chart lifecycle through Kubernetes APIs \cite{krateo_core_provider}.
 As a matter of fact, out of the box, Kubernetes does not provide a way to manage Helm charts natively and the Krateo core-provider is one tool that allows to do so.
-The Kubernetes Custom Resource Definition introduced by the Krateo core-provider is called \textbf{\textit{CompositionDefinition}}. It is a CRD that represents the Helm chart and its values (a Helm Chart archive (.tgz) with a JSON Schema for the values.yaml file) \cite{krateo_core_provider}.
-Upon a CompositionDefinition manifest application to the Kubernetes cluster, the Krateo core-provider generates the CRD from the schema defined in the \textit{values.schema.json} file included in the chart. It then deploys an instance of the Krateo composition-dynamic-controller, setting it up to manage resources of the type defined by the CRD \cite{krateo_core_provider}.
+The Kubernetes Custom Resource Definition introduced by the Krateo core-provider is called \textbf{\textit{CompositionDefinition}}. 
+It is a CRD that represents the Helm chart and its values (a Helm Chart archive (.tgz) with a JSON Schema for the values.yaml file) \cite{krateo_core_provider}.
+Upon a CompositionDefinition manifest application to the Kubernetes cluster, the Krateo core-provider generates the CRD from the schema defined in the \textit{values.schema.json} file included in the chart. 
+It then deploys an instance of the Krateo composition-dynamic-controller, setting it up to manage resources of the type defined by the CRD \cite{krateo_core_provider}.
+Therefore, this is an example of the Operator paradigm described in section \ref{sec:kubernetes_extendability} where the Krateo core-provider is the Operator and the CompositionDefinition is the Custom Resource Definition.
 
 \subsection{Krateo composition-dynamic-controller}
 
-The Krateo composition-dynamic-controller is the Kubernetes operator that is instantiated by the Krateo core-provider to manage the Custom Resources whose Custom Resource Definition is generated by the core-provider.
-In practice, when a Custom Resource (CR) is created, the instance of composition-dynamic-controller checks if a Helm release associated with the CR already exists in the cluster \cite{krateo_composition_dynamic_controller}. 
+The Krateo composition-dynamic-controller is the Kubernetes operator that is instantiated by the Krateo core-provider to manage the specific Custom Resources whose Custom Resource Definition is generated by the core-provider.
+In practice, when a Custom Resource (CR) is created, the specific instance of composition-dynamic-controller checks if a Helm release associated with the CR already exists in the cluster \cite{krateo_composition_dynamic_controller}. 
 If this is not the case, it performs an \textit{helm install} operation using the values specified in the CR to create a new Helm release. This will practically deploy all the resources defined in the Helm chart using \textbf{Helm's templating engine}.
+This feature is particularly important in the context of the system described in this thesis and in particular for multi-cloud resource management as explained in section XYZ.
 However, if the Helm release does already exist, it instead executes an \textit{helm upgrade} operation, updating the release's values with those specified in the CR, effectively updating the resources in the cluster.
+This mechanism will be leveraged as well for a particular feature of our system described in section XYZ.
 Finally, when the CR is deleted from the cluster, the instance of the composition-dynamic-controller performs an \textit{helm uninstall} on the release, removing all the resources defined in the Helm chart from the cluster \cite{krateo_composition_dynamic_controller}. \\
-
-The architecture of the Krateo core-provider and composition-dynamic-controller is depicted in Figure \ref{fig:krateo_core_provider}.
+It must be said that Krateo composition-dynamic-controller has a set of additional features that are not described in this work such as multi-version support.
+The architecture of the Krateo core-provider and Krateo composition-dynamic-controller is depicted in Figure \ref{fig:krateo_core_provider}, as described and depicted in \cite{krateo_core_provider}.
 
 \begin{figure}[htb]
     \centering
@@ -455,18 +461,20 @@ A weighted distribution can be created by normalizing the MOER values across the
 These weightings are encoded in a YAML file and applied as a priority for the Scheduler, which out-of-the-box supports these kind of custom rules to extend the scheduling process.
 The claim is that by combining three elements (i.e., Kubernetes scheduler, carbon intensity data, and a weighting algorithm) any Kubernetes instance can be made carbon-aware, at least in a simplified way \cite{microsoft_carbon_aware_k8s}.
 
-\section{Multi-cloud resource management - takeaways}
+\section{Multi-cloud resource management - major takeaways}
 
 %many simulation compared to real-world scenarios
 %no much flexibility for what concern variaty of resource managed
 %usually tied to one type of resource (e.g., VMs, K8s pods)
 %usually either time shifting or geographical shifting
 Many of the concepts described in this chapter are leveraged in the design and implementation of our system. 
-We can list some of the major recurrent elements that are generally needed in order to build a system for multi-cloud resource management:
+We can briefly list some of the major recurrent elements that are generally needed in order to build a system for multi-cloud resource management:
 \begin{enumerate}
     \item representation of a generic workload (with its characteristics and constraints)
     \item cloud service broker / orchestrator
     \item modules to directly interact with the cloud providers
 \end{enumerate}
+
+In the system proposed by this thesis, the elements listed above are represented by \textbf{cloud-native components} in the Kubernetes ecosystem as described in the following chapters.
 
 \newpage

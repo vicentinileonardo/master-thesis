@@ -107,8 +107,6 @@ The following table provides an overview of the main components of the system an
 
 All the components listed in the above table must be deployed inside a Kubernetes cluster. The only exception are the OPA Policies and data which lies outside the cluster as described in section \ref{sec:opa_bundles}.
 
-\newpage
-
 \section{Krateo PlatformOps integration}
 
 Krateo PlatformOps is utilized in this system for \textbf{multi-cloud resource management}, allowing for the declarative orchestration of cloud resources across different cloud providers leveraging Kubernetes as a control plane. 
@@ -122,7 +120,7 @@ It is deemed interesting to describe both approaches in order to identify the se
 
 \subsection{Resource management: the Custom Kubernetes ``Synchronization Operator" approach}
 
-When dealing with multi-cloud workloads with Kubernetes as a control plane, a \textb{synchronization and mapping mechanism} (broker) is required to bridge the gap between:
+When dealing with multi-cloud workloads with Kubernetes as a control plane, a \textbf{synchronization and mapping mechanism} (broker) is required to bridge the gap between:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
   \item[$\bullet$] \textbf{Generic Kubernetes Custom Resources}, which represent generic provider-agnostic workloads.
   \item[$\bullet$] \textbf{Cloud provider-specific Custom Resources}, which correspond to the actual cloud resources provisioned through the respective Kubernetes operators provided by Azure, AWS or GCP (in our case).
@@ -185,6 +183,7 @@ Others require additional provider-specific metadata (e.g., Azure requires a \te
 A custom synchronization operator must take into account and encode this logic explicitly, making it more complex to maintain especially when supporting several cloud providers.
 
 \subsubsection{Limitations of a Custom ``Synchronization Operator''}
+\label{sec:limitations_custom_operator}
 
 Another major challenge with a custom synchronization operator is that some cloud providers do not support time scheduling metadata within their Custom Resources. 
 In particular, no cloud provider operator among the ones we used for the system (AWS, Azure, GCP) currently provides a dedicated field for scheduling time.
@@ -209,7 +208,7 @@ Due to these limitations and complexities, we explored and leveraged an \textbf{
 \end{figure}
 
 In our approach, we opted to replace a custom Kubernetes operator (``Synchronization Operator''), originally designed to handle the \textbf{mapping} from generic to cloud-specific resources, with \textbf{Krateo Core Provider}. 
-This decision was motivated by the need for greater flexibility and maintainability in defining multi-cloud infrastructure components. 
+This decision was motivated by the need for \textbf{greater flexibility and maintainability} in defining multi-cloud infrastructure components. 
 As a matter of fact, a custom Kubernetes operator was originally designed to handle only virtual machines (VMs).
 Mappings and extensions to support additional cloud resources would have required significant code changes and maintenance overhead for each additional resource type added.
 Therefore instead of embedding business logic directly within a custom Kubernetes operator, in the current system implementation, we leverage the capabilities of \textbf{Helm templating} to dynamically generate cloud-provider-specific resources. 
@@ -224,7 +223,6 @@ This approach, further described in this section, offers several advantages:
   \item[$\bullet$] Reduced maintenance overhead: Custom operators typically require constant updates and refinements, especially if they are responsible for complex business logic. 
 \end{itemize}
 
-
 \subsubsection{Generic VM resource definition}
 
 %n pratica, la prima fase è la creazione del composition-dynamic-controller (cdc), fatta dal core-provider
@@ -233,14 +231,13 @@ This approach, further described in this section, offers several advantages:
 
 In order to define a generic VM resource, we leverage Krateo Core Provider to define a \textbf{CompositionDefinition} resource that specifies the structure of the VM resource.
 Effectively a CompositionDefinition is a Kubernetes Custom Resource that defines the structure of a Composition Custom Resource (instance) which is an Helm chart comprised of Helm templates and values.
-As a matter of fact, a CompositionDefinition is pointing to a versioned Helm chart that is stored in a Helm repository.
+As a matter of fact, a CompositionDefinition is pointing to a versioned Helm chart that is stored in a Helm repository (e.g. on a Helm repository server).
 
 \begin{lstlisting}[language=yaml, caption={CompositionDefinition}, label={lst:composition_definition}]
 apiVersion: core.krateo.io/v1alpha1
 kind: CompositionDefinition
 metadata:
   name: vmtemplate
-  namespace: greenops
 spec:
   chart:
     repo: vm-template
@@ -249,8 +246,7 @@ spec:
 \end{lstlisting}
 
 The Helm chart referenced in the CompositionDefinition contains the Helm templates and values needed to define the resource named \textit{VmTemplate}.
-Listing \ref{lst:values.yaml} shows an example of the VmTemplate values.yaml file, which defines the fields of the VM resource.
-Listing \ref{lst:values.schema.json} shows the corresponding JSON schema for the values.yaml file.
+Listing \ref{lst:values.yaml} shows an example of the VmTemplate values.yaml file, which defines the fields of the VM resource while listing \ref{lst:values.schema.json} shows the corresponding JSON schema for the values.yaml file.
 
 \begin{lstlisting}[language=yaml_1, caption={values.yaml}, label={lst:values.yaml}, float=htpb]
 # @param {string} vmName Name of the VM
@@ -358,8 +354,8 @@ maxLatency: 100
 \subsubsection{Generic VM to Cloud Provider Specific VM mapping}
 
 The Krateo composition-dynamic-controller (Krateo cdc) is responsible for creating the Composition Custom Resource (instance) by templating the Helm chart referenced in the CompositionDefinition.
-For the purpose of the system, we levareged Helm templating to dynamically generate cloud-provider-specific resources from a generic VM resource.
-As a matter of fact, the Helm chart contains all the three cloud provider specific set of templates necessary for a VM provisioning but only one set of templates is used at a time.
+For the purpose of the system, we leveraged Helm templating to dynamically generate cloud-provider-specific resources from a generic VM resource.
+As a matter of fact, the Helm chart contains all the \textbf{three cloud provider specific set of templates} necessary for a VM provisioning but \textbf{only one set of templates is used at a time}.
 The Krateo cdc will generate the cloud-provider-specific VM resources based on the cloud provider specified in the generic VM resource.
 Therefore, for each generic VM resource, the Krateo cdc will use \textbf{only one set of templates} to generate the cloud provider specific VM resource.
 This ``brokering mechanism'' (routing through Helm templates) is implemented in the Helm templates using ``\textbf{guards}'' as reported in listing \ref{lst:guards}
@@ -394,7 +390,7 @@ The directory structure of the Helm chart is the following:
 
 \vspace{0.5cm}
 
-\begin{lstlisting}[language=yaml, caption={Scheduling time}, label={lst:sched}]
+\begin{lstlisting}[language=yaml, caption={Helm Template guards example}, label={lst:guards}]
 {{ if hasKey .Values "provider" }}
 {{ $provider := .Values.provider }}
 {{ if eq $provider "azure" }}
@@ -407,45 +403,24 @@ metadata:
 \end{lstlisting}
 
 
-VM size selection is a crucial step in the VM provisioning process.
-
+\textbf{VM size selection} is a crucial step in the VM provisioning process.
 Helm allows the definition of \textbf{helper functions} which resides in the \textit{\_helpers.tpl} file.
-In our case, we defined a helper function called \textit{findBestVmSize} that takes as input the CPU and RAM requirements of the VM and returns the best provider-specific VM size available.
+In our case, we defined a helper function called \textbf{\textit{findBestVmSize()}} that takes as input the CPU and RAM requirements of the VM and returns the best provider-specific VM size available.
+For instance: a generic requested VM specification could be (4 vCPU, 8 GiB of RAM) and this would be mapped to the ``\textit{Azure Standard\_A4\_v2}'' VM size.
 A prerequisite for that is to have a mapping between the tuple (CPU, RAM) and the VM sizes (a string) for each cloud provider.
+This mappings are were built using the cloud provider documentation and are stored in the Helm chart as a set of utilities files.
+Potentially, an automatic way to fetch the available VM sizes for each cloud provider could be implemented in the future.
+For our first iteration of the system we used a small subset of all the available instance types (i.e. 5 instance types for each cloud provider).
 
-Helm template engine (how to map to cloud provider specific resources, why is better)
-We need to know which VMs (instance types) are actually available on Azure, AWS, GCP.
-What to actually use to fetch the list and where to store it
-How frequent the elements changes and how to update the list (this is done with policy updates (updates to contextual data))
-How to match generic workload to candidate VMs instance types (that adhere to the generic workload specs), what is the mapping logic.
-For example:
-Requested VM (generic): (2 vCPU, 16 GiB)
-Chosen VM instance: Azure Standard E2as v4
-What are the steps of the process to identify the correct VM instance?
-
-For our PoC we use a small subset of all the available instance types.
-
-Current approach:
-Map (CPU, RAM) => InstanceType
-
-This mapping is done through Helm templating 
-
-
-
-
-
-
-
+\subsubsection{Scheduling time waiting logic}
 
 Helm template engine is also leveraged to handle the \textbf{scheduling time waiting logic}.
-As previously described in section XYZ, this logic is crucial for the system duo to the fact that cloud provider operators do not support scheduling time metadata in their CRs and therefore as soon as a CR is created the cloud provider operator will provision the resource immediately.
-We leverage a set of ``\textbf{guards}'' to effectively block manifest creation until the scheduling time is reached. 
+As previously described in section \ref{sec:limitations_custom_operator}, this logic is crucial for the system due to the fact that cloud provider operators do not support scheduling time metadata in their CRs and therefore as soon as a CR is created the cloud provider operator will provision the resource immediately.
+It must be remembered that is not a trivial task to implement this logic in a Kubernetes operator.
+In this case, we leverage a set of ``\textbf{guards}'' to effectively block manifest creation until the scheduling time is reached. 
 As a result, only when the scheduling time is reached the manifest is created and applied by Helm and finally the resource is provisioned by the cloud provider operator.
-
-
-Krateo cdc will periodically perform an ``helm upgrade'' and if the 
-
-
+As a matter of fact, Krateo cdc will periodically perform an ``helm upgrade'' and if the scheduling time is reached the cloud provider specific resources will be created. 
+As a consequence, the specific cloud provider operator will be triggered by the creation of the cloud provider specific resources and will provision the VM.
 Listing \ref{lst:sched} shows an example of how guards are used to handle the scheduling time waiting logic and other scheduling constraints.
 We also make sure, for instance, that the generic CR contains a ``provider'' field that specifies the cloud provider where the resource should be provisioned.
 
@@ -477,11 +452,9 @@ Each Operator, when installed on a Kubernetes cluster, installs a \textbf{set of
 These CRDs can be used to define cloud resources in a declarative manner, in the form of Kubernetes Custom Resources (CRs), allowing users to specify the desired state of the cloud resources they wish to manage.
 The other component installed by the Operator is the \textbf{controller}, a software module that watches for changes to the Custom Resources in the cluster and takes all the necessary actions to reconcile the actual state with the desired state.
 Under the hood the controller interacts with the cloud provider's API to provision, update, and delete cloud resources.
-
 Kubernetes operators work on the principle of \textbf{Continuous Reconciliation}, ensuring, in this case, that the desired state of the system, as defined by users, aligns with the actual state of provisioned cloud resources. 
 In particular, Operators act as controllers that monitor (\textit{watch}), adjust, and manage external cloud resources within a Kubernetes environment. 
 Inside the Kubernetes cluster lie the \textbf{real-time representation of the provisioned cloud resources}, which are managed by the operators.
-
 It must be noted that different cloud providers adopt \textbf{different design choices} for their Kubernetes operators and more in general for their overall cloud infrastructure management. 
 Therefore, for the creation of logically similar resources, like a virtual machine, the structure and the field of the resources can be different. 
 These resources typically include:
@@ -515,8 +488,8 @@ This fields are labeled with an ID which will be attached to the resources' list
 \subsection{Azure Kubernetes Operator}
 
 Microsoft Azure provides a Kubernetes operator called \textbf{Azure Service Operator v2} (ASO).
-Currently, ASO supports more than 150 different Azure resources.
-The minimum set of resources needed for vm provisioning on Azure through Azure service operator is is:
+Currently, ASO supports more than 150 different Azure resources one of which is the \textbf{Azure Virtual Machine}.
+The minimum set of resources needed for VM provisioning on Azure through Azure service operator is:
 
 \begin{itemize}[itemsep=0.2pt, topsep=1pt] 
 \item[$\bullet$] Virtual Network 
@@ -531,7 +504,6 @@ The minimum set of resources needed for vm provisioning on Azure through Azure s
 \caption{Minimum set of Azure resources for VM provisioning}
 \label{fig:azure}
 \end{figure}
-
 
 An example of a Azure-specific custom resource is the one illustrated in listing \ref{lst:azure}. \\
 
@@ -564,7 +536,8 @@ spec:
 
 \subsection{GCP Operator}
 
-GCP Config connector
+Google Cloud Platform provides a Kubernetes operator called \textbf{GCP Config Connector}.
+The name of the virtual machine resource in GCP is \textbf{ComputeInstance}.
 For what concerns the GCP Operator, the minimum set of resources needed for VM provisioning is:
 
 \begin{itemize}[itemsep=0.2pt, topsep=1pt] 
@@ -579,7 +552,6 @@ For what concerns the GCP Operator, the minimum set of resources needed for VM p
 \caption{Minimum set of GCP resources for VM provisioning}
 \label{fig:gcp}
 \end{figure}
-
 
 %some fields are based on regions
 %some fields are based on zones
@@ -678,7 +650,7 @@ The AMI must be compatible with the chosen EC2 instance type, ensuring that the 
 The following attributes define an AMI:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt] 
   \item[$\bullet$] Region: AMIs are region-specific
-  \item[$\bullet$] Operating System: Determines the base OS (e.g., Ubuntu, Windows, RHEL) installed on the AMI.
+  \item[$\bullet$] Operating System: Determines the base OS (e.g., Ubuntu, RHEL) installed on the AMI.
   \item[$\bullet$] Processor Architecture: e.g., x86, ARM
   \item[$\bullet$] Root Device Type: Specifies whether the AMI uses an EBS-backed volume (Elastic Block Store) or Instance Store for storage.
   \item[$\bullet$] Virtualization Type: Defines whether the AMI supports paravirtual (PV) or hardware virtual machine (HVM) instances.
@@ -703,8 +675,6 @@ spec:
  @\yellowhl{    instanceType: \{\{{ \$vmSize \}\}} \#[2] }@
   subnetID: {{ (lookup "ec2.services.k8s.aws/v1alpha1" "Subnet" (.Values.namespace | default "greenops") (printf "%s-subnet" .Values.vmName)).status.subnetID }}
 \end{lstlisting}
-
-\newpage
 
 \section{Kubernetes Mutating Webhook Configuration}
 
@@ -758,11 +728,12 @@ This process is further described in the next section.
 
 \section{Open Policy Agent (OPA)}
 
-Open Policy Agent (OPA) is an open-source general-purpose \textbf{policy engine} that enables unified policy enforcement across several types of environments. OPA provides a declarative language called Rego enabling a paradigm known as ``\textbf{Policy as Code}" \cite{opa_docs}.
+Open Policy Agent (OPA) is an open-source general-purpose \textbf{policy engine} that enables unified policy enforcement across several types of environments. 
+OPA provides a declarative language called \textbf{Rego} enabling a paradigm known as ``\textbf{Policy as Code}" \cite{opa_docs}.
 
 Open Policy Agent can be integrated as a sidecar container, host-level daemon, or library to perform policy decisions for a plethora of use cases: microservices, Kubernetes admission control, CI/CD pipelines, API gateways and more \cite{opa_docs}. 
 
-In the context of our system, OPA and the Policy-as-Code paradigm are used to define \textbf{policies for workload scheduling}: encoding the output of a scheduling decision coming from an external GreenOps Scheduler and ensuring compliance with additional policies related to latency requirements and legal constraints.
+In the context of our system, OPA and the Policy-as-Code paradigm are leveraged to define \textbf{policies for workload scheduling}: encoding the output of a \textbf{scheduling decision} coming from an external GreenOps Scheduler and ensuring compliance with \textbf{additional policies} related to latency requirements and legal constraints.
 
 \subsection{Policy as Code paradigm}
 
@@ -869,7 +840,11 @@ scheduling_details := http.send({
 
 \subsection{OPA integration with Kubernetes}
 
-In Kubernetes admission control, policy enforcement is handled by the \textbf{Kubernetes API server} itself. OPA makes the policy decisions when queried by the admission controller, but the actual enforcement (namely allowing or denying requests) is executed by Kubernetes' built-in admission control mechanisms. This workflow is represented in figure \ref{fig:webhook_opa} where \textbf{AdmissionrReview request} and \textbf{AdmissionReview response} are respectively input and output of the whole OPA section. The API Server sends the entire Kubernetes object in the webhook request to OPA. %cite OPA kubernetes primer
+In Kubernetes admission control, policy enforcement is handled by the \textbf{Kubernetes API server} itself. 
+OPA makes the policy decisions when queried by the admission controller, but the actual enforcement (namely allowing or denying requests) is executed by Kubernetes' built-in admission control mechanisms. 
+This is effectively one of the core design principles of OPA: to provide policy decisions to external systems, which then enforce the decisions based on their own logic \cite{opa_kubernetes_primer}.
+This workflow is represented in figure \ref{fig:webhook_opa} where \textbf{AdmissionReview request} and \textbf{AdmissionReview response} are respectively input and output of the whole OPA section. 
+The API Server sends the entire Kubernetes object in the webhook request to OPA. %cite OPA kubernetes primer
 The Kubernetes API server will use the received AdmissionReview response for its decision. \\
 %\cite{opa_philosophy}
 
@@ -882,7 +857,7 @@ The Kubernetes API server will use the received AdmissionReview response for its
 \label{fig:webhook_opa}
 \end{figure}
 
-In a Kubernetes deployment, an OPA Pod typically consists of the following containers:
+In a Kubernetes deployment, an \textbf{OPA server Pod} typically consists of the following containers:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
   \item[$\bullet$] OPA server container
   \item[$\bullet$] \textbf{kube-mgmt} container \\
@@ -893,10 +868,9 @@ The primary responsibility of kube-mgmt is to replicate Kubernetes resources int
 This is especially useful to enforce policies that deals with naming conflicts, where OPA needs to check existing names in the cluster for the decision \cite{kube-mgmt}.
 Additionally, it allows for loading policies directly from the Kubernetes cluster by retrieving them in the form of ConfigMaps. This feature is particularly useful when policies need to be dynamically updated based on the current state of the cluster \cite{kube-mgmt}. However, in the system described in this thesis, this latter feature is not employed in the current implementation as we are using policy bundles for policy distribution.
 
-In the current system configuration, the kube-mgmt container is deployed to facilitate resource replication, ensuring that Kubernetes resources, namely VmTemplate resources, are synchronized with the OPA instance. However, at present, no policy requires interrogation of VmTemplate resources that are already present in the system.
+In the current system configuration, the kube-mgmt container is deployed to facilitate resource replication, ensuring that Kubernetes resources, namely VmTemplate resources, are synchronized with the OPA instance. 
+However, at present, no policy requires interrogation of VmTemplate resources that are already present in the system.
 Looking ahead, future policies could leverage VmTemplate resource information to enforce naming conflict resolution, quota management, or additional constraints.
-
-\newpage
 
 \subsection{OPA policies}
 \label{sec:opa_policies}
@@ -981,8 +955,6 @@ response := {
 else := {"allowed": true, "uid": uid}
 \end{lstlisting}
 
-
-\newpage
 \lstset{style=jsonstyle}
 \begin{lstlisting}[caption={AdmissionReview request}]
 {
@@ -1072,7 +1044,6 @@ Figure \ref{fig:latency_matrix} illustrates an small example (4 regions subset) 
   \label{fig:latency_matrix}
 \end{figure}
 
-
 \lstset{style=jsonstyle}
 \begin{lstlisting}[caption={Latancy matrix example encoded in JSON format}, label={lst:latency_matrix_example}]
 {
@@ -1104,27 +1075,11 @@ Figure \ref{fig:latency_matrix} illustrates an small example (4 regions subset) 
 
 \end{lstlisting}
 
-
-data
-
-Azure provides monthly Percentile P50 round trip times between Azure regions:
-(https://learn.microsoft.com/en-us/azure/networking/azure-network-latency?tabs=Americas%2CWestUS)
-https://learn.microsoft.com/en-us/azure/networking/media/azure-network-latency/azure-network-latency-thumb.png#lightbox 
-
-Azure network latencies docs:
-https://raw.githubusercontent.com/MicrosoftDocs/azure-docs/refs/heads/main/articles/networking/azure-network-latency.md
-
-Merged Azure network latencies:
-https://docs.google.com/spreadsheets/d/1kxtPw9ZSnAv1vQ6IDwzw-mXdHoKUFb8AjlsjACnvDqE/edit?usp=sharing 
-
-
-AWS:
-https://www.cloudping.co/grid (not official, not using VMs but Lambda functions)
-how it is calculated
-
-google
-syntetic data
-no offical data
+For what concern data sources, cloud-specific inter-regional latency data were obtained in different ways for each cloud provider.
+Microsoft Azure provides monthly Percentile P50 round trip times between Azure regions in its documentation \cite{azure_network_latency}. 
+This data was scraped, merged and used to build the latency matrix for Azure regions.
+For AWS a similar approach was used, but the data was obtained from a third-party website that provides latency data between AWS regions calculating using AWS Lambda functions \cite{cloudping}.
+For Google Cloud Platform, no official data was found, so the latency matrix was built using synthetic data.
 
 \subsection{GDPR policy}
 
@@ -1136,6 +1091,7 @@ Since each cloud provider has its own regional distribution, the list of EU-comp
 It must be noted that this policy is \textbf{not intended to be a comprehensive GDPR compliance solution}, but rather a basic example of how OPA can enforce \textbf{data residency requirements in a multi-cloud environment}. Organizations with more stringent GDPR compliance needs should consider additional measures.
 
 \subsection{Scheduling outcome policy}
+\label{sec:scheduling_outcome_policy}
 
 In the context of this work, the ``Scheduling outcome policy'' is a policy that determines the scheduling decision for a given workload based on the output of the GreenOps Scheduler which is queried in real-time, as described in section \ref{sec:opa_external_data}.
 The inputs and outputs of this policy are as follows:
@@ -1176,27 +1132,33 @@ patchCode = {
 
 \subsection{OPA Data mapping}
 
-OPA is flexible enough to handle data mapping between different data models, enabling seamless integration with external systems. In our GreenOps system, data mapping is essential for translating between ElectricityMaps regions and cloud provider regions. 
+OPA is flexible enough to handle \textbf{data mapping operations} between different data models, enabling seamless integration with external systems. 
+In our GreenOps system, data mapping is essential for translating between ElectricityMaps regions and cloud provider regions. 
+At some point in the system this mapping needed to be done and we deemed that inside the OPA policies was the best place to
+do it.
+In particular, this mappings are needed since the GreenOps scheduler knows only the notion of ElectricityMaps regions, and do not possess the knowledge of cloud provider regions. 
+Therefore, a mapping is needed to translate the ElectricityMaps regions to cloud provider regions and vice versa.
 
+The entire data mapping process can be broken down into the following steps:
+\begin{enumerate}
+  \item Cloud provider selection (e.g., Azure, AWS, GCP): this determines the set of cloud provider regions.
+  \item Latency filtering: this step can only be done with cloud provider-specific latencies and determines the eligible regions.
+  \item GDPR compliance filtering (if enabled): this step ensures that only regions in the EU are selected.
+  \item ElectricityMaps region mapping: this step maps the eligible cloud provider regions to ElectricityMaps regions.
+  \item Scheduling outcome: this step determines the scheduling region (ElectricityMaps region) based on the output of the GreenOps Scheduler.
+  \item The ElectricityMaps region is then mapped back to the cloud provider region as final step.
+\end{enumerate}
 
-At some point in the system this mapping needs to be done.
-this mappings are needed since the scheudler knows only about ElectricityMaps regions, and do not possess the knowledge of cloud provider regions. Therefore, a mapping is needed to translate the ElectricityMaps regions to cloud provider regions and vice versa.
+This process is illustrated in figure \ref{fig:data_mapping}.
 
-inside the policy is a good place to do this mapping
-
-
-first filter is the selection of the provider
-this determine the whole set of regions belonging to that provider
-
-eligible regions: this filter can be only done with cloud provider specific latencies
-
-\begin{figure}[H]
+\begin{figure}[htb]
   \centering
   \includegraphics[width=1\linewidth]{images/data_mapping.png}
   \caption{OPA Data mapping}
   \label{fig:data_mapping}
 \end{figure}
 
+The Rego code in listing \ref{lst:rego_data_mapping} illustrates the Rego functions used for data mapping between cloud provider regions and ElectricityMaps regions.
 
 \begin{lstlisting}[language=Rego, caption=Rego data mapping, label=lst:rego_data_mapping]
 # Utility functions to map between cloud provider regions 
@@ -1224,41 +1186,17 @@ map_from_electricitymaps(em_region, provider) = cloud_region if {
 
 \end{lstlisting}
 
-\subsection{OPA integration end-to-end workflow}
+\subsection{OPA integration in the system}
 
- (K8s mutating webhook)
-
-OPA flow:
-
-- admission review (contains max\_latency, origin\_region)
-
-- policy contains cloud provider (or chose for the user)
-
-- policy calculate subset of eligible regions
-
-- policy will ask scheduling information to the scheduler (using http.send()
-
-
-
-
-
-
-
-
-
-
-relationship with k8s mutating webhook
-
-rego policies
-
-
-scheduler has notions of 
-electricity maps regions only
-
-OPA is used also as a data mapping layer
-both at request time
-and at response time
-
+In this section we describe the integration of OPA in the system.
+The entire architecture of the system and the integration of OPA is illustrated in figure \ref{fig:architecture}.
+OPA has the role of \textbf{mutating webhook server} which is consulted by the Kubernetes API server when a CREATE or UPDATE operation is performed on a VmTemplate Custom Resource.
+The OPA server is responsible for evaluating the policies and returning the AdmissionReview response to the API server.
+The AdmissionReview response contains the decision of the policy evaluation (i.e. scheduling outcome) and the JSON patch operations to be applied to the VmTemplate resource by the Kubernetes API server.
+OPA is periodically polling the policy bundles from an external container registry (e.g., DockerHub) to ensure that the policies are up to date.
+The main policy, namely the ``scheduling outcome policy'', is responsible for determining the scheduling decision based on the output of the GreenOps Scheduler called in real-time at request time, as described in section \ref{sec:scheduling_outcome_policy}.
+OPA is also responsible for data mapping operations between ElectricityMaps regions and cloud provider regions, as described in section \ref{sec:opa_data_mapping}.
+The system is designed to be highly flexible and extensible, allowing for the addition of new policies and data mappings as needed.
 
 \begin{figure}[htb]
 \centering
@@ -1267,22 +1205,15 @@ and at response time
 \label{fig:architecture}
 \end{figure}
 
-Figure \ref{fig:architecture}represents the configuration of the Kubernetes Mutating Webhook with the intergeation of Open Policy Agent.
-In particular, 
-
-
-
 \subsubsection{Day 2 operations}
 \label{sec:day2_operations}.
 
 We can define as \textbf{\textit{Day 2 operations}} all the management operations that are performed after the deployment of a resource.
 These operations comprise tasks such as scaling up or down a VM based on the load, stopping a VM during off-peak hours, or migrating a VM to a different region to optimize costs.
-
-
-
-The mutating webhook configuration is set on the CREATE and UPDATE operations
-UPDATE operation trigger
-K8s Cronjob that attach a label to the custom resoruce 
+As we previously described, the mutating webhook configuration is set on both the CREATE and \textbf{UPDATE} operations.
+A possible UPDATE operation trigger could be Kubernetes Cronjob that attach a label ``\textit{"greenops-optimization": "123456789"}'' to the VmTemplate resource at a specific time of the day.
+This could be useful to trigger specific policies that are only applied during the day 2 operations.
+In addition to that, the UPDATE operation could be useful for VMs that have already been scheduled in a distant future (due to their deadline very far in the future) to obtain a new scheduling decision based on new conditions (e.g. more recent carbon intensity forecast).
 
 \subsection{OPA Gatekeeper}
 
@@ -1352,10 +1283,14 @@ It must be noted that OPA Gatekeeper limitations could be potentially addressed 
 
 \subsection{OPA advanced features}
 
-It is deemed useful to mention some of the advanced features of OPA that were not employed in the system described in this thesis but could be potentially useful in future developments or in other contexts where OPA is used.
-
-- bundle signing
-- delta bundles
+It is deemed useful to mention some of the advanced features of OPA that were not employed in the first iteration of the system described in this thesis but could be potentially useful in future developments or in other contexts where OPA is used.
+\newline
+To ensure data integrity of policies (i.e., to prevent unauthorized modifications or MITM (Man in the Middle) attacks) and to provide a mechanism for verifying the authenticity of policies, OPA provides a \textbf{policy signing} feature \cite{opa_signing}.
+This feature allow policy developer to digitally sign their policies bundles by adding a file named ``\textit{.signature.json}''.
+\newline
+OPA also provides a more efficient way to distribute policies using \textbf{Delta Bundles} \cite{opa_delta_bundles}.
+Normally, when a policy bundle is downloaded, OPA will download the entire bundle, erase and overwrite the current policies and data with the new ones.
+Delta Bundles are composed of a single ``patch,json'' file that contains a set of JSON Patch operations that can be applied to the current data to update it to the new version. Currently only data updates are supported (data.json) and not policy updates (policy.rego) \cite{opa_delta_bundles}.
 
 \newpage
 
@@ -1587,15 +1522,15 @@ In addition, the Prometheus server can be configured to send alerts based on the
   \label{fig:prometheus}
 \end{figure}
 
+An example of how these metrics can be used for ``day 2 operations" is the one put in place by the \textbf{Krateo Composable FinOps} component \cite{krateo_docs}.
+In this case, the system uses a set of Prometheus exporters and scrapers, configured through Kubernetes Custom Resources, to collect metrics about the VMs managed by the system.
+The optimizations are encoded in a set of Kubernetes Custom Resources (CRs) that are used by the specific operators (e.g., \textit{finops-operator-vm-manager}) to performs operations on the VMs, such as scaling up or down the VMs, stopping them during off-peak hours, etc \cite{krateo_docs}.
 %Prometheus exporters (https://prometheus.io/docs/instrumenting/exporters/) + Prometheus scrapers for data collection.
 %Generic Prometheus exporters and scrapers already used for Krateo Composable FinOps leveraging specific K8s Custom Resources. These exporters are generic and can scrape arbitrary metrics configured in specific CRs (for instance, collecting VMs CPU consumption though Azure APIs).
 %From the Krateo Composable FinOps document: 
 %- “we transform all optimizations into a set of Kubernetes Custom Resources (CRs) to act upon newly found cost-related deficiencies. This allows us to use Kubernetes operators (explicitly coded to interact with cloud services) to monitor these metrics and act automatically to apply changes to remote resources.”
-
 %- “forward the optimization to the Krateo operator that manages the services that need to be optimized, for example, the Azure Operator to modify the size of a Virtual Machine;”
-
 %- “the optimization is automatically encoded in a CR for the finops-operator-vm-manager, which then analyzes it and decides how to manage the Virtual Machine. For example, it could scale up or down the virtual machine, stop it for the night, etc.”
-
 \newline
 As Microsoft Azure documentation describes, there are actually two different categories of metrics that can be collected from a VM: the \textbf{guest-level metrics} and the \textbf{hypervisor-level or host-level metrics} \cite{azure_vm_monitoring}.
 The first category of metrics is collected by agents directly installed on the VMs, as described above.
