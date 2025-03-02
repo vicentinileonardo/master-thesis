@@ -489,6 +489,7 @@ This fields are labeled with an ID which will be attached to the resources' list
 
 Microsoft Azure provides a Kubernetes operator called \textbf{Azure Service Operator v2} (ASO).
 Currently, ASO supports more than 150 different Azure resources one of which is the \textbf{Azure Virtual Machine}.
+An example of a Azure Virtual Machine custom resource is the one illustrated in listing \ref{lst:azure}.
 The minimum set of resources needed for VM provisioning on Azure through Azure service operator is:
 
 \begin{itemize}[itemsep=0.2pt, topsep=1pt] 
@@ -504,8 +505,6 @@ The minimum set of resources needed for VM provisioning on Azure through Azure s
 \caption{Minimum set of Azure resources for VM provisioning}
 \label{fig:azure}
 \end{figure}
-
-An example of a Azure-specific custom resource is the one illustrated in listing \ref{lst:azure}. \\
 
 \begin{lstlisting}[language=yaml, caption={Azure Instance Custom Resource}, label={lst:azure}]
 apiVersion: compute.azure.com/v1api20220301
@@ -538,6 +537,7 @@ spec:
 
 Google Cloud Platform provides a Kubernetes operator called \textbf{GCP Config Connector}.
 The name of the virtual machine resource in GCP is \textbf{ComputeInstance}.
+An example of a GCP ComputeInstance custom resource is the one illustrated in listing \ref{lst:gcp}.
 For what concerns the GCP Operator, the minimum set of resources needed for VM provisioning is:
 
 \begin{itemize}[itemsep=0.2pt, topsep=1pt] 
@@ -553,10 +553,8 @@ For what concerns the GCP Operator, the minimum set of resources needed for VM p
 \label{fig:gcp}
 \end{figure}
 
-%some fields are based on regions
-%some fields are based on zones
-%networkinterface is directly defined in the instance manifest,
-%no additional networkinterface resource neededv to be created
+We can mention the fact that some fields on GCP resource manifests are based on regions and some fields are based on avavilability zones.
+In order to select a zone, a helper function is used to select a zone based on the region.
 
 \begin{lstlisting}[language=yaml, caption={GCP Intance Custom Resource}, label={lst:gcp}]
   apiVersion: compute.cnrm.cloud.google.com/v1beta1
@@ -588,6 +586,7 @@ For what concerns the GCP Operator, the minimum set of resources needed for VM p
 
 AWS provides an entire collection of operators that are part of the AWS controllers for Kubernetes (ACK) project.
 Each controller is responsible for managing a specific AWS service, such as EC2, EBS, RDS, S3, and more. In the context of this research, the EC2 controller is used to manage virtual machine (EC2 Instances) provisioning on AWS.
+An example of a AWS EC2 Instance Custom Resource is the one illustrated in listing \ref{lst:aws}.
 The minimum set of resources needed for VM provisioning is:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt] 
 \item[$\bullet$] VPC
@@ -601,6 +600,8 @@ The minimum set of resources needed for VM provisioning is:
 \caption{Minimum set of AWS resources for VM provisioning}
 \label{fig:aws}
 \end{figure}
+
+\subsubsection{Provider specific configurations}
 
 As described at the beginning of this section, the implementation approach adopted in our system ensures compatibility with diverse cloud provider design choices. Cloud providers may impose different constraints and best practices when managing Kubernetes-native resources, and the system is designed to adapt to these variations seamlessly.
 One notable design choice observed with the AWS operator is the restriction on referencing some Kubernetes objects inside a Custom Resource (CR) manifest. This limitation means that developers cannot directly link a resource (e.g., a Virtual Machine) to another Kubernetes object (e.g., a Subnet) using built-in object references.
@@ -639,11 +640,9 @@ spec:
 ...
 \end{lstlisting}
 
-In thr case of Listing \ref{lst:aws_direct_reference}, the Subnet Custom Resource manifest directly references in a conveneint way the VPC Custom Resource using its name and namespace since the Operator is designed to support this type of relationship. As explained before, this is determined by Operator design choices but our system is able to handle both scenarios.
-
-\subsubsection{Provider specific configurations}
-
-When launching an Amazon EC2 instance, specifying an AMI is \textbf{mandatory}. 
+In the case of Listing \ref{lst:aws_direct_reference}, the Subnet Custom Resource manifest directly references in a convenient way the VPC Custom Resource using its name and namespace since the Operator is designed to support this type of relationship. As explained before, this is determined by Operator design choices but our system is able to handle both scenarios.
+\newline
+Another important aspect to consider is that, when launching an Amazon EC2 instance, specifying an AMI is \textbf{mandatory}. 
 An Amazon Machine Image (AMI) is a pre-configured image that provides the necessary software environment to set up and boot an Amazon EC2 instance \cite{aws_AMIs}. 
 In other words, AMIs serve as a blueprint for launching virtual machines (VMs) in AWS.
 The AMI must be compatible with the chosen EC2 instance type, ensuring that the selected image supports the required hardware and software configurations.
@@ -658,9 +657,7 @@ The following attributes define an AMI:
 
 The most important attribute for our system is the \textbf{Operating System} since it determines the software environment for the VM.
 For the purpose of this research, only \textbf{Ubuntu-based AMIs} have been considered for provisioning virtual machines. Official Ubuntu AMIs were collected from a dedicated Ubuntu repository.
-In order to select the most suitable AMI for a given VM, the system leverages a function that 
-
-to dynamically select the appropriate AMI ID based on the region and other parameters specified in the VmTemplate Kubernetes Custom Resource (CR).
+In order to select the most suitable AMI for a given VM, the system leverages a custom helper function to dynamically select the appropriate AMI ID based on the region and other parameters specified in the VmTemplate Kubernetes Custom Resource (CR).
 
 \begin{lstlisting}[language=yaml, caption={AWS}, label={lst:aws}]
 apiVersion: ec2.services.k8s.aws/v1alpha1
@@ -1039,7 +1036,7 @@ Figure \ref{fig:latency_matrix} illustrates an small example (4 regions subset) 
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.75\linewidth]{images/latency_heatmap.png}
+  \includegraphics[width=0.65\linewidth]{images/latency_heatmap.png}
   \caption{Latency matrix example (Azure regions subset)}
   \label{fig:latency_matrix}
 \end{figure}
@@ -1140,7 +1137,7 @@ In particular, this mappings are needed since the GreenOps scheduler knows only 
 Therefore, a mapping is needed to translate the ElectricityMaps regions to cloud provider regions and vice versa.
 
 The entire data mapping process can be broken down into the following steps:
-\begin{enumerate}
+\begin{enumerate}[itemsep=0.2pt, topsep=1pt]
   \item Cloud provider selection (e.g., Azure, AWS, GCP): this determines the set of cloud provider regions.
   \item Latency filtering: this step can only be done with cloud provider-specific latencies and determines the eligible regions.
   \item GDPR compliance filtering (if enabled): this step ensures that only regions in the EU are selected.
@@ -1206,7 +1203,7 @@ The system is designed to be highly flexible and extensible, allowing for the ad
 \end{figure}
 
 \subsubsection{Day 2 operations}
-\label{sec:day2_operations}.
+\label{sec:day2_operations}
 
 We can define as \textbf{\textit{Day 2 operations}} all the management operations that are performed after the deployment of a resource.
 These operations comprise tasks such as scaling up or down a VM based on the load, stopping a VM during off-peak hours, or migrating a VM to a different region to optimize costs.
@@ -1321,7 +1318,7 @@ In particular, \textbf{MLflow} is used for model tracking, model selection, and 
 \subsection{MLflow}
 
 MLflow is an open-source platform designed to facilitate and enhance the overall machine learning lifecycle. 
-In particular, it offers tooling for \textbf{experiment tracking}, \textbf{model management}, and \textbf{model storage}.
+In particular, it offers tooling for \textbf{experiment tracking}, \textbf{model management}, and \textbf{model storage} \cite{mlflow_docs}.
 It is compatible with various ML frameworks, including scikit-learn, PyTorch, TensorFlow, and XGBoost.
 In particular, in the case of our system, PyTorch is the ML framework used for the forecasting models making MLflow a suitable choice for model management.
 For what concerns model deployment, MLflow does not provide a built-in solution, but it is compatible with other tools like KServe which will be described in section \ref{sec:kserve}.
@@ -1339,10 +1336,9 @@ MLflow Tracking Server, as the name suggest, is a server that is constantly wait
 Said data comes from the various training scripts that are executed by the data scientists or machine learning engineers which are run in  training environments.
 In particular the training scripts must be instrumented with the \textbf{MLflow API calls} to log the data in the remote MLflow Tracking Server.
 This setting is very flexible since the training scripts can be run in any environment (e.g., local environment, Universities' HPC clusters), as long as they have access to the MLflow Tracking Server.
-It is deemed important to mention some of the MLflow API calls that are used in the training scripts: the \textit{infer\_signature} and \textit{autolog} functions.
+It is deemed important to mention some of the MLflow API calls that are used in the training scripts: the \textit{infer\_signature} and \textit{autolog} functions \cite{mlflow_docs}.
 The \textit{infer\_signature} function captures the \textbf{input and output schema of the model}, which is important for the deployment of the model.
 The \textit{autolog} function is used to automatically log the parameters and metrics of the model training session, without the need to manually log them. In particular, each supported ML framework has its own autolog function which is used to automatically log the parameters and metrics of the model training session.
-
 The final phase of a model training session is the automatic creation of a \textbf{self-contained directory}, named after the experiment and run IDs, that contains all the necessary files to deploy the model. 
 In particular, the folder contains: the serialized model with model weights, the configuration files (conda.yaml, requirements.txt), and the MLmodel file that contains additional configuration, among which, the model signature.
 The self-contained folder is then automatically uploaded to the MLflow Tracking Server as an artifact.
@@ -1567,12 +1563,11 @@ However, Kepler could be potentially used in a future iteration of the system.
 
 \subsection{Carbon metrics}
 
+[TO BE FIXED] \newline
+
 As briefly mentioned in the beginning of this section, there is no adopted standard adopted by Public Cloud Providers to calculate and expose the carbon footprint of a cloud resource.
 As described in section \ref{sec:real_time_cloud}, the Green Software Foundation is working on a standard called Real Time Cloud that aims to provide a common standard for carbon footprint calculation.
 However, this standard is not yet adopted by any major Public Cloud Provider.
-
-
-
 
 Public Cloud Providers provide monthly reports (probably not useful in this case)
 Export Azure carbon optimization emissions data (Preview) (probably not fine-grained as we want)
@@ -1605,8 +1600,72 @@ The critical point here is to get/calculate the energy consumed by a cloud insta
 \subsection{Impact framework potential integration}
 \label{sec:impact_framework_integration}
 
+[TO BE FIXED] \newline
+
 A potential integration with the Green Software Foundation's Impact Framework is envisioned for the system.
-Currently, said integration is not implemented, but it is deemed a valuable addition to the system.
+Currently, said integration is not implemented, but it is deemed a valuable addition to the system in future iterations.
+As briefly described in section \ref{sec:impact_framework}, the Impact Framework is a tool that allow to create pipelines for data extraction, transformation, and calculations.
+In addition, Impact Framework provides a database of cloud instances (CSV file) with their respective specifications (e.g., CPU model, CPU TDP, GPU model, GPU TDP, memory, etc), which can be used to estimate the power consumption of a cloud instance.
+Listing \ref{lst:cloud_metadata_example} shows an example of a simple Impact Framework pipeline that extracts the metadata of a cloud instance.
+As a matter of fact the pipeline is composed of just one step that extract the metadadat of the Azure Standard\_A1\_v2 instance.
+
+\begin{lstlisting}[language=yaml, caption={Cloud Metadata extraction example}, label={lst:cloud_metadata_example}]
+name: cloud-instance-metadata-extraction
+description: null
+tags: null
+initialize:
+  plugins:
+    cloud-instance-metadata:
+      path: builtin
+      method: CSVLookup
+      config:
+        filepath: >-
+          https://raw.githubusercontent.com/Green-Software-Foundation/if-data/main/cloud-metdata-azure-instances.csv
+        query:
+          instance-class: cloud/instance-type
+        output: '*'
+...
+tree:
+children:
+  child:
+    pipeline:
+      compute:
+        - cloud-instance-metadata
+    inputs:
+      - timestamp: 2023-08-06T00:00
+        cloud/provider: azure
+        cloud/instance-type: Standard_A1_v2
+    outputs:
+      - timestamp: 2023-08-06T00:00
+        cloud/provider: azure
+        cloud/instance-type: Standard_A1_v2
+        cpu-cores-available: 52
+        cpu-cores-utilized: 1
+        cpu-manufacturer: Intel
+        cpu-model-name: >-
+          Intel® Xeon® Platinum 8272CL,Intel® Xeon® 8171M 2.1 GHz,Intel® Xeon®
+          E5-2673 v4 2.3 GHz,Intel® Xeon® E5-2673 v3 2.4 GHz
+        cpu-tdp: 205
+        gpu-count: nan
+        gpu-model-name: nan
+        gpu-tdp: nan
+        memory-available: 2
+\end{lstlisting}
+
+As we can see from the example, the pipeline is composed of two main sections: the \textit{initialize} section, where the plugins (pipelines steps) are defined, and the \textit{tree} section, where the actual pipeline is defined.
+Among the output fields of the pipeline, we can see the \textit{cpu-tdp} field, which represents the Thermal Design Power of the CPU of the Azure Standard\_A1\_v2 instance.
+This field could be used in a more complex pipeline to estimate the power consumption of the instance, and therefore its carbon footprint.
+An example of such pipeline is described in the Impact Framework documentation \cite{impact_framework_pipeline} and is shown in Figure \ref{fig:impact_framework}.
+
+\newpage
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=1\linewidth]{images/impact_framework.png}
+  \caption{Impact Framework pipeline to estimate carbon footprint of a cloud instance}
+  \label{fig:impact_framework}
+\end{figure}
+
 
 \newpage
 

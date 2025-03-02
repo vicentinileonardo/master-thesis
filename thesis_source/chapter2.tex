@@ -362,6 +362,7 @@ The concept is similar to FOCUS specification for FinOps but is at a very early 
 %https://github.com/Green-Software-Foundation/real-time-cloud?tab=readme-ov-file
 
 \subsubsection{Impact Framework}
+\label{sec:impact_framework}
 
 The Impact Framework is a flexible framework for measuring and reporting the environmental impact of software systems \cite{impact_framework}.
 The core of the framework is represented by a \textbf{Manifest file} which is a YAML file that is used both for describing \textbf{calculation pipelines} and for storing the results of the calculations.
@@ -371,37 +372,32 @@ A potential integration of this framework with our system is described in sectio
 %https://patterns.greensoftware.foundation/catalog/cloud/choose-region-closest-to-users
 %[which patterns are used in our system]
 
-\subsection{Computational Sustainability by Public cloud providers}
+\subsection{Computational Sustainability by Public Cloud Providers}
 
-what are they already doing
-improving energy efficiency by reducing their PUE
-(Power Usage Effectiveness (PUE) is the ratio of the total energy used by a data center to the energy used for computing.)
----
+[TO BE FIXED] \newline
 
-For the purpose of ths work, we assume that a cloud data center will likely rely on the same energy sources that characterize a specific geographical region (grid).
-For example, if data from Electricity Maps tell us that Finland is producing energy with low carbon emissions then we assume that the data centers in that area will likely be powered with energy from low carbon sources.
-However, some cloud providers may have better access to renewable energy sources in certain regions due to their individual initiatives e.g. wind farms that feed directly into their data centers.
+For the purpose of ths work, we assume that a cloud data center will likely rely on the same energy sources that characterize a specific geographical region (local grid).
+For example, if data from Electricity Maps (carbon-intensity forecasters) indicate that Finland is producing energy with low carbon emissions, then we assume that the data centers in that area will likely be powered with energy from low carbon sources.
+However, some public cloud providers may have better access to renewable energy sources in certain regions due to their individual initiatives e.g. private wind farms that feed directly into their data centers.
 
+%what are they already doing
+%improving energy efficiency by reducing their PUE
+%(Power Usage Effectiveness (PUE) is the ratio of the total energy used by a data center to the energy used for computing.)
 
-what microsoft is already doing with alternative energy sources apart from grid
+%what microsoft is already doing with alternative energy sources apart from grid
 
+%https://blog.google/inside-google/infrastructure/data-centers-work-harder-sun-shines-wind-blows/
 
----
+%Google CFE\%: “This is the average percentage of carbon free energy consumed in a particular location on an hourly basis, while taking into account the investments we have made in carbon-free energy in that location. This means that in addition to the carbon free energy that's already supplied by the grid, we have added carbon-free energy generation in that location”.
 
-Carbon aware computing at Google
-https://www.performance2021.deib.polimi.it/www.performance2021.deib.polimi.it/wp-content/uploads/2021/11/Carbon-Aware-Computing-%40-Google-and-Beyond.pdf
-Year: 2021
-Description: 
-It states that Carbon-aware computing is: exploiting flexibility in when and where and how computing is done to reduce carbon emissions.
-Some examples of flexible workloads are: video processing, training large-scale machine learning models, simulation pipelines.
-The components they recognized to be necessary are: accurate carbon intensity data (Tomorrow), Scalable infrastructures (Cloud), Virtualizations and migration mechanisms (VMs), Well identified flexible load, data-driven methodology.
-At Google: the total amount of work that needs to get done per day is quite predictable.
+%usually big companies leverage financial instruments like PPAs to buy renewable energy therefore their emissions are not zero but they are offset by the renewable energy they buy.
 
-https://blog.google/inside-google/infrastructure/data-centers-work-harder-sun-shines-wind-blows/
-
-Google CFE\%: “This is the average percentage of carbon free energy consumed in a particular location on an hourly basis, while taking into account the investments we have made in carbon-free energy in that location. This means that in addition to the carbon free energy that's already supplied by the grid, we have added carbon-free energy generation in that location”.
-
-usually big companies levarege financial instruments like PPAs to buy renewable energy therfore their emissions are not zero but they are offset by the renewable energy they buy.
+Google has been working on carbon-aware computing for internal use. 
+In particular, they exploit workload flexibility to shift when, where and how computing is done to reduce carbon emissions \cite{google_carbon_aware_computing}.
+Some of the types of workloads they identified as flexible are: \textbf{video processing}, \textbf{training large-scale machine learning models}, \textbf{simulation pipelines}.
+The main components they recognized to be necessary for carbon-aware computing are: accurate carbon intensity data, scalable infrastructures and migrations mechanisms \cite{google_carbon_aware_computing}.
+Another important point is to adopt a \textbf{data-driven methodology}.
+Indeed, at Google the total amount of work (computing) that needs to get done per day is quite predictable thanks to the large amount of data they can analyze to make predictions \cite{google_carbon_aware_computing}.
 
 \section{Carbon-aware systems for resource management}
 
