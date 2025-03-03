@@ -114,15 +114,16 @@ Figure \ref{fig:kubernetes_architecture} shows the Kubernetes architecture as de
 
 The main components of Kubernetes are:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
-    \item[$\bullet$] \textbf{Kubernetes API server}: the central component that manages the Kubernetes cluster. It exposes the Kubernetes API and is responsible for validating and mutating data related to Kubernetes objects.
+    \item[$\bullet$] \textbf{Kubernetes API server}: the central component that manages the Kubernetes cluster. It exposes the Kubernetes API and is responsible for validating and mutating data related to Kubernetes objects before persisting them in the cluster state.
     \item[$\bullet$] \textbf{etcd}: a key-value store used to store the cluster state.
     \item[$\bullet$] \textbf{Kubernetes controller manager}: a daemon that embeds the core control loops shipped with Kubernetes.
     \item[$\bullet$] \textbf{Kubernetes scheduler}: a component that assigns Pods to nodes.
-    \item[$\bullet$] \textbf{Kubelet}: an agent that runs on each node in the cluster. It makes sure that containers are correctly running in a Pod.
+    \item[$\bullet$] \textbf{Kubelet}: an agent that runs on each node in the cluster. It makes sure that containers are correctly running in Pods.
     \item[$\bullet$] \textbf{Kubernetes proxy}: a network proxy that runs on each node in the cluster. It maintains network rules and it is responsible for routing network traffic.
-    \item[$\bullet$] \textbf{Container runtime}: the software that is responsible for running containers on the Node (in this case represented by Docker).
+    \item[$\bullet$] \textbf{Container runtime}: the software that is responsible for running containers on the Node (in this case represented by Docker but other runtimes like containerd are supported).
 \end{itemize}
 
+The first four components are the main control plane components of Kubernetes while the last three are the main components of each worker node in the cluster.
 It must be noted that in our system we are not extending the Kubernetes scheduler as described for instance in the works described in section \ref{sec:low_carbon_k8s_scheduler} and \ref{sec:microsoft_carbon_aware_k8s}, since we are not dealing with the scheduling of in-cluster resources (e.g., Kubernetes Pods) nor with the provisioning of entire Kubernetes clusters.
 We are instead focusing on the \textbf{management of external resources on cloud providers} (only VMs in this first iteration), leveraging Kubernetes as a control plane for the management of these resources.
 As described in the following section, our focus will be on the Kubernetes API server and in particular on Kubernetes Admission Control.
@@ -161,7 +162,6 @@ By \textbf{unifying infrastructure management under Kubernetes}, complexity is r
 
 
 % https://aws.amazon.com/it/blogs/containers/kubernetes-as-a-platform-vs-kubernetes-as-an-api-2/
-
 
 \subsection{Helm}
 
@@ -398,6 +398,8 @@ Some of the types of workloads they identified as flexible are: \textbf{video pr
 The main components they recognized to be necessary for carbon-aware computing are: accurate carbon intensity data, scalable infrastructures and migrations mechanisms \cite{google_carbon_aware_computing}.
 Another important point is to adopt a \textbf{data-driven methodology}.
 Indeed, at Google the total amount of work (computing) that needs to get done per day is quite predictable thanks to the large amount of data they can analyze to make predictions \cite{google_carbon_aware_computing}.
+
+In section \ref{sec:carbon_metrics} we will briefly describe how public cloud providers are already providing carbon footprint data reports to their customers.
 
 \section{Carbon-aware systems for resource management}
 

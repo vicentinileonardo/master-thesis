@@ -725,12 +725,11 @@ This process is further described in the next section.
 
 \section{Open Policy Agent (OPA)}
 
-Open Policy Agent (OPA) is an open-source general-purpose \textbf{policy engine} that enables unified policy enforcement across several types of environments. 
+Open Policy Agent (OPA) is an open-source general-purpose \textbf{policy engine} that enables unified policy enforcement across several types of environments \cite{opa_docs}. 
 OPA provides a declarative language called \textbf{Rego} enabling a paradigm known as ``\textbf{Policy as Code}" \cite{opa_docs}.
-
-Open Policy Agent can be integrated as a sidecar container, host-level daemon, or library to perform policy decisions for a plethora of use cases: microservices, Kubernetes admission control, CI/CD pipelines, API gateways and more \cite{opa_docs}. 
-
+Open Policy Agent can be integrated as a sidecar container, host-level daemon, or library to perform policy decisions for a plethora of use cases: microservices, \textbf{Kubernetes admission control}, CI/CD pipelines, API gateways and more \cite{opa_docs}. 
 In the context of our system, OPA and the Policy-as-Code paradigm are leveraged to define \textbf{policies for workload scheduling}: encoding the output of a \textbf{scheduling decision} coming from an external GreenOps Scheduler and ensuring compliance with \textbf{additional policies} related to latency requirements and legal constraints.
+In particular, OPA is used as a \textbf{Kubernetes Mutating Webhook server} to apply scheduling decisions to VmTemplate Custom Resources based on policies.
 
 \subsection{Policy as Code paradigm}
 
@@ -745,17 +744,16 @@ OPA's generic definition of policy is: ``\textit{A policy is a set of rules that
 \item[$\bullet$] Enforcing that new deployed servers must have the prefix ``server-" in their name.
 \end{itemize}
 
-Another interesting example is the use of OPA for compliance automation for AWS infrastructure \cite{10612535}. 
-In this case, OPA is used as a step in a CI/CD pipeline to enforce compliance policies on AWS infrastructure represented with the Infrastructure as Code (IaC) tool CloudFormation \cite{10612535}.
-
+Another interesting example is the use of OPA for \textbf{compliance automation for AWS infrastructure} \cite{10612535}. 
+In this case, OPA is used by the authors as a step in a CI/CD pipeline to enforce compliance policies on AWS infrastructure represented with the Infrastructure as Code (IaC) tool CloudFormation \cite{10612535}.
 Therefore, the use cases covered span from role-based access control to container image security and beyond.
 \newline
 
-Another important aspect of OPA is that it effectively \textbf{decouples} policy decision-making from policy enforcement, enabling organizations to implement consistent and scalable authorization across their systems \cite{test}.
-In practice, this means that when a software module needs to make a policy decision, it queries OPA, supplying relevant data as input. In other words, policy decisions are \textbf{offloaded} to OPA rather than being hardcoded within individual services. This approach offers several key advantages:
+Another important aspect of OPA is that it effectively \textbf{decouples} policy decision-making from policy enforcement, enabling organizations to implement consistent and scalable authorization across their systems \cite{opa_docs}.
+In practice, this means that when a software module needs to make a policy decision, it queries OPA, supplying relevant data as input. In other words, policy decisions are \textbf{offloaded} to OPA rather than being hardcoded within individual services. This approach offers several key advantages \cite{opa_docs}:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
   \item[$\bullet$] \textbf{Centralized policy management}: policies are defined in a single location, ensuring uniform enforcement across all services of an organization.
-  \item[$\bullet$] \textbf{Improved maintainability}: updating policies does not require modifying, recompiling or redeploying application code, reducing complexity and deployment overhead.
+  \item[$\bullet$] \textbf{Improved maintainability}: updating policies does not require modifying, recompiling or redeploying application code, reducing complexity, errors and deployment overhead.
   \item[$\bullet$] \textbf{Greater flexibility}: policies can be dynamically updated (e.g., with CI/CD approaches) based on evolving security and compliance requirements. 
   \item[$\bullet$] \textbf{Scalability}: since OPA and application modules are not tightly coupled.
 \end{itemize} 
@@ -766,11 +764,11 @@ As mentioned in the introduction to this section, one common approach to integra
 
 A standard OPA deployment consists of three main components:
 
-\begin{itemize}[itemsep=0.2pt, topsep=1pt]
-\item[$\bullet$] \textbf{OPA Server}: The core service that evaluates policy queries and returns decisions based on defined rules, contextual data and input data.
-\item[$\bullet$] \textbf{OPA Policies}: Rules written in the Rego language that define the logic to be enforced.
-\item[$\bullet$] \textbf{Data}: Optional contextual information, typically structured in JSON format, that policies use to make informed decisions along with input data.
-\end{itemize}
+\begin{enumerate}[itemsep=0.2pt, topsep=1pt]
+  \item \textbf{OPA Server}: The core service that evaluates policy queries and returns decisions based on defined rules, contextual data and input data.
+  \item \textbf{OPA Policies}: Rules written in the Rego language that define the logic to be enforced.
+  \item \textbf{Data}: Optional contextual information, typically structured in JSON format, that policies use to make informed decisions along with input data.
+\end{enumerate}
 
 To facilitate deployment and management, Rego policies and associated contextual data are packaged into \textbf{policy bundles}, as described in section \ref{sec:opa_policies}. These bundles enable version-controlled, centralized policy distribution, ensuring consistency and maintainability across distributed environments. \newline
 
@@ -783,8 +781,8 @@ To facilitate deployment and management, Rego policies and associated contextual
 \end{figure}
 
 
-OPA accepts arbitrary structured data as input.
-and  Like query inputs, your policies can generate arbitrary structured data as output.
+OPA accepts arbitrary structured data as input and can generate arbitrary structured data as output. 
+This flexibility allows OPA to be used in a wide range of use cases, as described above.
 
 \subsection{OPA and external data sources}
 \label{sec:opa_external_data}
@@ -792,7 +790,7 @@ and  Like query inputs, your policies can generate arbitrary structured data as 
 In order to get data from external sources, OPA provides several options that can be chosen based on size and frequency of update \cite{opa_external_data}.
 For the use case of this work, external data to be pulled is the \textbf{scheduling decision} from the GreenOps Scheduler in a synchronous way.
 The most suitable option is to \textbf{pull data during policy evaluation} since scheduling decisions must be made in real-time.
-The data is pulled from the GreenOps Scheduler (effectively a HTTP server) with the use of the OPA built-in function ``\textit{http.send()}'' which can be used to send HTTP requests to arbitrary endpoints just like a ``curl'' command in a shell script \cite{opa_http_send}.
+The data is pulled from the GreenOps Scheduler (effectively a HTTP server) with the use of the OPA built-in function ``\textit{http.send()}'' which can be used to send HTTP requests to arbitrary endpoints just like a ``curl'' command in a shell script \cite{opa_external_data}.
 The listings \ref{lst:scheduler_req} and \ref{lst:opa_external_data} respectively show an example of a HTTP request to the GreenOps Scheduler and how the OPA external data pull is implemented in Rego.
 
 \begin{lstlisting}[language=sh, caption={GreenOps scheduler HTTP request example}, label={lst:scheduler_req}]
@@ -837,14 +835,13 @@ scheduling_details := http.send({
 
 \subsection{OPA integration with Kubernetes}
 
-In Kubernetes admission control, policy enforcement is handled by the \textbf{Kubernetes API server} itself. 
-OPA makes the policy decisions when queried by the admission controller, but the actual enforcement (namely allowing or denying requests) is executed by Kubernetes' built-in admission control mechanisms. 
+In the context of Kubernetes Admission Control mechanism, policy enforcement is handled by the \textbf{Kubernetes API server} itself. 
+OPA makes the policy decisions when queried by the admission controller, but the actual enforcement (namely allowing, denying, modifying requests) is executed by Kubernetes' built-in admission control mechanisms. 
 This is effectively one of the core design principles of OPA: to provide policy decisions to external systems, which then enforce the decisions based on their own logic \cite{opa_kubernetes_primer}.
-This workflow is represented in figure \ref{fig:webhook_opa} where \textbf{AdmissionReview request} and \textbf{AdmissionReview response} are respectively input and output of the whole OPA section. 
-The API Server sends the entire Kubernetes object in the webhook request to OPA. %cite OPA kubernetes primer
+This workflow is represented in figure \ref{fig:webhook_opa} where the \textbf{AdmissionReview request} and \textbf{AdmissionReview response} are respectively input and output of the whole OPA section. 
+The API Server sends the entire Kubernetes object in the webhook request to OPA \cite{opa_kubernetes_primer}.
 The Kubernetes API server will use the received AdmissionReview response for its decision. \\
 %\cite{opa_philosophy}
-
 % https://www.openpolicyagent.org/docs/latest/kubernetes-tutorial/
 
 \begin{figure}[htb]
@@ -875,48 +872,19 @@ Looking ahead, future policies could leverage VmTemplate resource information to
 %example of a policy:
 %(https://www.openpolicyagent.org/docs/latest/kubernetes-primer/)
 
+As OPA official documentation describes, when the Kubernetes AdmissionReview request from the webhook arrives, it is bound to the \textbf{OPA input document} and generates the default, ``root", decision: \textit{system.main} \cite{opa_docs}.
+The root policy, in the case of Kubernetes admission control, is responsible for generating the AdmissionReview response in accordance with the Kubernetes API specifications. 
+Indeed, it is the duty of the policy developer to write Rego code that produces a \textbf{well-formed AdmissionReview response}, ensuring that the OPA server can then correctly communicate its decision to the Kubernetes admission controller \cite{opa_docs}.
+OPA policies are compiled before being evaluated, and any errors that occur during compilation are reported back to the caller.
+An example of these errors is when there are merge errors on contextual data \cite{opa_docs}.
+For the purpose of this thesis, it is deemed useful to show one of the simplest and common example of a OPA policy in the \textbf{Kubernetes admission control context}. 
+That is: to ensure all images for Kubernetes Pods come from a trusted registry, namely \textit{unitn.it}.
+It is important to note that, in this case, due to the simplicity of the policy, no additional contextual data in JSON format is required while in a standard scenario, data is used to provide additional context to the policy evaluation process. \newline
 
+Listing \ref{lst:rego_policy_example} shows the Rego policy that enforces the rule described above while listing \ref{lst:rego_root_policy} shows the root policy that generates the AdmissionReview response.
+Listings \ref{lst:admission_review_request} and \ref{lst:admission_review_response} show respectively an example of an AdmissionReview request and response. \newline
 
-
-
-As OPA official documentation describes, when the Kubernetes AdmissionReview request from the webhook arrives, it is binded to the OPA input document and generates the default, ``root", decision: \textit{system.main}
-%\cite
-
-The root policy, in the case of Kubernetes admission control, is responsible for generating the AdmissionReview response in accordance with the Kubernetes API specifications. It is the duty of the policy developer to write Rego code that produces a well-formed AdmissionReview response, ensuring that the OPA server can then correctly communicate its decision to the Kubernetes admission controller.
-%cite
-
-It is deemed useful to show one of the simplest and common example of a OPA policy in the \textbf{Kubernetes admission control context}. That is: to ensure all images for Kubernetes Pods come from a trusted registry, namely \textit{unitn.it}. \\
-
-
-It is important to note that, in this case, due to the simplicity of the policy, no additional contextual data in JSON format is required.
-
-
-policy compilation
-policy are compiled
-compile time errors like merge errors if data is clashing for instance
-
-
-
-\begin{comment}
-    \lstset{
-   language=Go,
-   basicstyle=\ttfamily\small,
-   breaklines=true,
-   showstringspaces=false,
-   commentstyle=\color{green!60!black},
-   keywordstyle=\color{blue},
-   stringstyle=\color{purple},
-   numberstyle=\tiny,
-   numbers=left,
-   backgroundcolor=\color{gray!10},
-   frame=single,
-   captionpos=b
-}
-\end{comment}
-
-
-\begin{lstlisting}[language=Rego, caption={Rego policy for Pods registry},
-label=lst:rego_data_mapping]                              
+\begin{lstlisting}[language=Rego, caption={Rego policy for Pods registry}, label=lst:rego_policy_example]                              
 deny contains msg if {                                                      
     input.request.kind.kind == "Pod"                                        
     image := input.request.object.spec.containers[_].image                  
@@ -925,7 +893,7 @@ deny contains msg if {
 }
 \end{lstlisting}
 
-\begin{lstlisting}[language=Rego, caption={Rego ``root" policy (system.main)}]
+\begin{lstlisting}[language=Rego, caption={Rego ``root" policy (system.main)}, label=lst:rego_root_policy]
 package system
 
 import data.kubernetes.admission
@@ -953,7 +921,7 @@ else := {"allowed": true, "uid": uid}
 \end{lstlisting}
 
 \lstset{style=jsonstyle}
-\begin{lstlisting}[caption={AdmissionReview request}]
+\begin{lstlisting}[caption={AdmissionReview request}, label={lst:admission_review_request}]
 {
     "apiVersion": "admission.k8s.io/v1",
     "kind": "AdmissionReview",
@@ -981,7 +949,7 @@ else := {"allowed": true, "uid": uid}
 \end{lstlisting}
 
 \lstset{style=jsonstyle}
-\begin{lstlisting}[caption={AdmissionReview response}]
+\begin{lstlisting}[caption={AdmissionReview response}, label={lst:admission_review_response}]
 {
     "apiVersion": "admission.k8s.io/v1",
     "kind": "AdmissionReview",
@@ -994,7 +962,8 @@ else := {"allowed": true, "uid": uid}
 }
 \end{lstlisting}
 
-Therefore, in this specific case, the creation of the Kubernetes Pod will be \textbf{denied}. OPA is responsible for \textbf{decision-making}, determining that the request do not complies with the defined policies, while the Kubernetes API server, using the AdmissionReview response generated by OPA, handles \textbf{policy enforcement}, effectively rejecting the CREATE request since it violates the specified rules.
+Therefore, in this specific case, the creation of the Kubernetes Pod will be \textbf{denied}. 
+OPA is responsible for \textbf{decision-making}, determining that the request do not complies with the defined policies, while the Kubernetes API server, using the AdmissionReview response generated by OPA, handles \textbf{policy enforcement}, effectively rejecting the CREATE request since it violates the specified rules.
 
 \subsection{OPA policy bundles}
 \label{sec:opa_bundles}
@@ -1007,13 +976,16 @@ A policy bundle mainly consists of:
 \end{itemize} 
 
 Policy bundles can be distributed through a variety of mechanisms such as remote HTTP servers (e.g., NGINX) and object storage services (e.g., Amazon S3, Google Cloud Storage, Azure Blob Storage) \cite{opa_bundles}.
-One of the most convenient approaches is packaging them as \textbf{OCI (Open Container Initiative) images} \cite{oci} and this is the approach adopted in the system described in this thesis.
-
-Once packaged as OCI images, policy bundles can be pulled by OPA servers from a container registry at predefined time intervals. This allows policy updates to be deployed in OPA \textbf{without requiring manual intervention} or \textbf{service restarts}, ensuring that enforcement mechanisms remain up to date with the latest compliance requirements identified and implemented by the organization. This is crucial for instance when dealing with \textbf{critical security policies} that need to be updated frequently, maybe in response to the discoveries of new CVEs. In the context of our system, such timely updates are not essential but the OPA is designed to be able to handle them if needed.
+One of the most convenient approaches is packaging policy bundles as \textbf{OCI (Open Container Initiative) images} \cite{oci} and this is the approach adopted in the system described in this thesis.
+Once packaged as OCI images, policy bundles can be pulled by OPA servers from a container registry at predefined and configurable time intervals. 
+This allows policy updates to be deployed in OPA \textbf{without requiring manual intervention} or \textbf{service restarts}, ensuring that enforcement mechanisms remain up to date with the latest compliance requirements identified and implemented by the organization. 
+This is crucial for instance when dealing with \textbf{critical security policies} that need to be updated frequently, maybe in response to the discoveries of new CVEs. 
+In the context of our system, such timely updates are not essential but the OPA is designed to be able to handle them if needed.
 To ensure continuous policy enforcement while maintaining high operational efficiency, a CI/CD approach is adopted for policy management in the context of our system.
 As a matter of fact, policies are maintained in a \textbf{version-controlled hosted repository} (i.e., on GitHub), where updates like tagging (``git tag'') trigger an automated pipeline (e.g., using GitHub Actions) responsible for building, packaging into a OCI image, and publishing the policy bundle to a container registry (e.g., Docker Hub).
-One of the major advantages of this approach is the ability to dynamically update policies without requiring OPA pods to restart as there is an \textbf{hot-reload} of policies done at application level by OPA (``loaded on the fly'') \cite{opa_bundles}. This is particularly useful in production environments where service availability is critical and downtime must be minimized. 
-The overall process of policy distribution is illustrated in figure \ref{fig:opa_bundles}.
+One of the major advantages of this approach is the ability to dynamically update policies without requiring OPA Pods to restart as there is an \textbf{hot-reload} of policies done at application level by OPA (``loaded on the fly'') \cite{opa_bundles}. 
+This is particularly useful in production environments where service availability is critical and downtime must be minimized. 
+The overall process of policy distribution adopted and implemented in our system is illustrated in figure \ref{fig:opa_bundles}.
 
 \begin{figure}[H]
 \centering
@@ -1022,7 +994,8 @@ The overall process of policy distribution is illustrated in figure \ref{fig:opa
 \label{fig:opa_bundles}
 \end{figure}
 
-By leveraging OCI images for policy distribution and implementing a fully automated CI/CD pipeline, our system ensures that policy enforcement remains consistent, up to date, and highly available across all OPA instances. This approach aligns with modern DevOps practices, enabling organizations to maintain a high level of security and compliance without compromising operational efficiency.
+By leveraging OCI images for policy distribution and implementing fully automated CI/CD pipelines, this methodology ensures that policy enforcement remains consistent, up to date, and highly available across all OPA instances. 
+This approach aligns with modern and standard DevOps practices, enabling organizations to maintain a high level of security and compliance without compromising operational efficiency.
 
 \subsection{Latency policy}
 
@@ -1036,7 +1009,7 @@ Figure \ref{fig:latency_matrix} illustrates an small example (4 regions subset) 
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.65\linewidth]{images/latency_heatmap.png}
+  \includegraphics[width=0.575\linewidth]{images/latency_heatmap.png}
   \caption{Latency matrix example (Azure regions subset)}
   \label{fig:latency_matrix}
 \end{figure}
@@ -1073,8 +1046,8 @@ Figure \ref{fig:latency_matrix} illustrates an small example (4 regions subset) 
 \end{lstlisting}
 
 For what concern data sources, cloud-specific inter-regional latency data were obtained in different ways for each cloud provider.
-Microsoft Azure provides monthly Percentile P50 round trip times between Azure regions in its documentation \cite{azure_network_latency}. 
-This data was scraped, merged and used to build the latency matrix for Azure regions.
+Microsoft Azure provides monthly ``Percentile P50 round trip times'' between Azure regions in its documentation \cite{azure_network_latency}. 
+This data was automatically scraped, merged and used to build the latency matrix for Azure regions.
 For AWS a similar approach was used, but the data was obtained from a third-party website that provides latency data between AWS regions calculating using AWS Lambda functions \cite{cloudping}.
 For Google Cloud Platform, no official data was found, so the latency matrix was built using synthetic data.
 
@@ -1143,10 +1116,10 @@ The entire data mapping process can be broken down into the following steps:
   \item GDPR compliance filtering (if enabled): this step ensures that only regions in the EU are selected.
   \item ElectricityMaps region mapping: this step maps the eligible cloud provider regions to ElectricityMaps regions.
   \item Scheduling outcome: this step determines the scheduling region (ElectricityMaps region) based on the output of the GreenOps Scheduler.
-  \item The ElectricityMaps region is then mapped back to the cloud provider region as final step.
+  \item The ElectricityMaps region is then mapped back to the cloud provider region as final step. \newline
 \end{enumerate}
 
-This process is illustrated in figure \ref{fig:data_mapping}.
+This process is illustrated in figure \ref{fig:data_mapping} and the Rego code in listing \ref{lst:rego_data_mapping} illustrates the Rego functions used for data mapping between cloud provider regions and ElectricityMaps regions. \newline
 
 \begin{figure}[htb]
   \centering
@@ -1154,8 +1127,6 @@ This process is illustrated in figure \ref{fig:data_mapping}.
   \caption{OPA Data mapping}
   \label{fig:data_mapping}
 \end{figure}
-
-The Rego code in listing \ref{lst:rego_data_mapping} illustrates the Rego functions used for data mapping between cloud provider regions and ElectricityMaps regions.
 
 \begin{lstlisting}[language=Rego, caption=Rego data mapping, label=lst:rego_data_mapping]
 # Utility functions to map between cloud provider regions 
@@ -1214,18 +1185,21 @@ In addition to that, the UPDATE operation could be useful for VMs that have alre
 
 \subsection{OPA Gatekeeper}
 
-OPA Gatekeeper is a Kubernetes-native policy engine that extends OPA with \textbf{Custom Resources (CRs)} and controllers to enforce policies across a Kubernetes cluster. It integrates natively with Kubernetes and provides a declarative approach to defining and enforcing policies using Kubernetes Custom Resources (CRs). This makes it an excellent choice for basic and standard policy enforcement scenarios, such as RBAC (Role-Based Access Control), security compliance, and resource constraints.
-However, while OPA Gatekeeper is well-suited for simple use cases, it presents \textbf{limitations} when addressing complex policy requirements, particularly when policies involve \textbf{mutations} or require access to \textbf{external data sources}. These limitations make it unsuitable for the specific challenges tackled in this system. Therefore, after an initial investigation and Proof of Concept implementation, we decided to use the standard OPA server for policy enforcement mainly due to the flexibility it provides in handling diverse scenarios.
-
+OPA Gatekeeper is a Kubernetes-native policy engine that extends OPA with \textbf{Custom Resources (CRs)} and controllers to enforce policies across a Kubernetes cluster \cite{opa_gatekeeper}. 
+It integrates natively with Kubernetes and provides a declarative approach to defining and enforcing policies using Kubernetes Custom Resources (CRs). 
+This makes it an excellent choice for basic and standard policy enforcement scenarios, such as RBAC (Role-Based Access Control), security compliance, and resource constraints \cite{opa_gatekeeper}.
+However, while OPA Gatekeeper is \textbf{well-suited for simple use cases}, it presents \textbf{limitations} when addressing complex policy requirements, particularly when policies involve \textbf{mutations} or require access to \textbf{external data sources} \cite{opa_gatekeeper_external_data}. 
+Indeed, these limitations make it unsuitable for the specific challenges tackled in this system. 
+Therefore, after an initial investigation and Proof of Concept implementation, we decided to use a standard OPA server deployment for policy enforcement mainly due to the flexibility it provides in handling diverse scenarios.
 To illustrate the differences between a standard OPA policy and an OPA Gatekeeper policy, we present two examples:  
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
   \item[$\bullet$] a simple Rego policy that enforces a basic constraint on Pod creation in a Kubernetes cluster.
-  \item[$\bullet$] the corresponding policy implemented as an OPA Gatekeeper \textbf{ConstraintTemplate} and \textbf{Constraint} Kubernetes resources.
+  \item[$\bullet$] the corresponding policy implemented as an OPA Gatekeeper \textbf{ConstraintTemplate} and \textbf{Constraint} Kubernetes custom resources.
 \end{itemize}
 
-The first example demonstrates a standalone Rego policy, which can be evaluated directly by an OPA instance. While this approach is flexible and allows for fine-grained policy definition, it requires manual integration into the system, including policy distribution and enforcement setup.  
+The first example demonstrates a standalone Rego policy, which can be evaluated directly by an OPA instance. 
+While this approach is flexible and allows for fine-grained policy definition, it requires manual integration into the system, including policy distribution and enforcement setup.  
 
-\lstset{style=python}
 \begin{lstlisting}[language=rego, caption={Simple OPA Rego Policy}, label={lst:opa-rego}]
 package kubernetes.admission
 
@@ -1272,11 +1246,15 @@ spec:
   parameters: {}
 \end{lstlisting}
 
-In the example, the policy is defined as a ConstraintTemplate, which is then instantiated as a Constraint Custom Resource of kind defined in the ConstraintTemplate. The ConstraintTemplate specifies the Rego policy logic, while the Constraint defines the target resources and parameters for policy enforcement. Therefore a ConstraintTemplate can be used by multiple Constraints, allowing for policy reuse.
+In the example, the policy is defined as a ConstraintTemplate, which is then instantiated as a Constraint Custom Resource of kind defined in the ConstraintTemplate. 
+The ConstraintTemplate specifies the Rego policy logic, while the Constraint defines the target resources and parameters for policy enforcement. Therefore a ConstraintTemplate can be used by multiple Constraints, allowing for policy reuse.
 
-OPA Gatekeeper also provides additional Kubernetes Custom Resources called \textit{mutators} (Assign, AssignMetadata, AssignImage, ModifySet) that allow modifying resource fields without writing Rego code. These mutators are useful for simple transformations, such as setting default labels or annotations. However simultaneous mutation of multiple fields leveraging external data is not supported \cite{opa_gatekeeper_external_data}. This limitation, in the context of our system, determined the choice of the standard OPA server for policy enforcement.
+OPA Gatekeeper also provides additional Kubernetes Custom Resources called \textit{mutators} (Assign, AssignMetadata, AssignImage, ModifySet) that allow modifying resource fields without writing Rego code \cite{opa_gatekeeper}. 
+These mutators are useful for simple transformations, such as setting default labels or annotations. However simultaneous mutation of multiple fields leveraging external data is not supported \cite{opa_gatekeeper_external_data}. 
+This limitation, in the context of our system, determined the choice of the standard OPA server for policy enforcement. \newline
 
-It must be noted that OPA Gatekeeper limitations could be potentially addressed in future releases, making it a more viable option for complex policy enforcement scenarios. However, for the current system requirements, the standard OPA server was deemed more suitable due to its flexibility.
+It must be noted that OPA Gatekeeper limitations could be potentially addressed in future releases, making it a more viable option for complex policy enforcement scenarios. 
+However, for the current system requirements, the standard OPA server was deemed more suitable due to its flexibility.
 
 \subsection{OPA advanced features}
 
@@ -1287,7 +1265,7 @@ This feature allow policy developer to digitally sign their policies bundles by 
 \newline
 OPA also provides a more efficient way to distribute policies using \textbf{Delta Bundles} \cite{opa_delta_bundles}.
 Normally, when a policy bundle is downloaded, OPA will download the entire bundle, erase and overwrite the current policies and data with the new ones.
-Delta Bundles are composed of a single ``patch,json'' file that contains a set of JSON Patch operations that can be applied to the current data to update it to the new version. Currently only data updates are supported (data.json) and not policy updates (policy.rego) \cite{opa_delta_bundles}.
+Delta Bundles are composed of a single ``patch.json'' file that contains a set of JSON Patch operations that can be applied to the current data to update it to the new version. Currently only data updates are supported (``data.json") and not policy updates (``policy.rego") \cite{opa_delta_bundles}.
 
 \newpage
 
@@ -1439,7 +1417,6 @@ Server Metadata & GET           & v2                                            
 Our specific use case requires the deployment of multiple models, each corresponding to a different region.
 This is true if we want to achieve better model performance compared to a single model that tries to predict the carbon intensity of all the regions.
 The current strategy adopted for the system is the following: one model per region is deployed, and a generic model is used as a fallback if the specific model is not available.
-
 This translates into the deployment of multiple InferenceServices, each corresponding to a specific region, and one InferenceService that acts as a fallback.
 This setting introduces a quite large amount of overhead in terms of resources, since each InferenceService set up a whole new set of resources (e.g., large Kubernetes Pods with underlying model serving environments) for each model.
 Figure \ref{fig:forecaster} illustrates the configuration of the InferenceServices used to deploy the forecasting models in the system.
@@ -1509,7 +1486,7 @@ Some examples of this kind of agents are the \textbf{Prometheus Node exporter} a
 Figure \ref{fig:prometheus} shows an example of a standard Prometheus architecture used to collect system performance metrics using the Node exporter and the Process exporter on a set of Linux VMs.
 In particular, the Node exporter collects metrics such as CPU usage, memory usage, disk usage, and network usage, while the Process exporter collects metrics about the various processes running on the VM (e.g., CPU and memory usage per process group).
 Metrics are pulled by the Prometheus server, which stores them in a time-series database and makes them available for querying and visualization (e.g., using Grafana). 
-In addition, the Prometheus server can be configured to send alerts based on the collected metrics leveraging the Alertmanager component.
+In addition, the Prometheus server can be configured to send alerts based on the collected metrics leveraging the Alertmanager component. \newline
 
 \begin{figure}[htb]
   \centering
@@ -1528,15 +1505,14 @@ The optimizations are encoded in a set of Kubernetes Custom Resources (CRs) that
 %- “forward the optimization to the Krateo operator that manages the services that need to be optimized, for example, the Azure Operator to modify the size of a Virtual Machine;”
 %- “the optimization is automatically encoded in a CR for the finops-operator-vm-manager, which then analyzes it and decides how to manage the Virtual Machine. For example, it could scale up or down the virtual machine, stop it for the night, etc.”
 \newline
-As Microsoft Azure documentation describes, there are actually two different categories of metrics that can be collected from a VM: the \textbf{guest-level metrics} and the \textbf{hypervisor-level or host-level metrics} \cite{azure_vm_monitoring}.
+As Microsoft Azure documentation describes, there are actually two different categories of metrics that can be collected from a VM in the cloud: the \textbf{guest-level metrics} and the \textbf{hypervisor-level or host-level metrics} \cite{azure_vm_monitoring}.
 The first category of metrics is collected by agents directly installed on the VMs, as described above.
 The second category of metrics is collected by \textbf{cloud provider APIs}, and they provide information about the VMs from the hypervisor or host level.
 For instance, in the case of Azure Virtual Machines, this date is relaated to the Hyper-V host that runs the VM \cite{azure_vm_monitoring}.
-The difference between these two categories of metrics is that the guest-level metrics are more fine-grained and provide information about the actual resource usage of the VM (being collected at the OS level), while the hypervisor-level metrics are more high-level.
+The difference between these two categories of metrics is that the guest-level metrics are more fine-grained and provide information about the actual resource usage of the VM (being collected at the OS level), while the hypervisor-level metrics are more high-level. \newline
 %Azure monitoring REST API: https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/rest-api-walkthrough?tabs=rest%2Cportal
 %https://learn.microsoft.com/en-us/rest/api/monitor/metrics/list?view=rest-monitor-2023-10-01&tabs=HTTP
 %https://learn.microsoft.com/en-us/azure/virtual-machines/monitor-vm 
-\newline
 To support the collection of metrics, several cloud providers offer agents that can be installed on the provider-specific VMs they manage.
 One of the goal of these agents comparared to standard cloud-agnostic agents is to provide a more convenient experience for the user managing the VMs in the context of the cloud provider. 
 Therefore these agents are usually more integrated with other cloud provider services and APIs.
@@ -1562,52 +1538,51 @@ However, Kepler could be potentially used in a future iteration of the system.
 %there is the TEADS metodology like 
 
 \subsection{Carbon metrics}
-
-[TO BE FIXED] \newline
+\label{sec:carbon_metrics}
 
 As briefly mentioned in the beginning of this section, there is no adopted standard adopted by Public Cloud Providers to calculate and expose the carbon footprint of a cloud resource.
-As described in section \ref{sec:real_time_cloud}, the Green Software Foundation is working on a standard called Real Time Cloud that aims to provide a common standard for carbon footprint calculation.
-However, this standard is not yet adopted by any major Public Cloud Provider.
+In section \ref{sec:real_time_cloud}, we briefly described that the Green Software Foundation is working on a standard called \textbf{Real Time Cloud} that aims to provide a common standard for carbon footprint calculation.
+The goal would be to have a \textbf{real-time carbon metric} to be used for optimization and this metric would be added to the set of metrics that are already provided by the cloud providers (e.g., CPU usage, memory usage).
+However, this standard is not yet adopted by any major Public Cloud Provider which in turn provide only high-level monthly reports for carbon emission data.
+A brief summary, as reported by one of the proposers of Real Time Cloud \cite{cloud_provider_sustainability_reports}, is shown in Table \ref{tab:cloud_carbon_emissions_reports}.
 
-Public Cloud Providers provide monthly reports (probably not useful in this case)
-Export Azure carbon optimization emissions data (Preview) (probably not fine-grained as we want)
+\begin{table}[H]
+  \centering
+  \renewcommand{\arraystretch}{1.2} % Increase row height for readability
+  \setlength{\extrarowheight}{2pt} % Add extra space between rows
+  \begin{tabularx}{\textwidth}{|X|X|X|X|X|X|}
+  \hline
+  \textbf{Cloud Provider}     & \textbf{Project name}                          & \textbf{Scope}            & \textbf{Geographical resolution} & \textbf{Carbon resolution} & \textbf{Time resolution} \\ \hline
+  Amazon Web Services (AWS)   & AWS Customer Carbon Footprint Tool             & Account, EC2, S3, Other   & Continental                      & 0.001 Metric Tons of CO2e  & Monthly                  \\ \hline
+  Microsoft Azure             & Azure Carbon Footprint API Schema              & Account, Service          & Country and region               & 0.001 Metric Tons of CO2e  & Monthly                  \\ \hline
+  Google Cloud Platform (GCP) & Google Carbon Footprint BigQuery Export Schema & Account, Project, Service & Country, region and zone         & 0.1 Kilograms of CO2e      & Monthly                  \\ \hline
+  \end{tabularx}
+  \caption{Cloud provider sustainability reports}
+  \label{tab:cloud_carbon_emissions_reports}
+\end{table}
+%Export Azure carbon optimization emissions data (Preview) (probably not fine-grained as we want)
 
-Cloud Carbon Footprint
-Uses cloud provider billing (AWS Cost and Usage Reports with Amazon Athena, GCP Billing Export Table using BigQuery, Azure Consumption 
-Management API). Using these services costs.
-Electricity Maps API integration is supported (for live grid carbon intensity)
+We deem interesting to mention some of the existing projects that can be used to estimate the carbon footprint of a cloud resource.
+\textbf{Cloud Carbon Footprint} \cite{cloud_carbon_footprint} is a tool that uses cloud provider billing (i.e., AWS Cost and Usage Reports with Amazon Athena, GCP Billing Export Table using BigQuery, Azure Consumption Management API) and resource usage metrics to provide an estimation of the carbon footprint of a cloud resource. For live grid carbon intensity an integration with Electricity Maps API is supported \cite{cloud_carbon_footprint}.
+Another tool within the GreenOps ecosystem is the \textbf{Aether} calculation engine \cite{aether}
+Currently only AWS and GCP are supported as it uses AWS CloudWatch and Google monitoring
+There is not the possibility to use a real-time Grid Carbon Intensity Coefficient since carbon data is extrapolated from “governative” data reports \cite{aether}.
+A different approach to estimate the carbon footprint of resource, in particualar a virtual machine is the one proposed by the \textbf{carbond} agent \cite{carbond:2023:hotcarbon}. 
+This agent must be installed on the VM and aims to provide a real-time estimation of the carbon footprint of the VM via a file-system API \cite{carbond:2023:hotcarbon}.
+It should be investigated further whether this agent could be use in cloud environments, since those settings, as described above, do not provide access to the underlying hardware sensors that are usually used by agents to estimate the power consumption of the VM
 
- 
-aether calculation engine (https://aether.green/docs/methodologies/) 
-only AWS and GCP supported, Azure not yet
-uses AWS CloudWatch and Google monitoring
-very small project
-no live Grid Carbon Intensity Coefficient, they extrapolate data from “governative” data reports
-https://aether.green/docs/methodologies/#grid-carbon-intensity-coefficient
-
-
-A possible approach to estimate the carbon footprint of a VM instance 
-carbond agent
-,ust installed on the machine
-so in this case, probably not useful 
-\cite{carbond:2023:hotcarbon}
-
-
-Example of a manual approach (not scalable due to tech specs research): https://devblogs.microsoft.com/sustainable-software/how-can-i-calculate-co2eq-emissions-for-my-azure-vm/ 
-
-The critical point here is to get/calculate the energy consumed by a cloud instance, since there are a huge number of technical configurations to find, retrieve and use for calculations.
+%Example of a manual approach (not scalable due to tech specs research): https://devblogs.microsoft.com/sustainable-software/how-can-i-calculate-co2eq-emissions-for-my-azure-vm/ 
+%The critical point here is to get/calculate the energy consumed by a cloud instance, since there are a huge number of technical configurations to find, retrieve and use for calculations.
 
 \subsection{Impact framework potential integration}
 \label{sec:impact_framework_integration}
 
-[TO BE FIXED] \newline
-
 A potential integration with the Green Software Foundation's Impact Framework is envisioned for the system.
 Currently, said integration is not implemented, but it is deemed a valuable addition to the system in future iterations.
 As briefly described in section \ref{sec:impact_framework}, the Impact Framework is a tool that allow to create pipelines for data extraction, transformation, and calculations.
-In addition, Impact Framework provides a database of cloud instances (CSV file) with their respective specifications (e.g., CPU model, CPU TDP, GPU model, GPU TDP, memory, etc), which can be used to estimate the power consumption of a cloud instance.
+In addition, Impact Framework provides a database of cloud instances (a CSV file) with their respective specifications (e.g., CPU model, CPU TDP, GPU model, GPU TDP, memory, etc), which can be used to estimate the power consumption of a cloud instance.
 Listing \ref{lst:cloud_metadata_example} shows an example of a simple Impact Framework pipeline that extracts the metadata of a cloud instance.
-As a matter of fact the pipeline is composed of just one step that extract the metadadat of the Azure Standard\_A1\_v2 instance.
+As a matter of fact the pipeline is composed of just one step that extract the metadata of the Azure \textit{Standard\_A1\_v2} instance. \newline
 
 \begin{lstlisting}[language=yaml, caption={Cloud Metadata extraction example}, label={lst:cloud_metadata_example}]
 name: cloud-instance-metadata-extraction
@@ -1631,21 +1606,21 @@ children:
     pipeline:
       compute:
         - cloud-instance-metadata
-    inputs:
+    @\yellowhl{inputs:}@
       - timestamp: 2023-08-06T00:00
-        cloud/provider: azure
-        cloud/instance-type: Standard_A1_v2
-    outputs:
+        @\yellowhl{cloud/provider: azure}@
+        @\yellowhl{cloud/instance-type: Standard\_A1\_v2}@
+    @\yellowhl{outputs:}@
       - timestamp: 2023-08-06T00:00
-        cloud/provider: azure
-        cloud/instance-type: Standard_A1_v2
+        @\yellowhl{cloud/provider: azure}@
+        @\yellowhl{cloud/instance-type: Standard\_A1\_v2}@
         cpu-cores-available: 52
         cpu-cores-utilized: 1
         cpu-manufacturer: Intel
         cpu-model-name: >-
           Intel® Xeon® Platinum 8272CL,Intel® Xeon® 8171M 2.1 GHz,Intel® Xeon®
           E5-2673 v4 2.3 GHz,Intel® Xeon® E5-2673 v3 2.4 GHz
-        cpu-tdp: 205
+        @\yellowhl{cpu-tdp: 205}@
         gpu-count: nan
         gpu-model-name: nan
         gpu-tdp: nan
@@ -1653,9 +1628,10 @@ children:
 \end{lstlisting}
 
 As we can see from the example, the pipeline is composed of two main sections: the \textit{initialize} section, where the plugins (pipelines steps) are defined, and the \textit{tree} section, where the actual pipeline is defined.
-Among the output fields of the pipeline, we can see the \textit{cpu-tdp} field, which represents the Thermal Design Power of the CPU of the Azure Standard\_A1\_v2 instance.
+Among the output fields of the pipeline, we can see the \textit{cpu-tdp} field, which represents the \textit{Thermal Design Power} of the CPU of the Azure Standard\_A1\_v2 instance.
 This field could be used in a more complex pipeline to estimate the power consumption of the instance, and therefore its carbon footprint.
 An example of such pipeline is described in the Impact Framework documentation \cite{impact_framework_pipeline} and is shown in Figure \ref{fig:impact_framework}.
+A series of steps are performed to estimate the carbon footprint of a cloud instance, starting from the metadata extraction, to the power consumption estimation (with conversions), to the carbon footprint calculation.
 
 \newpage
 

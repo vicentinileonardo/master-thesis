@@ -1,49 +1,52 @@
 \chapter{Conclusion}
 \label{cha:conclusion}
 
-This chapter concludes the thesis by summarizing the main contributions, and discussing future work.
-
-In particular ...
-production-ready system
+This chapter concludes the thesis by summarizing the implementation results, and discussing future work.
+In particular, we will first describe the \textbf{end-to-end integrated test} that has been carried out on a Kubernetes cluster to validate the system.
+Finally, we will present and describe some \textbf{future improvements} that could be made to the system.
 
 \section{End-to-end integrated test}
 
-final result
-A comprehensive end-to-end integrated test has been carried out on a Kubernetes cluster
-this was used to validate the system
+A comprehensive end-to-end integrated test has been carried out on a Kubernetes cluster. 
+In particular, the test has been performed on a Azure AKS cluster, which is a managed Kubernetes service provided by Microsoft Azure.
+The cluster had a maximum of 4 nodes (autoscaling enabled) with 4 vCPUs and 16 GiB of RAM each.
+During the test, a \textbf{comprehensive deployment guide} has been prepared to guide future deployments of the system.
+The guide is divided into the following sections:
+\begin{itemize}[itemsep=0.2pt, topsep=1pt]
+    \item[$\bullet$] \textbf{Part 1 - Cloud Providers' Operators}
+    \item[$\bullet$] \textbf{Part 2 - MLOps stack}
+    \item[$\bullet$] \textbf{Part 3 - VmTemplate Composition Definition, OPA and K8s Mutating Webhook}
+    \item[$\bullet$] \textbf{Part 4 - GreenOps Scheduler and Forecasts update CronJob}
+\end{itemize}
 
-\section{GreenOps system evaluation}
-
-[maybe not really in the scope]
-[MORE RELATED TO REDI'S THESIS]
-
-
-\subsection{Theoretic upper bound}
-
- (how close can we get, masachussets amherest group)
-
-\subsection{Baseline definition}
-
-We should prepare one or more baseline schedulings that will be used as a baseline and compared with a carbon-aware scheduling proposed by our system.
-
-\subsection{Black hole phenomenon}
-
-How to deal with the so-called “Black hole” phenomenon?
-That is, if 100 workload scheduling arrives at some point, there is the possibility that the outcome of the system we are building is: “schedule all workloads in Norway” where Norway is the region with least carbon intensity at that moment.
-This phenomenon came up also in a previous meeting but it is not clear if this could be a problem etc..
-A probable differentiator could be the max latency field of the workload request. Other service requirements could contribute to this as well.
+It must be noted that the order of the parts is important, as the system has dependencies between the components.
 
 
-(how it is countered)
 
-\subsection{Side effects}
 
-Maybe out of scope of this work, side effects, big picture.
-What happens if a big percentage of companies that relies on cloud services starts to adopt carbon-aware scheduling of their workloads?
-We tend to image cloud providers or even cloud regions as an infinite pool of resources, and at a certain level it is almost like that. But could carbon aware scheduling have larger, not foreseen, side effects?
-Is this a responsibility of who schedules? Shall schedulers be responsible for the load on regions? Like self-imposing some sort of limits/caps.
+%The test has been successful, and the system has been validated.
+%this was used to validate the system
+%production-ready system
 
-\subsection{Preliminary evaluation}
+%\section{GreenOps system evaluation}
+%[maybe not really in the scope]
+%[MORE RELATED TO REDI'S THESIS]
+%\subsection{Theoretic upper bound}
+%(how close can we get, masachussets amherest group)
+%\subsection{Baseline definition}
+%We should prepare one or more baseline schedulings that will be used as a baseline and compared with a carbon-aware scheduling proposed by our system.
+%\subsection{Black hole phenomenon}
+%How to deal with the so-called “Black hole” phenomenon?
+%That is, if 100 workload scheduling arrives at some point, there is the possibility that the outcome of the system we are building is: “schedule all workloads in Norway” where Norway is the region with least carbon intensity at that moment.
+%This phenomenon came up also in a previous meeting but it is not clear if this could be a problem etc..
+%A probable differentiator could be the max latency field of the workload request. Other service requirements could contribute to this as well.
+%(how it is countered)
+%\subsection{Side effects}
+%Maybe out of scope of this work, side effects, big picture.
+%What happens if a big percentage of companies that relies on cloud services starts to adopt carbon-aware scheduling of their workloads?
+%We tend to image cloud providers or even cloud regions as an infinite pool of resources, and at a certain level it is almost like that. But could carbon aware scheduling have larger, not foreseen, side effects?
+%Is this a responsibility of who schedules? Shall schedulers be responsible for the load on regions? Like self-imposing some sort of limits/caps.
+%\subsection{Preliminary evaluation}
 
 \section{Future improvements}
 
@@ -66,13 +69,42 @@ we need
 templates
 operators
 
-from only vm 
-to other resources
+\subsection{Support for other resources}
 
-example of a listing of resources that could be supported
+As described in the previous chapters, the system currently supports only VMs but it is designed with flexibility as a guiding principle.
+In the future, the system could be extended to support other resources, such as serverless functions, databases, Kubernetes clusters, and other cloud resources.
+The requirements for enabling support for other resources are: 
+\begin{enumerate}
+    \item the definition of a VmTemplate-like resources with Krateo core-provider
+    \item the deployment of specific operators for the resources
+\end{enumerate}
+
+Listing \ref{lst:aws_lambda} shows an example of a manifest of a AWS Lambda function that could be supported by the system \cite{aws_lambda_ack}
+
+\begin{lstlisting}[language=yaml, caption=AWS Lambda manifest example \cite{aws_lambda_ack}, label=lst:aws_lambda]
+apiVersion: lambda.services.k8s.aws/v1alpha1
+kind: Function
+metadata:
+    name: $FUNCTION_NAME
+    annotations:
+        services.k8s.aws/region: $AWS_REGION
+spec:
+    name: $FUNCTION_NAME
+    code:
+        s3Bucket: $BUCKET_NAME
+        s3Key: my-deployment-package.zip
+    role: $LAMBDA_ROLE
+    runtime: python3.9
+    handler: lambda_function.lambda_handler
+    description: function created by ACK lambda-controller e2e tests
+\end{lstlisting}
+
 
 
 \subsection{Multi model serving}
+
+It is deemed plausible that in the future resource management will rely on an increasing number of machine learning models for decision-making.
+In this context, the current design of KServe standard model deployment may not be the most efficient one.
 
 "The original design of KServe deploys one model per InferenceService. But, when dealing with a large number of models, its 'one model, one server' paradigm presents challenges for a Kubernetes cluster."
 

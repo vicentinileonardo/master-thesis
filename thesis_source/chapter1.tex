@@ -1,8 +1,31 @@
 \chapter{Introduction}
 \label{cha:introduction}
 
-[TO BE ADDED]
-The work described in this thesis is part of a larger project that aims to develop a system ... 
+In this chapter we will introduce the context of the work, the problem statement, the method adopted and the personal contribution to the overall project.
+
+\section{Context}
+\label{sec:context}
+
+The work described in this thesis is part of a larger project developed by a team
+that aims to develop a system for reducing the carbon footprint of workloads in the cloud. 
+Said system is based on the idea of \textbf{time-shifting} and \textbf{geographical shifting} of workloads to time periods and geographical regions with low carbon intensity.
+As a matter of fact, nowadays, the carbon intensity of electricity varies significantly depending on the time of day and the geographical region.
+Therefore, it is deemed interesting to leverage this information to schedule workloads in a way that reduces the carbon footprint of the workloads compared to a traditional scheduling approach.
+Targeted workloads are the ones that are not time-sensitive but instead are quite delay-tolerant. 
+In addition, workloads are also characterized by other requirements, such as Quality of Service (QoS) requirements (e.g., deadlines, maxLatency, etc.).
+Indeed a \textbf{policy-driven approach} is used to encode these requirements along with schduling outcomes.
+
+
+The system is designed to be used in a multi-cloud setting, 
+The system is designed to be flexible and extensible, so that it can be used for different types of workloads and different cloud providers.
+
+GOAL
+The goal of the project is to employ mainly time-shifting and geographical shifting for the scheduling of workload leveraging a multi-cloud setting.
+We can choose to schedule workloads in periods and regions with low carbon intensity (when renewables are plentiful). 
+Therefore, targeted workloads are the ones that are not time-sensitive but instead are quite delay-tolerant. For example training a machine learning model could wait until a period of low carbon intensity. Another example is shifting video / image processing, as Google is doing.
+Kubernetes is leveraged as a platform for scheduling and managing workloads on different cloud providers.
+Long term goal: “Using electricity when the carbon intensity is low is the best way to ensure investment flows towards low-carbon emitting plants and away from high-carbon emitting plants”.
+
 The project is divided into three main parts: data analysis, machine learning, and cloud infrastructure as shown in Figure \ref{fig:project_parts}.
 
 \begin{figure}[htb]
@@ -12,8 +35,8 @@ The project is divided into three main parts: data analysis, machine learning, a
     \label{fig:project_parts}
 \end{figure}
 
-\section{Context}
-\label{sec:context}
+The focus of this thesis is on the cloud infrastructure part.
+
 
 [TO BE ADDED]
 
@@ -68,7 +91,8 @@ this is described in section XYZ
 
 \section{Method}
 
-[TO BE ADDED]
+The method adopted in this thesis followed several principles described in this section.
+First of all the main goal was to develop a solution to be integrated to be integrated into an existing platform \textbf{to support real use cases}.
 
 Developing a real solution, integrating it on top of OSS
 
@@ -80,7 +104,7 @@ System architecture to start with: Saima's + Krateo platform
 
 integration into an existing platform (krateo)
 
-leveraging krateo componenets
+leveraging krateo componenets is beneficial 
 
 Krateo Core Provider and cdc instead of developing 1 or more K8s operators from scratch
 
@@ -96,8 +120,8 @@ cons: maintainer costs
 
 ideation and creation of architectural diagrams
 
-tackling first use case
-but create a system that is flexible enough to be used for other use cases as well
+tackling first use case: GreenOps scheeduling of virtual machines
+but create a system that is flexible and extendible enough to be used for other use cases as well
 
 \section{Personal contribution}
 
@@ -113,11 +137,6 @@ model selection
 
 infrastructure part
 
-GOAL
-The goal of the project is to employ mainly time-shifting and geographical shifting for the scheduling of workload leveraging a multi-cloud setting.
-We can choose to schedule workloads in periods and regions with low carbon intensity (when renewables are plentiful). 
-Therefore, targeted workloads are the ones that are not time-sensitive but instead are quite delay-tolerant. For example training a machine learning model could wait until a period of low carbon intensity. Another example is shifting video / image processing, as Google is doing.
-Kubernetes is leveraged as a platform for scheduling and managing workloads on different cloud providers.
-Long term goal: “Using electricity when the carbon intensity is low is the best way to ensure investment flows towards low-carbon emitting plants and away from high-carbon emitting plants”.
+
 
 \newpage
