@@ -10,21 +10,21 @@ Finally, the \textbf{GreenOps landscape} is introduced, focusing on the the \tex
 
 \section{Public cloud providers}
 
-The Cloud Computing definition by the National Institute of Standards and Technology (NIST) \cite{nist} states that ``\textit{Cloud Computing is a model for enabling ubiquitous, convenient, on-demand network access to a shared pool of configurable computing resources (e.g., networks, servers, storage, applications, and services) that can be rapidly provisioned and released with minimal management effort or service provider interaction}" \cite{nist}.
+The Cloud Computing definition by the National Institute of Standards and Technology (NIST) \cite{nist_cloud_computing} states that ``\textit{Cloud Computing is a model for enabling ubiquitous, convenient, on-demand network access to a shared pool of configurable computing resources (e.g., networks, servers, storage, applications, and services) that can be rapidly provisioned and released with minimal management effort or service provider interaction}" \cite{nist_cloud_computing}.
 \textbf{Public Cloud Providers} or Cloud Service Providers (CSPs) are companies that have as their core business the provisioning of cloud computing services. 
-These services, which are growing in number and complexity, range from computing resources to storage, networking, databases, machine learning, and more. 
+These services, which are growing in number and complexity over time, range from computing resources to storage, networking, databases, machine learning, and more. 
 Public cloud is a deployment model that allows organizations to consume cloud services without having to build and maintain their own physical infrastructure (e.g., private cloud), therefore reducing capital expenditure (CapEx) and shifting to an operational expense model (OpEx). 
-The public cloud model is actually a multi-tenant environment where physical resources maintained and operated by the cloud provider are shared among multiple customers (tenants).
+The public cloud model is actually a multi-tenant environment where physical resources maintained and operated by the cloud provider are shared among multiple customers (tenants) with the means of virtualization and isolation techniques.
 These resources are offered in the form of various services at different levels of abstraction (e.g., Infrastructure as a Service, Platform as a Service, Software as a Service) and are provided on-demand on a pay-as-you-go basis.
 %Doing so requires public cloud provider to leverage paradigm and technique which were known in the industry well before the advent of cloud computing: virtualization and isolation.
 Currently, as of 2024, the public cloud market is dominated by three main hyperscalers: \textbf{Amazon Web Services (AWS)}, \textbf{Microsoft Azure}, and \textbf{Google Cloud Platform (GCP)}.
 An hyperscaler is generally a company (Cloud Service Provider) that operates a data center infrastructure at a massive scale and is able to provide cloud services to a global audience.
-Figure \ref{fig:pcp} shows the worldwide market share of leading cloud infrastructure service providers as of Q3 2024 \cite{statista}.
+Figure \ref{fig:pcp} shows the worldwide market share of leading cloud infrastructure service providers as of Q3 2024 \cite{statista_cloud_market_share}.
 
 \begin{figure}[htb]
     \centering
     \includegraphics[width=0.75\linewidth]{images/pcp.jpeg}
-    \caption{Worldwide market share of leading cloud infrastructure service providers as of Q3 2024 \cite{statista}}
+    \caption{Worldwide market share of leading cloud infrastructure service providers as of Q3 2024 \cite{statista_cloud_market_share}}
     \label{fig:pcp}
 \end{figure}
   
@@ -53,7 +53,7 @@ We must note that the number of regions and availability zones is constantly cha
     Google Cloud Platform (GCP) & 40 & 121 \\
     \hline
     \end{tabular}
-    \caption{Number of Cloud Regions and Availability Zones by Provider as of 2024 \cite{stat}}
+    \caption{Number of Cloud Regions and Availability Zones by Provider as of 2024 \cite{statista_cloud_regions}}
     \label{tab:cloud_regions_azs}
 \end{table}
 
@@ -193,7 +193,7 @@ Krateo is composed of three main parts:
 
 For the purpose of this work, we will focus on the \textbf{Krateo Composable Operations} part, which is the core of the Krateo platform and is responsible for managing the lifecycle of resources in a Kubernetes cluster \cite{krateo_docs}.
 Krateo Composable Operations is composed in turn by several components. 
-Due to their core importance in our system, we will briefly describe the functionalities of the \textbf{Krateo core-provider} and the \textbf{Krateo composition-dynamic-controller} as described in Krateo official documentation \cite{krateo_core_provider} and \cite{krateo_composition_dynamic_controller}.
+Due to their core importance in our system, we will briefly describe the functionalities of the \textbf{Krateo core-provider} and the \textbf{Krateo composition-dynamic-controller} as described in Krateo official documentation (\cite{krateo_core_provider} and \cite{krateo_composition_dynamic_controller}).
 
 \subsection{Krateo core-provider}
 
@@ -216,9 +216,9 @@ Therefore, this is an example of the Operator paradigm described in section \ref
 The Krateo composition-dynamic-controller is the Kubernetes operator that is instantiated by the Krateo core-provider to manage the specific Custom Resources whose Custom Resource Definition is generated by the core-provider.
 In practice, when a Custom Resource (CR) is created, the specific instance of composition-dynamic-controller checks if a Helm release associated with the CR already exists in the cluster \cite{krateo_composition_dynamic_controller}. 
 If this is not the case, it performs an \textit{helm install} operation using the values specified in the CR to create a new Helm release. This will practically deploy all the resources defined in the Helm chart using \textbf{Helm's templating engine}.
-This feature is particularly important in the context of the system described in this thesis and in particular for multi-cloud resource management as explained in section XYZ.
+This feature is particularly important in the context of the system described in this thesis and in particular for multi-cloud resource management as explained in section \ref{sec:krateo_integration}.
 However, if the Helm release does already exist, it instead executes an \textit{helm upgrade} operation, updating the release's values with those specified in the CR, effectively updating the resources in the cluster.
-This mechanism will be leveraged as well for a particular feature of our system described in section XYZ.
+This mechanism will be leveraged as well for a particular feature  of our system (i.e., ``waiting logic'') described in section \ref{sec:scheduling_time_waiting_logic}.
 Finally, when the CR is deleted from the cluster, the instance of the composition-dynamic-controller performs an \textit{helm uninstall} on the release, removing all the resources defined in the Helm chart from the cluster \cite{krateo_composition_dynamic_controller}. \\
 It must be said that Krateo composition-dynamic-controller has a set of additional features that are not described in this work such as multi-version support.
 The architecture of the Krateo core-provider and Krateo composition-dynamic-controller is depicted in Figure \ref{fig:krateo_core_provider}, as described and depicted in \cite{krateo_core_provider}.
@@ -374,9 +374,11 @@ A potential integration of this framework with our system is described in sectio
 
 [TO BE FIXED] \newline
 
-For the purpose of ths work, we assume that a cloud data center will likely rely on the same energy sources that characterize a specific geographical region (local grid).
-For example, if data from Electricity Maps (carbon-intensity forecasters) indicate that Finland is producing energy with low carbon emissions, then we assume that the data centers in that area will likely be powered with energy from low carbon sources.
-However, some public cloud providers may have better access to renewable energy sources in certain regions due to their individual initiatives e.g. private wind farms that feed directly into their data centers.
+For the purpose of ths work, we assume that a cloud data center will likely rely on the same energy sources that characterize a specific geographical region.
+Indeed, cloud data centers typically draw power from their local electrical grids, meaning their carbon emissions are closely tied to the energy mix of their specific geographical regions just like any other industrial facility.
+For instance, if Finland's energy production is characterized by low carbon emissions, data centers located there are likely powered by clean energy sources. 
+However, some public cloud providers may implement individual initiatives to enhance their access to renewable energy and by consequence to reduce their carbon footprints.
+ 
 
 %what are they already doing
 %improving energy efficiency by reducing their PUE

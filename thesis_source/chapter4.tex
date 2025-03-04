@@ -1,9 +1,15 @@
 \chapter{Conclusion}
 \label{cha:conclusion}
 
-This chapter concludes the thesis by summarizing the implementation results, and discussing future work.
-In particular, we will first describe the \textbf{end-to-end integrated test} that has been carried out on a Kubernetes cluster to validate the system.
-Finally, we will present and describe some \textbf{future improvements} that could be made to the system.
+This thesis has introduced a system for resource management in multi-cloud environments, leveraging a policy-driven, Kubernetes-based architecture. 
+In particular, the guiding principle was to employ existing and well-known technologies to provide a flexible solution for cloud resource management.
+As a matter of fact, Kubernetes, Krateo PlatformOps, Open Policy Agent are technologies that have flexibility and extensibility as their core principles.
+The focus of the work proposed in the thesis was on optimizing the scheduling of virtual machines to minimize carbon footprint, effectively demonstrating how GreenOps principles can be integrated into a cloud resource management system.
+Thanks to a comprehensive end-to-end integrated test, the system was successfully deployed and validated on a Kubernetes cluster, proving its feasibility in a real-world cloud setting.
+The integration of Open Policy Agent (OPA) for dynamic decision-making (i.e. real-time scheduling outcome), the use of machine learning models for carbon intensity forecasting deployed within the same Kubernetes environment adopting MLOps principles, the enforcement of policies encoding Quality-of-Service requirements (e.g., latency constraints) and compliance with exemplificative regulatory policies (e.g., GDPR-like policy) highlight the system’s adaptability to a wide array of requirements and constraints of organizations that operate in multi-cloud environments.
+However, we believe that there is a potential for several improvement and extensions to the system, which are discussed in a following section.
+First and foremost, the current iteration focuses only on VM scheduling, but expanding the system to support additional cloud resources, such as serverless computing, containerized workloads, and databases is a natural next step as we described in section \ref{sec:support_other_resources}.
+
 
 \section{End-to-end integrated test}
 
@@ -19,11 +25,35 @@ The guide is divided into the following sections:
     \item[$\bullet$] \textbf{Part 4 - GreenOps Scheduler and Forecasts update CronJob}
 \end{itemize}
 
-It must be noted that the order of the parts is important, as the system has dependencies between the components.
+It must be noted that the order of the parts is important, as the system has dependencies between the components. \newline
 
-%The test has been successful, and the system has been validated.
-%this was used to validate the system
-%production-ready system
+The test has been successful, as we were able to perform the following operations:
+\begin{itemize}[itemsep=0.2pt, topsep=1pt]
+    \item[$\bullet$] Deployment of the operators for the three cloud providers (AWS, Azure, GCP) on the Kubernetes cluster.
+    \begin{itemize}[label=$\circ$]
+        \item Testing of the operators by creating provider-specific resources (e.g., AWS EC2 instances, Azure Virtual Machines, GCP Compute Instances).
+        \item Verification of the provisioned resources on the cloud providers' consoles.
+    \end{itemize}
+    \item[$\bullet$] Deployment of the MLOps stack
+    \begin{itemize}[label=$\circ$]
+        \item Deployment of CrateDB using the CrateDB operator (model metadata store).
+        \item Deployment of SeaweedFS using a Helm chart (model artifact store).
+        \item Deployment of MLflow tracking and serving with a custom Helm chart.
+        \item Deployment of KServe using a Helm chart.
+        \item Deployment of forecasting models on KServe using InferenceServices.
+    \end{itemize}
+    \item[$\bullet$] Installation of a VmTemplate CompositionDefinition
+    \begin{itemize}[label=$\circ$]
+        \item Verification of the related card on the Krateo Composable Portal (Web User Interface).
+    \end{itemize}
+    \item[$\bullet$] Deployment and configuration of Open Policy Agent.
+    \item[$\bullet$] Configuration of the Kubernetes mutating webhook.
+    \item[$\bullet$] Deployment of the GreenOps scheduler.
+    \item[$\bullet$] Simulation of user requests for generic resources (VmTemplates) on the Krateo Composable Portal.
+    \item[$\bullet$] Verification of the creation of VmTemplate resources on the Kubernetes cluster.
+    \item[$\bullet$] Verification of the mutation of the VmTemplate resource by the Kubernetes Mutating Webhook, with OPA integration, to obtain scheduling outcomes from the GreenOps scheduler.
+    \item[$\bullet$] Verification that, when the scheduling time is reached, the provider-specific resources are provisioned on the cloud providers' consoles.
+\end{itemize}
 
 
 %[maybe not really in the scope]
@@ -47,15 +77,19 @@ It must be noted that the order of the parts is important, as the system has dep
 
 \section{Future improvements}
 
+Since the system is designed with flexibility in mind, there are several possible improvements that could be made to the system.
+In addition to that, it must be remembered that the work proposed in this thesis is a first iteration of the system.
+
 \subsection{Day 2 operations}
 
-In previous chapter we have focused on a use case, that is VM scheduling (placing) that can be considered as a ``Day 1 operation".
+In the previous chapters we have focused on a use case, that is VM scheduling (placing) that can be considered as a ``Day 1 operation".
 In section \ref{sec:day2_operations} we have briefly described the concept of ``Day 2 operations" and the fact that the proposed system is designed to support them as well.
 Indeed, this is possible thanks to the flexibility of Kubernetes admission control and OPA.
 In particular, currently the Kubernetes mutating webhook is configured to intercept both the creation and the update of a VmTemplate resource.
 This means that the system can be potentially used to perform operations such as \textbf{scaling up or down a VM} as long as this logic is implemented in OPA policies and the specific operator is capable of performing the operation.
 
 \subsection{Support for other resources}
+\label{sec:support_other_resources}
 
 As described in the previous chapters, the system currently supports only VMs but it is designed with \textbf{flexibility as a guiding principle}.
 In future iterations, the system could be extended to support other resources, such as serverless functions, databases, Kubernetes clusters, and other cloud resources.
@@ -68,11 +102,11 @@ The requirements for enabling support for other resources are:
 
 For example, the system could be extended to support \textbf{serverless functions} by defining a \textbf{\textit{FunctionTemplate}} resource and deploying a set of operators that manage the lifecycle of the functions.
 For instance, AWS Lambda functions could be supported by deploying the ACK service controller for AWS Lambda.
-Listing \ref{lst:aws_lambda} shows an example of a manifest of a AWS Lambda function that could be rendered by the system \cite{aws_lambda_ack}.
+Listing \ref{lst:aws_lambda} shows an example of a manifest of a AWS Lambda function that could be rendered by the system \cite{aws_lambda_ack}. \newline
 
 \begin{lstlisting}[language=yaml, caption=AWS Lambda manifest example \cite{aws_lambda_ack}, label=lst:aws_lambda]
-apiVersion: lambda.services.k8s.aws/v1alpha1
-kind: Function
+@\yellowhl{apiVersion: lambda.services.k8s.aws/v1alpha1}@
+@\yellowhl{kind: Function}@
 metadata:
     name: $FUNCTION_NAME
     annotations:
@@ -91,17 +125,17 @@ spec:
 \subsection{Multi-model serving}
 
 It is deemed plausible that in the future resource management will rely on an increasing number of machine learning models for decision-making.
-In this context, the current design of KServe standard model deployment may not be the most efficient one.
+However, the current design of KServe standard model deployment may not be the most efficient one.
+As a matter of fact, the ``\textbf{one model, one server}" paradigm is the one that is currently implemented in KServe.
+Indeed, even in the context of our system, where \textbf{each ElectricityMaps regions could be represented by a model}, the current design of KServe would require the deployment of a large number of InferenceServices.
+Currently, as described in section \ref{sec:model_deployment}, our strategy is to deploy specific models for a set of regions and to use a generic model for the remaining regions.
+The ``one model, one server" paradigm is not the most efficient way to deploy models, as it introduces a lot of overhead and could represent be a bottleneck in the system.
+The Kubernetes cluster could be overloaded with a large number of InferenceServices, with in turn are composed of several Kubernetes Pods with additional sidecar containers.
+Resource limitation have been calculated by KServe team and described in the official documentation \cite{kserve_multi_model}.
+In particular, since Kubernetes Kubelet (the Kubernetes agent that runs on each node) has a default limit of 110 pods per node, the number of InferenceServices that can be deployed on a single node is limited \cite{kserve_multi_model}.
+In addition to that, Kubernetes has an IP address limit per cluster which could represent an additional bottleneck in some cases.
+In recent versions, KServe introduced as alpha feature the so-called \textbf{ModelMesh} which aims to solve the limitations briefly described above \cite{kserve_multi_model}.
+The study of the ModelMesh feature and its integration with our system is a possible future improvement.
 
-Indeed, in the context of our system, where each ElectricityMaps regions could be represented by a model, the current design of KServe would require the deployment of a large number of InferenceServices.
-
-
-
-"The original design of KServe deploys one model per InferenceService. But, when dealing with a large number of models, its 'one model, one server' paradigm presents challenges for a Kubernetes cluster."
-
-kserve model mesh instead of several InferenceServices
-there is a lot of overhead in the current configuration
-
-how much is better to use more models instead of one generic model 
 
 \newpage

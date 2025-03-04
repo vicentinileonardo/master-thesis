@@ -108,6 +108,7 @@ The following table provides an overview of the main components of the system an
 All the components listed in the above table must be deployed inside a Kubernetes cluster. The only exception are the OPA Policies and data which lies outside the cluster as described in section \ref{sec:opa_bundles}.
 
 \section{Krateo PlatformOps integration}
+\label{sec:krateo_integration}
 
 Krateo PlatformOps is utilized in this system for \textbf{multi-cloud resource management}, allowing for the declarative orchestration of cloud resources across different cloud providers leveraging Kubernetes as a control plane. 
 This section highlights the differences between two approaches that were considered for resource synchronization:
@@ -413,6 +414,7 @@ Potentially, an automatic way to fetch the available VM sizes for each cloud pro
 For our first iteration of the system we used a small subset of all the available instance types (i.e. 5 instance types for each cloud provider).
 
 \subsubsection{Scheduling time waiting logic}
+\label{sec:scheduling_time_waiting_logic}
 
 Helm template engine is also leveraged to handle the \textbf{scheduling time waiting logic}.
 As previously described in section \ref{sec:limitations_custom_operator}, this logic is crucial for the system due to the fact that cloud provider operators do not support scheduling time metadata in their CRs and therefore as soon as a CR is created the cloud provider operator will provision the resource immediately.
@@ -445,6 +447,7 @@ metadata:
 In order to take into account the time needed for the cloud provider operator to provision the resource, additional logic could be added in the template to anticipate the scheduling time (e.g, using a \textit{provisioningTimeOffset}).
 
 \section{Multi-Cloud Integration through Kubernetes Operators}
+\label{sec:cloud_providers_operators}
 
 The integration of operators from different cloud providers has enabled the development of an effective \textbf{multi-cloud system}, allowing seamless orchestration and provisioning of cloud resources across various cloud platforms. 
 More precisely, the system leverages Kubernetes operators from \textbf{Microsoft Azure}, \textbf{Google Cloud Platform (GCP)}, and \textbf{Amazon Web Services (AWS)}.
@@ -585,7 +588,7 @@ In order to select a zone, a helper function is used to select a zone based on t
 \subsection{AWS Operator}
 
 AWS provides an entire collection of operators that are part of the AWS controllers for Kubernetes (ACK) project.
-Each controller is responsible for managing a specific AWS service, such as EC2, EBS, RDS, S3, and more. In the context of this research, the EC2 controller is used to manage virtual machine (EC2 Instances) provisioning on AWS.
+Each controller is responsible for managing a specific AWS service, such as EC2, EBS, RDS, S3, and more. In the context of this research, the EC2 controller is used to manage virtual machines (called EC2 Instances) provisioning on AWS.
 An example of a AWS EC2 Instance Custom Resource is the one illustrated in listing \ref{lst:aws}.
 The minimum set of resources needed for VM provisioning is:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt] 
@@ -727,8 +730,8 @@ This process is further described in the next section.
 
 Open Policy Agent (OPA) is an open-source general-purpose \textbf{policy engine} that enables unified policy enforcement across several types of environments \cite{opa_docs}. 
 OPA provides a declarative language called \textbf{Rego} enabling a paradigm known as ``\textbf{Policy as Code}" \cite{opa_docs}.
-Open Policy Agent can be integrated as a sidecar container, host-level daemon, or library to perform policy decisions for a plethora of use cases: microservices, \textbf{Kubernetes admission control}, CI/CD pipelines, API gateways and more \cite{opa_docs}. 
-In the context of our system, OPA and the Policy-as-Code paradigm are leveraged to define \textbf{policies for workload scheduling}: encoding the output of a \textbf{scheduling decision} coming from an external GreenOps Scheduler and ensuring compliance with \textbf{additional policies} related to latency requirements and legal constraints.
+Open Policy Agent can be integrated as a sidecar container, host-level daemon, or library to perform policy decisions for a plethora of use cases: \textbf{Kubernetes admission control}, CI/CD pipelines, container images, microservices, etc.\cite{opa_docs}. 
+In the context of our system, OPA and the Policy-as-Code paradigm are mainly leveraged to define \textbf{policies for workload scheduling}: encoding the output of a \textbf{scheduling decision} coming from an external GreenOps Scheduler and ensuring compliance with \textbf{additional policies} related to latency requirements and legal constraints.
 In particular, OPA is used as a \textbf{Kubernetes Mutating Webhook server} to apply scheduling decisions to VmTemplate Custom Resources based on policies.
 
 \subsection{Policy as Code paradigm}
@@ -1070,7 +1073,7 @@ The inputs and outputs of this policy are as follows:
   \item[$\bullet$] Given:
   \begin{itemize}[label=$\circ$]
     \item \{CPU, RAM, duration, deadline, max latency\}: set at request time
-    \item eligible cloud providers: set at request time or in policies
+    \item eligible cloud providers: set at request time or in policies (configurable)
     \item origin region: set in policies
     \item GDPR compliancy: set in policies
     \item inter-region latency matrix: stored in policy data
@@ -1090,6 +1093,7 @@ JSON Patch is a format for describing changes to a JSON document which avoid the
 Effectively, only deltas are sent back to the requester which are themselves JSON documents.
 The format is defined in RFC 6902 from the IETF \cite{json_patch}.
 As an example, a single patch operation is the one shown in listing \ref{lst:json_patch}, where a new field ``schedulingTime'' is added to the resource.
+It must be said that whether the provider is randomly chosen from a subset, chosen due to additional logic or chosen by the user at request time is not a concern of the policy itself, but this choice is made by the system designer and implemented in the policy.
 
 \begin{lstlisting}[language=rego, caption={JSON Patch example}, label={lst:json_patch}]
 # schedulingTime is data coming from the GreenOps Scheduler
@@ -1413,10 +1417,11 @@ Server Metadata & GET           & v2                                            
 \end{table}
 
 \subsubsection{Model deployment}
+\label{sec:model_deployment}
 
 Our specific use case requires the deployment of multiple models, each corresponding to a different region.
 This is true if we want to achieve better model performance compared to a single model that tries to predict the carbon intensity of all the regions.
-The current strategy adopted for the system is the following: one model per region is deployed, and a generic model is used as a fallback if the specific model is not available.
+The current strategy adopted for the system is the following: \textbf{one model per region} is deployed, and a \textbf{generic model is used as a fallback} if the specific model is not available.
 This translates into the deployment of multiple InferenceServices, each corresponding to a specific region, and one InferenceService that acts as a fallback.
 This setting introduces a quite large amount of overhead in terms of resources, since each InferenceService set up a whole new set of resources (e.g., large Kubernetes Pods with underlying model serving environments) for each model.
 Figure \ref{fig:forecaster} illustrates the configuration of the InferenceServices used to deploy the forecasting models in the system.
@@ -1467,9 +1472,9 @@ In addition, we will also discuss the \textbf{challenges and limitations} that c
 
 \subsection{System performance metrics}
 
-This category of metrics provides information about the health and performance of a system.
+System performance metrics are a category of metrics that provide information about the health and performance of a system.
 Usually these metrics are related to bare-metal servers or virtual machines.
-Other cloud resources that have a higher level of abstraction (e.g., containers, Kubernetes Pods, serverless functions) expose a different set of metrics.
+Other cloud resources that have a higher level of abstraction (e.g., containers, Kubernetes Pods, serverless functions) may expose a slighlty different set of metrics that fall into this category as well.
 This category of metrics are also useful for the ``\textbf{day 2 operations}'', which are operations that are performed after the resource has been deployed and monitored for a certain period of time, briefly described in section \ref{sec:day2_operations}.
 
 System performance metrics comprise, for instance:
@@ -1628,7 +1633,7 @@ children:
 \end{lstlisting}
 
 As we can see from the example, the pipeline is composed of two main sections: the \textit{initialize} section, where the plugins (pipelines steps) are defined, and the \textit{tree} section, where the actual pipeline is defined.
-Among the output fields of the pipeline, we can see the \textit{cpu-tdp} field, which represents the \textit{Thermal Design Power} of the CPU of the Azure Standard\_A1\_v2 instance.
+Among the output fields of the pipeline, we can see the \textit{cpu-tdp} field, which represents the \textbf{\textit{Thermal Design Power}} of the CPU of the Azure Standard\_A1\_v2 instance.
 This field could be used in a more complex pipeline to estimate the power consumption of the instance, and therefore its carbon footprint.
 An example of such pipeline is described in the Impact Framework documentation \cite{impact_framework_pipeline} and is shown in Figure \ref{fig:impact_framework}.
 A series of steps are performed to estimate the carbon footprint of a cloud instance, starting from the metadata extraction, to the power consumption estimation (with conversions), to the carbon footprint calculation.
