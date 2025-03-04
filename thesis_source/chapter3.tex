@@ -1357,15 +1357,15 @@ A second theorized approach was to use a sidecar container with the duty of watc
 \subsection{KServe}
 \label{sec:kserve}
 
-KServe is an open-source model inference platform that extends Kubernetes with a set of Custom Resource Definitions (CRDs) to \textbf{deploy} and scale machine learning models in production environments \cite{kserve}.
-KServe can be deployed in several ways, one of which is the ``Serverless mode'' which is built on top of Istio and Knative, leveraging their powerful capabilities such as automatic scaling. 
-There are two main CRs that can be used to set up a model serving environment: \textit{\textbf{ServingRuntimes}} (or \textit{\textbf{ClusterServingRuntimes}}) and \textit{\textbf{InferenceServices}}.
+KServe is an open-source model inference platform that extends Kubernetes with a set of Custom Resource Definitions (CRDs) to \textbf{deploy} and scale machine learning models in production environments \cite{kserve_docs}.
+KServe can be deployed in several ways, one of which is the ``\textit{Serverless mode}'' which is built on top of Istio and Knative, leveraging their powerful capabilities such as automatic scaling. 
+There are two main CRs that can be used to set up a model serving environment: \textit{\textbf{ServingRuntimes}} (or \textit{\textbf{ClusterServingRuntimes}}) and \textit{\textbf{InferenceServices}} \cite{krateo_docs}.
 The former are abstractions that define model serving environments, specifying the templates for Kubernetes Pods capable of serving particular model formats. 
 The latter are actually leveraging the available ServingRuntimes to deploy the models in the system.  
 KServe provides several out-of-the-box ClusterServingRuntimes for common model formats, such as TensorFlow, PyTorch, and XGBoost, which can be used to deploy models without the need to define and configure the runtimes themselves.
 In particular, in our specific use case, since the forecasting models are PyTorch models, packaged by MLflow as described in the previous section, InferenceServices with ``kserve-mlserver" ClusterServingRuntime are used. 
-As a matter of fact, this runtime is the one that supports models packaged with MLflow.
-Listing \ref{lst:inference_service} shows an example of the InferenceService Custom Resource used to deploy a model in the system. \\
+As a matter of fact, this runtime is the one that supports models packaged with MLflow \cite{kserve_mlflow}.
+Listing \ref{lst:inference_service} shows an example of the InferenceService Custom Resource used to deploy a model in the system, namely the forectaser related to the ``\textit{IT-NO}'' ElectricityMaps region (northern Italy) \\
 
 \begin{lstlisting}[language=yaml, caption={InferenceService Custom Resource example}, label={lst:inference_service}]
 apiVersion: "serving.kserve.io/v1beta1"
@@ -1383,8 +1383,6 @@ spec:
       storageUri: s3://mlartifacts/forecaster-IT-NO
 \end{lstlisting}
 
-% https://kserve.github.io/website/master/modelserving/v1beta1/mlflow/v2/
-
 We can see that the InferenceService CR is quite simple and self-explanatory. 
 The most important fields are the \textit{model} field, which specifies the model format, the protocol version, and the storage URI.
 The storage URI is the location of the model artifacts in the artifact store, which in the case of the system is the SeaweedFS object storage service with S3 compatibility. 
@@ -1394,11 +1392,11 @@ At the location specified by the storage URI, the model artifacts are stored in 
 
 Interoperability is key in a fast-moving environment as the one of machine learning and AI. 
 Therefore KServe has introduced the \textbf{Open Inference Protocol specification} to standardize the communication between inference servers and clients. 
-The Open Inference Protocol has been adopted by several inference servers, including NVIDIA's Triton and Seldon MLserver.
+The Open Inference Protocol has been adopted by several inference servers, including NVIDIA's Triton and Seldon MLserver \cite{kserve_oip}.
 As mentioned in the previous section, the InferenceService CRs used in the system are leveraging the ``kserve-mlserver" ClusterServingRuntime, which under the hood uses MLserver that is compliant with the Open Inference Protocol.
 The list of API endpoints specified by the Open Inference Protocol is shown in Table \ref{tab:oip_endpoints}.
 
-% https://github.com/kserve/open-inference-protocol
+% 
 
 \begin{table}[h!]
 \centering
@@ -1412,7 +1410,7 @@ Server Ready    & GET           & v2/health/ready                               
 Server Live     & GET           & v2/health/live                                                                                        \\ \hline
 Server Metadata & GET           & v2                                                                                                    \\ \hline
 \end{tabular}
-\caption{Open Inference Protocol API endpoints specification}
+\caption{Open Inference Protocol API endpoints specification \cite{kserve_oip}}
 \label{tab:oip_endpoints}
 \end{table}
 
@@ -1636,7 +1634,7 @@ As we can see from the example, the pipeline is composed of two main sections: t
 Among the output fields of the pipeline, we can see the \textit{cpu-tdp} field, which represents the \textbf{\textit{Thermal Design Power}} of the CPU of the Azure Standard\_A1\_v2 instance.
 This field could be used in a more complex pipeline to estimate the power consumption of the instance, and therefore its carbon footprint.
 An example of such pipeline is described in the Impact Framework documentation \cite{impact_framework_pipeline} and is shown in Figure \ref{fig:impact_framework}.
-A series of steps are performed to estimate the carbon footprint of a cloud instance, starting from the metadata extraction, to the power consumption estimation (with conversions), to the carbon footprint calculation.
+A series of steps are performed to estimate the carbon footprint of a cloud instance, starting from the metadata extraction, to the power consumption estimation (with conversions), to the final carbon footprint calculation.
 
 \newpage
 
