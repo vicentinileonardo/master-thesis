@@ -2,10 +2,10 @@
 \label{cha:background}
 
 In this chapter, we provide an overview of the main concepts, paradigms and technologies that are relevant for the purpose of this work.
-We start by introducing the concept of \textbf{Public Cloud Providers} and the \textbf{Multi Cloud paradigm}.
+We start by introducing the concept of \textbf{Public Cloud Providers} and the \textbf{Multi-Cloud paradigm}.
 We then provide a brief overview of \textbf{Kubernetes}, in particular focusing on the concept of \textbf{Kubernetes as a platform} and the \textbf{Helm} package manager.
 After that, \textbf{Krateo PlatformOps}, an open-source Kubernetes-based platform that is a fundamental part of our system, is introduced.
-We deemed also valuable to provide an overview of the existing works in the field of \textbf{multi-cloud resource management} to highlight recurrent patterns and design choices.
+We also deemed valuable to provide an overview of the existing works in the field of \textbf{multi-cloud resource management} to highlight recurrent patterns and design choices.
 Finally, the \textbf{GreenOps landscape} is introduced, focusing on the the \textbf{Computational Sustainability} initiatives by Public Cloud Providers and on \textbf{carbon-aware systems for resource management}. 
 
 \section{Public cloud providers}
@@ -18,7 +18,7 @@ The public cloud model is actually a multi-tenant environment where physical res
 These resources are offered in the form of various services at different levels of abstraction (e.g., Infrastructure as a Service, Platform as a Service, Software as a Service) and are provided on-demand on a pay-as-you-go basis.
 %Doing so requires public cloud provider to leverage paradigm and technique which were known in the industry well before the advent of cloud computing: virtualization and isolation.
 Currently, as of 2024, the public cloud market is dominated by three main hyperscalers: \textbf{Amazon Web Services (AWS)}, \textbf{Microsoft Azure}, and \textbf{Google Cloud Platform (GCP)}.
-An hyperscaler is a company (cloud service provider) that operates a data center infrastructure at a massive scale and is able to provide cloud services to a global audience.
+An hyperscaler is generally a company (Cloud Service Provider) that operates a data center infrastructure at a massive scale and is able to provide cloud services to a global audience.
 Figure \ref{fig:pcp} shows the worldwide market share of leading cloud infrastructure service providers as of Q3 2024 \cite{statista}.
 
 \begin{figure}[htb]
@@ -31,9 +31,9 @@ Figure \ref{fig:pcp} shows the worldwide market share of leading cloud infrastru
 \subsection{Cloud Regions and Availability Zones}
 
 With the term \textbf{cloud region}, cloud providers refer to a geographical area where they have one or more data centers.
-Cloud providers usually further divide regions into availability zones which main purpose is to provide high availability and fault tolerance.
+Cloud providers usually further divide regions into availability zones (AZs) which main purpose is to provide high availability and fault tolerance.
 For the purpose of this work, we will consider the concept of \textbf{cloud region} as the primary unit of deployment of cloud resources.
-Usually, by cloud providers design choice, each cloud region supports a subset of the available cloud services and instance types.
+Usually, by cloud providers design choice, each cloud region supports only a subset of the available cloud services and instance types.
 We could safely assume that our targeted workload specifications are quite standard and therefore can be scheduled on any cloud region.
 As of late 2024, the three major cloud service providers have established extensive global infrastructures.
 Table \ref{tab:cloud_regions_azs} shows the number of regions and availability zones (AZs) for each provider as of Q4 2024 - Q1 2025
@@ -59,10 +59,10 @@ We must note that the number of regions and availability zones is constantly cha
 
 We must also note that each cloud provider has a different number of regions and zones and also different naming conventions for them.
 There is no standardization nor a convention in the industry for this and cloud providers have chosen their own naming schemes.
-For instance a region located in London is called ``\textit{eu-west-2}'' in AWS, ``\textit{uk-west}'' in Azure and ``\textit{europe-west2}'' in GCP.
-This detail must be taken into acoount when designing and implementing a multi-cloud system.
+For instance, a region located in London is called ``\textit{eu-west-2}'' in AWS, ``\textit{uk-west}'' in Azure and ``\textit{europe-west2}'' in GCP.
+This detail must be taken into account when designing and implementing a multi-cloud system.
 For what concerns the geo-distribution of cloud regions, as an example, Figure \ref{fig:azure_data_centers} shows the location of \textbf{Azure cloud data centers} around the world and the country Grid Carbon Intensity as reported by Electricity Maps (year 2024) \cite{electricity_maps}.
-Data center coordinates are retrieved by an Azure CLI command dump \cite{azure_data_centers_information}.
+Data center coordinates are retrieved by an Azure CLI command dump \cite{azure_data_centers_information} and plotted on a map using the Natural Earth dataset \cite{naturalearthdata}.
 
 \begin{figure}[htb]
     \centering
@@ -71,9 +71,6 @@ Data center coordinates are retrieved by an Azure CLI command dump \cite{azure_d
     \label{fig:azure_data_centers}
 \end{figure}
 
-% https://www.naturalearthdata.com/downloads/110m-cultural-vectors/
-
-
 \subsection{Multi-cloud paradigm}
 
 The multi-cloud paradigm refers to the strategic utilization of cloud services from multiple public cloud providers within a single, heterogeneous architecture. 
@@ -81,11 +78,12 @@ This approach allows organizations to distribute workloads, applications, and da
 On the other hand, the hybrid cloud paradigm refers to utilization of both public cloud services and on-premises infrastructure (private cloud).
 The multi-cloud strategy is often adopted by organizations to \textbf{avoid vendor lock-in}, \textbf{increase redundancy}, \textbf{increase flexibility} and \textbf{optimize costs} \cite{google_multicloud}.
 For what concern flexibility and optimization, a multi-cloud strategy allows an organization to select the best service on a case-by-case basis, leveraging the strengths of each provider.
+Moreover, single point of failure weaknesses are mitigated by distributing workloads or critical services across multiple providers.
 It could even be the case that, for the end user, the choice of the cloud provider for a service is transparent meaning that the organization itself (or the system) is the one that decides which cloud provider to use for a specific service based on some criteria.
-Vendor lock-in is avoided by designing applications to be \textbf{cloud-agnostic} and by leveraging open-source technologies (e.g., Kubernetes) and standards \cite{google_multicloud}.
+Vendor lock-in can be avoided by designing applications to be \textbf{cloud-agnostic} and by leveraging open-source technologies (e.g., Kubernetes) and standards \cite{google_multicloud}.
 If an application is designed to be cloud-agnostic, it can be relatively easily migrated from one cloud provider to another.
 Multi-cloud is a strategy that might be more difficult to implement compared to a single cloud strategy but the long-term benefits are significant.
-Challenges and disadvantages are also present in a multi-cloud strategy \cite{google_multicloud}.
+\textbf{Challenges} and \textbf{disadvantages} are also present in a multi-cloud strategy \cite{google_multicloud}.
 As a matter of fact it can be safely said that \textbf{complexity in the overall infrastructure management is increased}.
 Another challenge is the \textbf{integration of services} across different cloud providers.
 An additional consideration could be done in terms of security: a multi-cloud strategy can \textbf{increase the attack surface} of an organization, therefore security measures must be carefully implemented.
@@ -96,7 +94,7 @@ If a user or organization has a preference for a specific cloud provider, the sy
 Secondly, the system can be designed to be \textbf{cloud-agnostic}, meaning that the choice of the cloud provider is transparent to the end user. 
 With some specific configurations, the subset of providers to be used can be decided by the system itself based on some criteria.
 Currently, as described in section \ref{sec:scheduling_outcome_policy}, the user can specify a subset of cloud providers (among the 3 major ones) to be used for the deployment of resources.
-Finally, in theory, since different cloud providers have data centers in various locations around the world, some low-carbon regions might be available only on a specific cloud provider.
+Finally, in theory, since different cloud providers have data centers in various locations around the world, some low-carbon regions might be available only on a specific cloud provider and this could be leveraged for the deployment of resources.
 
 \section{Kubernetes}
 
@@ -156,7 +154,7 @@ Therefore, Kubernetes use cases have expanded beyond the management of container
 The idea is to \textbf{represent external resources as Kubernetes objects} and leverage Kubernetes' declarative paradigm and robust API to achieve unified and efficient infrastructure management.
 This approach can be exemplified by the public cloud providers' operators which extend Kubernetes to manage their cloud resources as described in section \ref{sec:cloud_providers_operators}.
 
-Config Connector is a Kubernetes operator developed by Google Cloud that allows to configure numerous Google Cloud services and resources using Kubernetes tooling and APIs \cite{gcp_config_connector}.
+For instance, Config Connector is a Kubernetes operator developed by Google Cloud that allows to configure numerous Google Cloud services and resources using Kubernetes tooling and APIs \cite{gcp_config_connector}.
 The idea general idea is that organizations might have to deal with a \textbf{heterogeneous infrastructure} composed of different cloud providers and on-premises resources. 
 By \textbf{unifying infrastructure management under Kubernetes}, complexity is reduced and velocity is increased because the same tools and APIs can be used to manage all the resources in a consistent way \cite{gcp_config_connector}.
 
@@ -389,10 +387,11 @@ However, some public cloud providers may have better access to renewable energy 
 %https://blog.google/inside-google/infrastructure/data-centers-work-harder-sun-shines-wind-blows/
 
 %Google CFE\%: “This is the average percentage of carbon free energy consumed in a particular location on an hourly basis, while taking into account the investments we have made in carbon-free energy in that location. This means that in addition to the carbon free energy that's already supplied by the grid, we have added carbon-free energy generation in that location”.
+When selecting a Google Cloud region, the user can see the carbon-free energy percentage (CFE\%) for that region.
 
 %usually big companies leverage financial instruments like PPAs to buy renewable energy therefore their emissions are not zero but they are offset by the renewable energy they buy.
 
-Google has been working on carbon-aware computing for internal use. 
+As an example of the efforts made by public cloud providers in the field of carbon-aware computing, we can describe how Google has been working on carbon-aware computing for internal use. 
 In particular, they exploit workload flexibility to shift when, where and how computing is done to reduce carbon emissions \cite{google_carbon_aware_computing}.
 Some of the types of workloads they identified as flexible are: \textbf{video processing}, \textbf{training large-scale machine learning models}, \textbf{simulation pipelines}.
 The main components they recognized to be necessary for carbon-aware computing are: accurate carbon intensity data, scalable infrastructures and migrations mechanisms \cite{google_carbon_aware_computing}.
@@ -410,6 +409,8 @@ In particular, implementation choices and design patterns that can be leveraged 
 The work of 2023 by Sukprasert et al. named ``\textit{Spatiotemporal Carbon-aware Scheduling in the Cloud: Limits and Benefits}'' \cite{10.1145/3599733.3606301} is a comprehensive analysis on the limits and benefits of the employment of geographical shifting and time shifting for cloud workloads.
 The authors highlight the fact that different workloads have different characteristics and therefore different degrees of flexibility. Those include, for instance: \textbf{execution deadlines}, \textbf{data protection laws}, and \textbf{latency requirements}. Therefore, carbon savings are constrained by a complex set of factors that need to be taken into account when designing a carbon-aware system \cite{10.1145/3599733.3606301}.
 The following sections will present systems that have been developed by various research groups to tackle the problem of carbon-aware resource management in cloud computing environments.
+
+%Bringing Carbon Awareness to Multi-cloud Application Delivery
 
 \subsection{CASPER}
 
@@ -453,7 +454,7 @@ The claim is that the solar irradiance has a bigger spread than the carbon inten
 \subsection{Microsoft's Carbon-Aware Kubernetes strategy}
 \label{sec:microsoft_carbon_aware_k8s}
 
-Citing to the previous work, Microsoft proposes a simple carbon-aware strategy for Kubernetes \cite{microsoft_carbon_aware_k8s}, integrating carbon intensity data into the scheduling process of Kubernetes Pods (rather than entire clusters).
+Citing the previous work, Microsoft proposes a simple carbon-aware strategy for Kubernetes \cite{microsoft_carbon_aware_k8s}, integrating carbon intensity data into the scheduling process of Kubernetes Pods (rather than entire clusters).
 The Kubernetes scheduler, which allows custom rules for assigning Nodes to Pods, can incorporate carbon metrics like the Marginal Operating Emissions Rate (MOER) as factors in placement decisions. 
 A weighted distribution can be created by normalizing the MOER values across the available Nodes.
 These weightings are encoded in a YAML file and applied as a priority for the Scheduler, which out-of-the-box supports these kind of custom rules to extend the scheduling process.

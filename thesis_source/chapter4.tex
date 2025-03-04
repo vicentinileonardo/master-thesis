@@ -21,14 +21,11 @@ The guide is divided into the following sections:
 
 It must be noted that the order of the parts is important, as the system has dependencies between the components.
 
-
-
-
 %The test has been successful, and the system has been validated.
 %this was used to validate the system
 %production-ready system
 
-%\section{GreenOps system evaluation}
+
 %[maybe not really in the scope]
 %[MORE RELATED TO REDI'S THESIS]
 %\subsection{Theoretic upper bound}
@@ -50,36 +47,28 @@ It must be noted that the order of the parts is important, as the system has dep
 
 \section{Future improvements}
 
-day2 operations
-we are ready for this
+\subsection{Day 2 operations}
 
-Scaling down a VM (example of Day 2 operations)
-From: (4 vCPU, 8 GiB RAM)
-To: (2 vCPU, 4 GiB RAM)
-
-This use case is meaningful for workloads with durations in the order of at least days. Otherwise, for short-lived workload this use case does not make sense.
-And in the case of workloads with days as duration, time and geographical shifting is not that relevant.
-
-This use case will leverage system and performance metrics.
-
-
-
-support for other resources
-we need
-templates
-operators
+In previous chapter we have focused on a use case, that is VM scheduling (placing) that can be considered as a ``Day 1 operation".
+In section \ref{sec:day2_operations} we have briefly described the concept of ``Day 2 operations" and the fact that the proposed system is designed to support them as well.
+Indeed, this is possible thanks to the flexibility of Kubernetes admission control and OPA.
+In particular, currently the Kubernetes mutating webhook is configured to intercept both the creation and the update of a VmTemplate resource.
+This means that the system can be potentially used to perform operations such as \textbf{scaling up or down a VM} as long as this logic is implemented in OPA policies and the specific operator is capable of performing the operation.
 
 \subsection{Support for other resources}
 
-As described in the previous chapters, the system currently supports only VMs but it is designed with flexibility as a guiding principle.
-In the future, the system could be extended to support other resources, such as serverless functions, databases, Kubernetes clusters, and other cloud resources.
+As described in the previous chapters, the system currently supports only VMs but it is designed with \textbf{flexibility as a guiding principle}.
+In future iterations, the system could be extended to support other resources, such as serverless functions, databases, Kubernetes clusters, and other cloud resources.
 The requirements for enabling support for other resources are: 
 \begin{enumerate}
-    \item the definition of a VmTemplate-like resources with Krateo core-provider
+    \item the definition of generic resources (VmTemplate-like) with Krateo core-provider
+    \item the configuration of a set of templates to define provider-specific resources
     \item the deployment of specific operators for the resources
 \end{enumerate}
 
-Listing \ref{lst:aws_lambda} shows an example of a manifest of a AWS Lambda function that could be supported by the system \cite{aws_lambda_ack}
+For example, the system could be extended to support \textbf{serverless functions} by defining a \textbf{\textit{FunctionTemplate}} resource and deploying a set of operators that manage the lifecycle of the functions.
+For instance, AWS Lambda functions could be supported by deploying the ACK service controller for AWS Lambda.
+Listing \ref{lst:aws_lambda} shows an example of a manifest of a AWS Lambda function that could be rendered by the system \cite{aws_lambda_ack}.
 
 \begin{lstlisting}[language=yaml, caption=AWS Lambda manifest example \cite{aws_lambda_ack}, label=lst:aws_lambda]
 apiVersion: lambda.services.k8s.aws/v1alpha1
@@ -99,21 +88,20 @@ spec:
     description: function created by ACK lambda-controller e2e tests
 \end{lstlisting}
 
-
-
-\subsection{Multi model serving}
+\subsection{Multi-model serving}
 
 It is deemed plausible that in the future resource management will rely on an increasing number of machine learning models for decision-making.
 In this context, the current design of KServe standard model deployment may not be the most efficient one.
 
+Indeed, in the context of our system, where each ElectricityMaps regions could be represented by a model, the current design of KServe would require the deployment of a large number of InferenceServices.
+
+
+
 "The original design of KServe deploys one model per InferenceService. But, when dealing with a large number of models, its 'one model, one server' paradigm presents challenges for a Kubernetes cluster."
 
-kserve model mesh instead of several InferenceService
+kserve model mesh instead of several InferenceServices
 there is a lot of overhead in the current configuration
 
 how much is better to use more models instead of one generic model 
-
-
-
 
 \newpage
