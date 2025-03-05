@@ -126,16 +126,18 @@ It must be noted that in our system we are not extending the Kubernetes schedule
 We are instead focusing on the \textbf{management of external resources on cloud providers} (only VMs in this first iteration), leveraging Kubernetes as a control plane for the management of these resources.
 As described in the following section, our focus will be on the Kubernetes API server and in particular on Kubernetes Admission Control.
 
-\subsection{Kubernetes extendability}
-\label{sec:kubernetes_extendability}
+\subsection{Kubernetes extensibility}
+\label{sec:kubernetes_extensibility}
 
 % https://www.cncf.io/blog/2022/06/15/kubernetes-operators-what-are-they-some-examples/
 
 Kubernetes allows for the extension of its functionalities through the use of \textbf{Custom Resource Definitions (CRDs)} and \textbf{Kubernetes Operators}, effectively adopting the so-called \textbf{Operator paradigm}.
 Simply put, Custom Resource Definitions are a way to instruct Kubernetes to manage new resource types. 
+CRDs can be added and removed from a Kubernetes cluster at runtime, through dynamic registration.
 They are a \textbf{schema} that defines the structure of the resource and the Kubernetes API server will validate the resource against the schema.
 \textbf{Custom Resources (CRs)} are actually instances of the resources defined by CRDs and are managed by an Operator.
 The Operator is a piece of software (controller) that is responsible for managing the lifecycle of the resources defined by the CRD.
+Indeed they implement \textbf{control loops} to compare the \textbf{current state} of the resources they manage with the \textbf{desired state} and take actions to make the current state converge to the desired state.
 Effectively the code of an Operator is usually deployed on the Kubernetes cluster in the form of a Deployment.
 This concept is not much different of what actually happens for standard built-in Kubernetes resources which are however manged by built-in controllers (e.g., Deployment controller, ReplicaSet controller, part of Kubernetes controller manager).
 An high-level overview of the Operator paradigm is depicted in Figure \ref{fig:operator_paradigm}.
@@ -209,7 +211,7 @@ The Kubernetes Custom Resource Definition introduced by the Krateo core-provider
 It is a CRD that represents the Helm chart and its values (a Helm Chart archive (.tgz) with a JSON Schema for the values.yaml file) \cite{krateo_core_provider}.
 Upon a CompositionDefinition manifest application to the Kubernetes cluster, the Krateo core-provider generates the CRD from the schema defined in the \textit{values.schema.json} file included in the chart. 
 It then deploys an instance of the Krateo composition-dynamic-controller, configuring it up to manage resources of the type defined by the CRD \cite{krateo_core_provider}.
-Therefore, this can be considered an example of the Operator paradigm described in section \ref{sec:kubernetes_extendability} where the Krateo core-provider is the Operator and the CompositionDefinition is the Custom Resource Definition.
+Therefore, this can be considered an example of the Operator paradigm described in section \ref{sec:kubernetes_extensibility} where the Krateo core-provider is the Operator and the CompositionDefinition is the Custom Resource Definition.
 
 \subsection{Krateo composition-dynamic-controller}
 
@@ -258,9 +260,15 @@ Users first submit a topology document, triggering the Cloud Manager to communic
 Experiments indicate that distributing workloads across different cloud providers can reduce the overall cost of the topology. The approach taken by the authors primarily focuses on two objectives: \textbf{cost efficiency} and \textbf{avoiding vendor lock-in}. The application environment was deployed on public cloud platforms, specifically AWS and Rackspace \cite{STRATOS}.
 \newline
 
-[TO BE ADDED]
-A Kubernetes 'Bridge' operator between cloud and external resources
-% https://arxiv.org/abs/2207.02531
+A more modern example of a similar strategy is the one developed at IBM and presented by Lublinsky et. al, denominated as ``\textbf{Kubernetes Bridge operator}'' in which the authors propose a system that allows to submit various types of workloads from Kubernetes to a \textbf{arbitrary external resource manager} \cite{lublinsky2022kubernetesbridgeoperatorcloud}.
+In particular, they tackle the problem that not every workload can be deployed on Kubernetes and that especially scientific workloads might require specific and dedicated computing resources.
+They refer, for instance, to \textbf{HPC clusters}, dedicated AI clusters, quantum computing cluster, etc.
+Indeed they rely on the fact that specific resource managers (e.g., Slurm, IBM Spectrum LSF, IBM Quantum service, Ray, etc.) usually expose a \textbf{HTTP API}.
+The proposed operator deploys Kubernetes Pods which in turn interact with external resource managers through HTTP APIs for job submission and monitoring \cite{lublinsky2022kubernetesbridgeoperatorcloud}.
+Each Custom Resource, which represent the configuration of an external job, is associated with a specific Kubernetes Pod named ``Controller Pod'' (one per remote job) that is responsible for the interaction with the external resource manager (effectively acting as a proxy).
+Credentials for external systems are stored in Kubernetes Secrets and are mounted in the Controller Pod.
+In other words, the Bridge Operator is \textbf{generic and agnostic} and has the duty of managing Controller Pods which are are specifically tailored for a particular external resource manager.
+The authors also provide an exemplificative set of implementations of controllers in the form of container images to be used in the Controller Pods \cite{lublinsky2022kubernetesbridgeoperatorcloud}.
 
 \subsection{AI-based resource management in cloud computing}
 \label{sec:ai_based_resource_management}
@@ -316,7 +324,7 @@ The focus of the research is on both the provider and the consumer perspective, 
 
 GreenOps is the abbreviation for ``\textbf{Green Operations}" and is the term used to describe an operational model that aims to integrate sustainable practices into an organization's digital operations, with a particular focus on cloud computing and data centers.
 The interest in GreenOps has been growing in the last years due to the increasing awareness of the environmental impact of data centers and cloud infrastructures.
-As a matter of fact according to various sources, the carbon footprint of data centers is [...]
+%As a matter of fact according to various sources, the carbon footprint of data centers is [...]
 The rising interest in the GreenOps ecosystem is also influenced by political and regulatory factors as the European Union's ambitious goals for the reduction of greenhouse gas emissions.
 In particular, the \textit{Climate Neutral Data Centre Pact in Europe}, is an EU initiative which aims for making climate-neutral data centers by 2030 \cite{climate_neutral_data_centre_pact}.
 Being the work of this thesis focused on the cloud ecosystem, we deem useful to cite the Technical Advisory Group (TAG) on Environmental Sustainability which is focused on the cloud-native sustainability landscape.
@@ -457,6 +465,7 @@ These weightings are encoded in a YAML file and applied as a priority for the Sc
 The claim is that by combining three elements (i.e., Kubernetes scheduler, carbon intensity data, and a weighting algorithm) any Kubernetes instance can be made carbon-aware, at least in a simplified way \cite{microsoft_carbon_aware_k8s}.
 
 \section{Multi-cloud resource management - major takeaways}
+\label{sec:multi_cloud_resource_management_takeaways}
 
 %many simulation compared to real-world scenarios
 %no much flexibility for what concern variaty of resource managed

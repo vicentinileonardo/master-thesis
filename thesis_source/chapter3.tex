@@ -110,30 +110,33 @@ All the components listed in the above table must be deployed inside a Kubernete
 \section{Krateo PlatformOps integration}
 \label{sec:krateo_integration}
 
-Krateo PlatformOps is utilized in this system for \textbf{multi-cloud resource management}, allowing for the declarative orchestration of cloud resources across different cloud providers leveraging Kubernetes as a control plane. 
-This section highlights the differences between two approaches that were considered for resource synchronization:
+Krateo PlatformOps is leveraged in this system as a core component for \textbf{multi-cloud resource management}, as it allows declarative orchestration of cloud resources across different cloud providers leveraging Kubernetes as a control plane. 
+This section highlights the differences between two different approaches that were considered for multi-cloud resource management:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
   \item[$\bullet$] The \textbf{Custom Kubernetes ``Synchronization Operator"} approach (initially considered)
   \item[$\bullet$] The \textbf{Krateo PlatformOps} approach (adopted in the final system design) \\
 \end{itemize}
 
-It is deemed interesting to describe both approaches in order to identify the several \textbf{trade-offs} between implementing a custom synchronization operator and leveraging a template-based abstraction for cloud resource provisioning.
+It is deemed interesting to describe both approaches in order to identify the several \textbf{trade-offs} between implementing a custom Kubernetes ``Synchronization Operator" and leveraging a template-based abstraction for cloud resource provisioning.
 
 \subsection{Resource management: the Custom Kubernetes ``Synchronization Operator" approach}
 
-When dealing with multi-cloud workloads with Kubernetes as a control plane, a \textbf{synchronization and mapping mechanism} (broker) is required to bridge the gap between:
+When dealing with multi-cloud resource management with Kubernetes as a control plane, a \textbf{synchronization and mapping mechanism} (broker) is required to bridge the gap between:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
   \item[$\bullet$] \textbf{Generic Kubernetes Custom Resources}, which represent generic provider-agnostic workloads.
   \item[$\bullet$] \textbf{Cloud provider-specific Custom Resources}, which correspond to the actual cloud resources provisioned through the respective Kubernetes operators provided by Azure, AWS or GCP (in our case).
 \end{itemize}
+This requirement was also highlighted in the literature review described in section \ref{sec:multi_cloud_resource_management_takeaways}.
 
-A custom Kubernetes Operator would be responsible for the mapping and synchronization of the above resource types. This approach is based on the principle of \textbf{Continuous Reconciliation}, where the operator continuously monitors and adjusts the system to maintain consistency between the desired and actual states.
-Candidate solutions for the development of a Kubernetes Operator includes: Operator SDK, Kubebuilder, or writing the operator from scratch using the Kubernetes client libraries. 
-For the purpose of this work, Kubebuilder was used to develop a Proof of Concept (PoC) for the custom synchronization operator.
+In this first approach, a custom Kubernetes ``Synchronization Operator" would be responsible for the mapping and synchronization of the above resource types. 
+Figure \ref{fig:k8s_operator} illustrates the high-level architecture of the system with the custom operator approach.
+This approach is based on the principle of \textbf{Continuous Reconciliation}, where the operator continuously monitors and adjusts the system to maintain consistency between the desired and actual states.
+Candidate solutions for the implementation of a Kubernetes Operator includes: Operator SDK, Kubebuilder, or writing the operator from scratch using the Kubernetes client libraries. 
+For the purpose of this work, Kubebuilder was used to develop a Proof of Concept (PoC) for the custom operator.
 
-\subsubsection{Responsibilities of the Custom Operator}
+\subsubsection{Responsibilities of the ``Synchronization Operator"}
 
-In our specific case, the operator should continuously watch the generic CRs in the Kubernetes cluster to check if critical scheduling fields have been set:
+In our specific case, the operator should continuously watch the generic CRs in the Kubernetes cluster to check if critical scheduling fields have been set, in particular:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
   \item[$\bullet$] \textbf{schedulingRegion}: Defines where the workload should be placed.
   \item[$\bullet$] \textbf{schedulingTime}: Specifies when the workload should be deployed.
@@ -141,7 +144,7 @@ In our specific case, the operator should continuously watch the generic CRs in 
 
 These fields, if set, indicate a geographical placement and timing for the workload have been determined by the GreenOps Scheduler.
 If these fields are not yet present, the operator must wait for scheduling decisions before proceeding.
-Therefore, inside its Reconcile() loop, the operator should:
+Therefore, inside its ``\textit{Reconcile()}'' loop, the operator should:
 \begin{enumerate}[itemsep=0.2pt, topsep=1pt]
   \item Continuously check if scheduling fields (schedulingRegion, schedulingTime) are set.
   \item Trigger the creation of the provider-specific resource when the schedulingTime is approaching.
@@ -153,15 +156,18 @@ Therefore, inside its Reconcile() loop, the operator should:
 Once the cloud provider-specific resource is created, two main questions arise:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
   \item[$\bullet$] What happens if the provider-specific CR is modified manually?
-  \item[$\bullet$] What happens if the VM configuration is modified directly on the cloud provider (outside Kubernetes)?
+  \item[$\bullet$] What happens if the provider-specific configuration is modified directly on the cloud provider (outside Kubernetes)?
 \end{itemize}
 
-Related to the first question, an example scenario could be: changing the VM instance type (VM size) inside the Kubernetes cluster. In this case, the operator needs to decide whether to revert unauthorized changes or allow them and update the generic CR accordingly.
-For the second question, an example could be: changing the VM size directly on the cloud provider’s console. In this case, the operator should detect the drift and update the generic CR to reflect the external changes.
+Related to the first question, an example scenario could be: changing the VM instance type (VM size) inside the Kubernetes cluster. 
+In this case, the operator needs to decide whether to revert unauthorized changes or allow them and update the generic CR accordingly.
+For the second question, an example could be: changing the VM size directly on the cloud provider’s console. 
+In this case, the operator should detect the drift and update the generic CR to reflect the external changes.
 
 \subsubsection{Resource linking}
 
-A mechanism must be in place to link the generic CR to the cloud provider-specific CR. Possible approaches include:
+A mechanism must be in place to link the generic CR to the cloud provider-specific CR. 
+Possible approaches include:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
   \item[$\bullet$] UUID-based linking: A universally unique identifier ensuring each resource is mapped correctly.
   \item[$\bullet$] Kubernetes Object Metadata (ObjectMetadata.Name \& ObjectMetadata.Namespace): This approach may be preferable within a single Kubernetes cluster, avoiding the need for an external ID system.
@@ -186,7 +192,7 @@ A custom synchronization operator must take into account and encode this logic e
 \subsubsection{Limitations of a Custom ``Synchronization Operator''}
 \label{sec:limitations_custom_operator}
 
-Another major challenge with a custom synchronization operator is that some cloud providers do not support time scheduling metadata within their Custom Resources. 
+Another major challenge with a custom ``synchronization'' operator is that some cloud providers do not support time scheduling metadata within their Custom Resources. 
 In particular, no cloud provider operator among the ones we used for the system (AWS, Azure, GCP) currently provides a dedicated field for scheduling time.
 This means that the custom Kubernetes operator itself must handle a time scheduling logic, delaying CR creation until the scheduled time.
 If the operator, upon the creation of a generic CR, immediately creates the cloud-provider specific CR (without a ``waiting logic''), the cloud provider Operator will trigger and provision the VM immediately, ignoring scheduling constraints.
@@ -208,18 +214,18 @@ Due to these limitations and complexities, we explored and leveraged an \textbf{
   \label{fig:krateo}
 \end{figure}
 
-In our approach, we opted to replace a custom Kubernetes operator (``Synchronization Operator''), originally designed to handle the \textbf{mapping} from generic to cloud-specific resources, with \textbf{Krateo Core Provider}. 
+In our approach, we opted to logically replace a custom Kubernetes operator (``Synchronization Operator''), originally designed to handle the \textbf{mapping} from generic to cloud-specific resources, with \textbf{Krateo Core Provider}. 
 This decision was motivated by the need for \textbf{greater flexibility and maintainability} in defining multi-cloud infrastructure components. 
 As a matter of fact, a custom Kubernetes operator was originally designed to handle only virtual machines (VMs).
 Mappings and extensions to support additional cloud resources would have required significant code changes and maintenance overhead for each additional resource type added.
-Therefore instead of embedding business logic directly within a custom Kubernetes operator, in the current system implementation, we leverage the capabilities of \textbf{Helm templating} to dynamically generate cloud-provider-specific resources. 
+Therefore, instead of embedding business logic directly within a custom Kubernetes operator, in the current system implementation, we leverage the capabilities of \textbf{Helm templating} to dynamically generate cloud-provider-specific resources. 
 More precisely, another Krateo component, the \textbf{Krateo composition-dynamic-controller} is leveraging \textbf{Helm Template Engine} under the hood to generate Kubernetes resources starting from Helm templates.
 By adopting an Helm-based resource generation, we can reduce the maintenance overhead and simplify the system architecture.
 Figure \ref{fig:krateo} illustrates, in a high-level manner, the revised system architecture for resource management with Krateo PlatformOps.
 
 This approach, further described in this section, offers several advantages:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
-  \item[$\bullet$] Simplified resource management: Helm enables a standardized way define resources without maintaining complex operator logic.
+  \item[$\bullet$] Simplified resource management: Helm enables a standardized way define resources without developing complex operator logic.
   \item[$\bullet$] Greater extensibility: By externalizing the logic from the Custom Operator (effectively removing it), future modifications and integrations on the system with additional cloud providers become easier.
   \item[$\bullet$] Reduced maintenance overhead: Custom operators typically require constant updates and refinements, especially if they are responsible for complex business logic. 
 \end{itemize}
@@ -232,7 +238,7 @@ This approach, further described in this section, offers several advantages:
 
 In order to define a generic VM resource, we leverage Krateo Core Provider to define a \textbf{CompositionDefinition} resource that specifies the structure of the VM resource.
 Effectively a CompositionDefinition is a Kubernetes Custom Resource that defines the structure of a Composition Custom Resource (instance) which is an Helm chart comprised of Helm templates and values.
-As a matter of fact, a CompositionDefinition is pointing to a versioned Helm chart that is stored in a Helm repository (e.g. on a Helm repository server).
+As a matter of fact, a CompositionDefinition is referencing a versioned Helm chart that is stored in a Helm repository (e.g. on a Helm repository server).
 
 \begin{lstlisting}[language=yaml, caption={CompositionDefinition}, label={lst:composition_definition}]
 apiVersion: core.krateo.io/v1alpha1
@@ -356,7 +362,7 @@ maxLatency: 100
 
 The Krateo composition-dynamic-controller (Krateo cdc) is responsible for creating the Composition Custom Resource (instance) by templating the Helm chart referenced in the CompositionDefinition.
 For the purpose of the system, we leveraged Helm templating to dynamically generate cloud-provider-specific resources from a generic VM resource.
-As a matter of fact, the Helm chart contains all the \textbf{three cloud provider specific set of templates} necessary for a VM provisioning but \textbf{only one set of templates is used at a time}.
+As a matter of fact, the Helm chart contains all the \textbf{three cloud provider specific sets of templates} necessary for a VM provisioning but \textbf{only one set of templates is used at a time}.
 The Krateo cdc will generate the cloud-provider-specific VM resources based on the cloud provider specified in the generic VM resource.
 Therefore, for each generic VM resource, the Krateo cdc will use \textbf{only one set of templates} to generate the cloud provider specific VM resource.
 This ``brokering mechanism'' (routing through Helm templates) is implemented in the Helm templates using ``\textbf{guards}'' as reported in listing \ref{lst:guards}
@@ -728,17 +734,23 @@ This process is further described in the next section.
 
 \section{Open Policy Agent (OPA)}
 
-Open Policy Agent (OPA) is an open-source general-purpose \textbf{policy engine} that enables unified policy enforcement across several types of environments \cite{opa_docs}. 
+Open Policy Agent (OPA) is an open-source general-purpose \textbf{policy engine} that enables unified policy decision-making across several types of environments \cite{opa_docs}. 
 OPA provides a declarative language called \textbf{Rego} enabling a paradigm known as ``\textbf{Policy as Code}" \cite{opa_docs}.
 Open Policy Agent can be integrated as a sidecar container, host-level daemon, or library to perform policy decisions for a plethora of use cases: \textbf{Kubernetes admission control}, CI/CD pipelines, container images, microservices, etc.\cite{opa_docs}. 
-In the context of our system, OPA and the Policy-as-Code paradigm are mainly leveraged to define \textbf{policies for workload scheduling}: encoding the output of a \textbf{scheduling decision} coming from an external GreenOps Scheduler and ensuring compliance with \textbf{additional policies} related to latency requirements and legal constraints.
-In particular, OPA is used as a \textbf{Kubernetes Mutating Webhook server} to apply scheduling decisions to VmTemplate Custom Resources based on policies.
+In the context of our system, OPA and the Policy-as-Code paradigm are mainly leveraged to define \textbf{policies for workload scheduling}: encoding the output of a \textbf{scheduling decision} coming from an external GreenOps Scheduler and ensuring compliance with \textbf{additional policies} related to latency requirements and legal constraints (QoS, data residency, etc.).
+In particular, OPA assumes the role of a \textbf{Kubernetes Mutating Webhook server} to apply scheduling decisions to VmTemplate Custom Resources based on policies.
 
 \subsection{Policy as Code paradigm}
 
-According to AWS, Policy-as-Code (PaC) is a software automation approach which is similar to Infrastructure-as-Code (IaC) \cite{pac_aws}. PaC helps assess company system configurations and validate compliance requirements through software automation \cite{pac_aws}. The perceived value of this type of automation in the software development lifecycle has grown significantly in modern enterprises. This large adoption is probably driven by the inherent consistency and reliability it provides, ensuring standardized enforcement of policies and reducing human error \cite{pac_aws}.
+According to AWS, Policy-as-Code (PaC) is a software automation approach which is similar to Infrastructure-as-Code (IaC) \cite{pac_aws}. 
+PaC helps assess company system configurations and validate compliance requirements through software automation \cite{pac_aws}. 
+The perceived value of this type of automation in the software development lifecycle has grown significantly in modern enterprises. 
+This large adoption is probably driven by the inherent consistency and reliability it provides, ensuring standardized enforcement of policies and reducing human error, as what happened with the IaC approach \cite{pac_aws}.
 
-OPA's generic definition of policy is: ``\textit{A policy is a set of rules that governs the behavior of a software service}" \cite{opa_philosophy}. OPA provides a high-level declarative language called \textbf{Rego} to define policies in a flexible manner. One of OPA's key strengths is its \textbf{domain-agnostic design}, allowing it to enforce policies across various systems and environments. This makes it highly adaptable to different use cases, ranging from access control to infrastructure security. Some representative examples of policies that OPA can enforce include:
+OPA's generic definition of policy is: ``\textit{A policy is a set of rules that governs the behavior of a software service}" \cite{opa_philosophy}. OPA provides a high-level declarative language called \textbf{Rego} to define policies in a flexible manner. 
+One of OPA's key strengths is its \textbf{domain-agnostic design}, allowing it to enforce policies across various systems and environments. 
+This makes it highly adaptable to different use cases, ranging from access control to infrastructure security. 
+Some representative examples of policies that OPA can enforce include:
 
 \begin{itemize}[itemsep=0.2pt, topsep=1pt] \item[$\bullet$] Restricting which image registries can be used for deploying new Pods in a Kubernetes cluster.
 \item[$\bullet$] Controlling whether a specific user is permitted to perform delete operations on certain resources.
@@ -752,8 +764,10 @@ In this case, OPA is used by the authors as a step in a CI/CD pipeline to enforc
 Therefore, the use cases covered span from role-based access control to container image security and beyond.
 \newline
 
-Another important aspect of OPA is that it effectively \textbf{decouples} policy decision-making from policy enforcement, enabling organizations to implement consistent and scalable authorization across their systems \cite{opa_docs}.
-In practice, this means that when a software module needs to make a policy decision, it queries OPA, supplying relevant data as input. In other words, policy decisions are \textbf{offloaded} to OPA rather than being hardcoded within individual services. This approach offers several key advantages \cite{opa_docs}:
+Another important aspect of OPA is that it effectively \textbf{decouples} policy decision-making from policy enforcement \cite{opa_docs}.
+In practice, this means that when a software module needs to make a policy decision, it queries OPA, supplying relevant data as input. 
+In other words, policy decisions are \textbf{offloaded} to OPA rather than being hardcoded within individual services. 
+This approach offers several key advantages \cite{opa_docs}:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
   \item[$\bullet$] \textbf{Centralized policy management}: policies are defined in a single location, ensuring uniform enforcement across all services of an organization.
   \item[$\bullet$] \textbf{Improved maintainability}: updating policies does not require modifying, recompiling or redeploying application code, reducing complexity, errors and deployment overhead.
@@ -763,7 +777,9 @@ In practice, this means that when a software module needs to make a policy decis
 
 \subsection{OPA architecture overview}
 
-As mentioned in the introduction to this section, one common approach to integrating OPA into a software system is by deploying it as a host-level daemon. The latter is essentially a lightweight server that processes policy queries via HTTP requests. This setup allows services to offload policy decision-making to OPA in a scalable and efficient manner since the two entities are not tightly coupled.
+As mentioned in the introduction to this section, one common approach to integrating OPA into a software system is by deploying it as a host-level daemon. 
+The latter is essentially a lightweight server that processes policy queries via HTTP requests. 
+This setup allows services to offload policy decision-making to OPA in a scalable and efficient manner since the two entities are not tightly coupled.
 
 A standard OPA deployment consists of three main components:
 

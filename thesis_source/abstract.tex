@@ -3,26 +3,140 @@
 
 \addcontentsline{toc}{chapter}{Abstract} % add to index
 
-contesto 
+%contesto 
+%motivazioni
+%riassunto problema affrontato
+%tecniche utilizzate
+%analisi requisiti, 
+%analisi pprogetti/prodotti disponibili
+%creazione proof of concept
+%risultati raggiunti:
+%full e2e testing
+%contributo personale
 
-motivazioni
-
-riassunto problema affrontato
-
-tecniche utilizzate
-analisi requisiti, 
-analisi pprogetti/prodotti disponibili
-creazione proof of concept
-
-
-risultati raggiunti:
-full e2e testing
-
-contributo personale
+%\section{Context}
 
 
+In the last 20 years, cloud computing has steadily become the backbone of modern digital infrastructure, enabling scalable and flexible deployment of heterogeneous services across geographically distributed data centers around the world.
+It can be safely said that cloud computing can be labelled as a disruptive technology since it has revolutionized the way IT services and applications are designed, developed, delivered and consumed.
+Moreover, cloud computing is playing a crucial role in the current AI revolution, enabling the training of large-scale machine learning models (such as Large Language Models) in a distributed manner and facilitating the deployment of AI-based services (such as chatbots, AI-powered search engines, etc.).
+The central role of cloud computing is also testified on the economic and financial side: indeed, according to recent market research for the year 2024 the total revenues of public cloud infrastructure services reached \$330 billions \cite{statista_cloud_market_share}.
+However, the rapid adoption and growth of cloud computing has also raised concerns about its environmental impact.
+The reason is that the big computing infrastructures require a huge amount of electricity to operate.
+By consequence, this energy consumption is responsible for an important amount of carbon emissions.
+Recent efforts in computational sustainability have been made and among these the GreenOps operational paradigm arose.
+It must be also said that majors public cloud providers (such as Amazon Web Services, Microsoft Azure, Google Cloud Platform) are already taking steps to reduce their carbon footprint in a variety of ways. 
+These spans from internal optimization of data centers, to bringing awareness to the customers on their individual carbon footprint. \newline
 
-The work presented in this thesis focuses
-...
+The work described in this thesis is part of a larger project which has the primary goal of developing a system for reducing the carbon footprint of workloads in the cloud.
+Said system is mainly based on the idea of exploiting \textbf{time-shifting} and \textbf{geographical shifting} of cloud workloads to time periods and geographical regions with low carbon intensity.
+As a matter of fact, nowadays, the carbon intensity of electricity varies significantly depending on the time of day and the geographical region.
+Therefore, it is deemed interesting to leverage these fluctuations in electricity grid carbon intensity to schedule workloads in a way that reduces the carbon footprint of the workloads compared to a traditional scheduling approach.
+Currently, targeted workloads are the ones that are not time-sensitive but instead are quite delay-tolerant.
+In addition, workloads are also characterized by other requirements, such as Quality of Service (QoS) requirements (e.g., deadlines, maximum latency constraints, etc.) and cost constraints (e.g., budget constraints, cost optimization, etc.).
+Indeed a \textbf{policy-driven approach} is used to encode these requirements along with scheduling outcomes.
+The system is designed to be used in a multi-cloud setting, where workloads can be scheduled on different cloud providers.
+Adopting a multi-cloud paradigm offers several advantages, including user-centric flexibility, avoidance of vendor lock-in, and the ability to exploit multiple regions because cloud providers may have varying geographical coverage.
+Some of the guiding principles adopted in the design of the system are: flexibility, extensibility, cloud-agnosticism.
+In order to implement these principles, the use of \textbf{Kubernetes as a platform for multi-cloud resource management} is considered.
+
+
+%The goal of the project is to employ mainly time-shifting and geographical shifting for the scheduling of workload leveraging a multi-cloud setting.
+%We can choose to schedule workloads in periods and regions with low carbon intensity (when renewables are plentiful). 
+%Therefore, targeted workloads are the ones that are not time-sensitive but instead are quite delay-tolerant. 
+%For example training a machine learning model could wait until a period of low carbon intensity. Another example is shifting video / image processing, as Google is doing.
+%Kubernetes is leveraged as a platform for scheduling and managing workloads on different cloud providers.
+%Long term goal: “Using electricity when the carbon intensity is low is the best way to ensure investment flows towards low-carbon emitting plants and away from high-carbon emitting plants”.
+
+%\section{Problem statement}
+\label{sec:problem}
+
+The traditional management of resources and workloads in the cloud does not consider the environmental impact, leading to suboptimal energy usage and excessive carbon emissions.
+However, users and organizations, even if interested in reducing carbon emissions and energy consumption, may not have the necessary systems to do so.
+In addition, they may be reluctant to give up performance and cost requirements in favor of environmental sustainability.
+
+The core challenge addressed in this thesis is:
+\begin{center}
+    How can virtual machines (VMs) and cloud resources be scheduled in a way that reduces their carbon footprint while maintaining a varied set of requirements (QoS, cost, etc.)?
+\end{center}
+
+To tackle this wide and complex problem, the research proposes and describes a multi-cloud resource management system that is mainly built upon Kubernetes, Krateo PlatformOps and Open Policy Agent (OPA) to enable a dynamic policy-driven workload scheduling. 
+
+
+
+
+Use cases (basic ones for the beginning) higher level explanation here
+first use case ("GreenOps" VM scheduling)
+
+second: scaling down a vm 
+infrastructure already put in place
+
+the system was designed with flexibility in mind therefore a workload could be potentially anything
+the condition is just to be represented in some way and have something else do certain actions based on that representation
+As we will see in section XXX, the most simple of this would be K8s operators
+this is described in section XYZ
+
+%\section{Method}
+
+The research methodology follows a \textbf{hands-on approach} to developing a practical, production-ready solution, integrating existing open-source technologies and tools.
+The phases of the methodology followed for this thesis are the following:
+\begin{enumerate}
+    \item \textbf{Literature and Technology Review}: The first phase of the research methodology is to review the existing literature and technologies related to the problem statement. 
+    This includes understanding the state-of-the-art in cloud computing, cloud sustainability, and cloud resource management. 
+    In addition, the review includes understanding the existing tools and technologies that can be used to develop the solution.
+\end{enumerate}
+
+
+
+
+
+
+
+
+
+---
+The method adopted in this thesis followed several principles described in this section.
+First of all the main goal was to develop a solution to be integrated to be integrated into an existing platform \textbf{to support real use cases}.
+
+Developing a real solution, integrating it on top of OSS
+
+production-ready solution
+
+we are on the consumer side, not on the provider side
+
+System architecture to start with: Saima's + Krateo platform
+
+integration into an existing platform (krateo)
+
+leveraging krateo componenets is beneficial 
+
+Krateo Core Provider and cdc instead of developing 1 or more K8s operators from scratch
+
+
+analysis of possible solutions
+implemnted poc 
+
+Initial analysis of a solution with operators were tried
+
+A PoC comprising 1 operator was created 
+``Synchronization operation"
+cons: maintainer costs
+
+ideation and creation of architectural diagrams
+
+tackling first use case: GreenOps scheeduling of virtual machines
+but create a system that is flexible and extendible enough to be used for other use cases as well
+
+%\section{Personal contribution}
+
+This thesis represents a technical and research contribution within a larger project supervised by Prof. Sandro Luigi Fiore. 
+
+The project is divided into three main parts: data analysis, machine learning, and cloud infrastructure as shown in Figure \ref{fig:project_parts}.
+The focus of this thesis is on the cloud infrastructure part.
+My specific contributions to the project include:
+
+
+
+
 
 \newpage

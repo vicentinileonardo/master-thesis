@@ -1,14 +1,14 @@
 \chapter{Conclusion}
 \label{cha:conclusion}
 
-This thesis has introduced a system for resource management in multi-cloud environments, leveraging a policy-driven, Kubernetes-based architecture. 
+This thesis has introduced a \textbf{system for resource management in multi-cloud environments, leveraging a policy-driven, Kubernetes-based architecture}. 
 In particular, the guiding principle was to employ existing and well-known technologies to provide a flexible solution for cloud resource management.
 As a matter of fact, Kubernetes, Krateo PlatformOps, Open Policy Agent are technologies that have flexibility and extensibility as their core principles.
-The focus of the work proposed in the thesis was on optimizing the scheduling of virtual machines to minimize carbon footprint, effectively demonstrating how GreenOps principles can be integrated into a cloud resource management system.
+The focus of the work proposed in the thesis was on \textbf{optimizing the scheduling of virtual machines to minimize carbon footprint}, effectively demonstrating how GreenOps principles can be integrated into a cloud resource management system.
 Thanks to a comprehensive end-to-end integrated test, the system was successfully deployed and validated on a Kubernetes cluster, proving its feasibility in a real-world cloud setting.
 The integration of Open Policy Agent (OPA) for dynamic decision-making (i.e. real-time scheduling outcome), the use of machine learning models for carbon intensity forecasting deployed within the same Kubernetes environment adopting MLOps principles, the enforcement of policies encoding Quality-of-Service requirements (e.g., latency constraints) and compliance with exemplificative regulatory policies (e.g., GDPR-like policy) highlight the system’s adaptability to a wide array of requirements and constraints of organizations that operate in multi-cloud environments.
-However, we believe that there is a potential for several improvement and extensions to the system, which are discussed in a following section.
-First and foremost, the current iteration focuses only on VM scheduling, but expanding the system to support additional cloud resources, such as serverless computing, containerized workloads, and databases is a natural next step as we described in section \ref{sec:support_other_resources}.
+However, we believe that there is a potential for several improvement and extensions to the system, which are discussed in a following section of this chapter.
+First and foremost, the current iteration of the system focuses only on VM scheduling, but expanding the system to support additional cloud resources, such as serverless computing, containerized workloads, and databases is a natural next step as we described in section \ref{sec:support_other_resources}.
 
 
 \section{End-to-end integrated test}
