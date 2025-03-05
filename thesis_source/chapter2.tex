@@ -12,7 +12,7 @@ Finally, the \textbf{GreenOps landscape} is introduced, focusing on the the \tex
 
 The Cloud Computing definition by the National Institute of Standards and Technology (NIST) \cite{nist_cloud_computing} states that ``\textit{Cloud Computing is a model for enabling ubiquitous, convenient, on-demand network access to a shared pool of configurable computing resources (e.g., networks, servers, storage, applications, and services) that can be rapidly provisioned and released with minimal management effort or service provider interaction}" \cite{nist_cloud_computing}.
 \textbf{Public Cloud Providers} or Cloud Service Providers (CSPs) are companies that have as their core business the provisioning of cloud computing services. 
-These services, which are growing in number and complexity over time, range from computing resources to storage, networking, databases, machine learning, and more. 
+These services, which are growing in number and complexity over time, range from computing resources to storage, networking, databases, machine learning solutions, and more. 
 Public cloud is a deployment model that allows organizations to consume cloud services without having to build and maintain their own physical infrastructure (e.g., private cloud), therefore reducing capital expenditure (CapEx) and shifting to an operational expense model (OpEx). 
 The public cloud model is actually a multi-tenant environment where physical resources maintained and operated by the cloud provider are shared among multiple customers (tenants) with the means of virtualization and isolation techniques.
 These resources are offered in the form of various services at different levels of abstraction (e.g., Infrastructure as a Service, Platform as a Service, Software as a Service) and are provided on-demand on a pay-as-you-go basis.
@@ -57,7 +57,7 @@ We must note that the number of regions and availability zones is constantly cha
     \label{tab:cloud_regions_azs}
 \end{table}
 
-We must also note that each cloud provider has a different number of regions and zones and also different naming conventions for them.
+We must also note that each public cloud provider has a different number of regions and zones and also different naming conventions for them.
 There is no standardization nor a convention in the industry for this and cloud providers have chosen their own naming schemes.
 For instance, a region located in London is called ``\textit{eu-west-2}'' in AWS, ``\textit{uk-west}'' in Azure and ``\textit{europe-west2}'' in GCP.
 This detail must be taken into account when designing and implementing a multi-cloud system.
@@ -98,7 +98,7 @@ Finally, in theory, since different cloud providers have data centers in various
 
 \section{Kubernetes}
 
-Kubernetes is an open-source platform for automating the orchestration of containerized applications.
+Kubernetes (K8s) is an open-source platform for automating the orchestration of containerized applications.
 It is widely used in the industry and became the \textbf{de-facto standard for container orchestration}.
 An extensive description of Kubernetes is out of the scope of this thesis but it is deemed necessary to provide a brief overview of the main concepts of Kubernetes that are relevant for the purpose of this work.
 Figure \ref{fig:kubernetes_architecture} shows the Kubernetes architecture as described by the Cloud Native Computing Foundation (CNCF) \cite{kubernetes_cnfc}.
@@ -122,7 +122,7 @@ The main components of Kubernetes are:
 \end{itemize}
 
 The first four components are the main control plane components of Kubernetes while the last three are the main components of each worker node in the cluster.
-It must be noted that in our system we are not extending the Kubernetes scheduler as described for instance in the works described in section \ref{sec:low_carbon_k8s_scheduler} and \ref{sec:microsoft_carbon_aware_k8s}, since we are not dealing with the scheduling of in-cluster resources (e.g., Kubernetes Pods) nor with the provisioning of entire Kubernetes clusters.
+It must be noted that in our system we are not extending the Kubernetes scheduler as described for instance in the works described in section \ref{sec:low_carbon_k8s_scheduler} and \ref{sec:microsoft_carbon_aware_k8s}, since we are not dealing with the scheduling of in-cluster resources (e.g., Kubernetes Pods).
 We are instead focusing on the \textbf{management of external resources on cloud providers} (only VMs in this first iteration), leveraging Kubernetes as a control plane for the management of these resources.
 As described in the following section, our focus will be on the Kubernetes API server and in particular on Kubernetes Admission Control.
 
@@ -138,7 +138,7 @@ They are a \textbf{schema} that defines the structure of the resource and the Ku
 \textbf{Custom Resources (CRs)} are actually instances of the resources defined by CRDs and are managed by an Operator.
 The Operator is a piece of software (controller) that is responsible for managing the lifecycle of the resources defined by the CRD.
 Indeed they implement \textbf{control loops} to compare the \textbf{current state} of the resources they manage with the \textbf{desired state} and take actions to make the current state converge to the desired state.
-Effectively the code of an Operator is usually deployed on the Kubernetes cluster in the form of a Deployment.
+Effectively the code of an Operator is usually deployed on the Kubernetes cluster in the form of a Kubernetes Deployment.
 This concept is not much different of what actually happens for standard built-in Kubernetes resources which are however manged by built-in controllers (e.g., Deployment controller, ReplicaSet controller, part of Kubernetes controller manager).
 An high-level overview of the Operator paradigm is depicted in Figure \ref{fig:operator_paradigm}.
 
@@ -157,7 +157,7 @@ The idea is to \textbf{represent external resources as Kubernetes objects} and l
 This approach can be exemplified by the public cloud providers' operators which extend Kubernetes to manage their cloud resources as described in section \ref{sec:cloud_providers_operators}.
 
 For instance, Config Connector is a Kubernetes operator developed by Google Cloud that allows to configure numerous Google Cloud services and resources using Kubernetes tooling and APIs \cite{gcp_config_connector}.
-The idea general idea is that organizations might have to deal with a \textbf{heterogeneous infrastructure} composed of different cloud providers and on-premises resources. 
+The general idea is that organizations might have to deal with a \textbf{heterogeneous infrastructure} composed of different cloud providers and on-premises resources. 
 By \textbf{unifying infrastructure management under Kubernetes}, complexity is reduced and velocity is increased because the same tools and APIs can be used to manage all the resources in a consistent way \cite{gcp_config_connector}.
 
 
@@ -173,16 +173,16 @@ The \textbf{templates} are Kubernetes manifest files that are rendered by Helm's
 The \textbf{values} are the set of variables that are used to render the templates.
 Upon an Helm chart installation, Helm will render the templates ``injecting" the values and deploy the resources in the Kubernetes cluster. 
 One major advantage that Helm provides is the complete management of the lifecycle of the resources.
-As a matter of fact, Helm allows to easily \textbf{upgrade}, \textbf{rollback} and \textbf{uninstall} the Kubernetes resources deployed with a Helm chart reducing time and errors in such operations \cite{helm}. 
+As a matter of fact, Helm allows to easily \textbf{upgrade}, \textbf{rollback} and \textbf{uninstall} the Kubernetes resources deployed with a Helm chart reducing time and human errors in such operations \cite{helm}. 
 Without Helm, the user would have to deal with each single Kubernetes resource manifest file and manually apply changes to them.
-Finally, users can benefit of Helm charts already developed by the community and leverage chart distribution within their organization using Helm repositories.
+Finally, users can benefit of Helm charts already developed by the community and leverage chart distribution within their organization using Helm repositories (either public or private).
 
 \section{Krateo PlatformOps}
 \label{sec:krateo}
 
 Krateo PlatformOps (Krateo) is an \textbf{open-source Kubernetes-based platform} that aims to provide a unified interface for managing any desired resource on any infrastructure \cite{krateo_docs}.
 Krateo runs as a Kubernetes deployment inside a Kubernetes cluster but \textbf{acts as a control plane} even for resource external to the Kubernetes cluster.
-The only requirement for this management is that the resources need to be logically descriptible using a YAML file which represents the desired state of the resources \cite{krateo_docs}.
+The only requirement for this management is that the resources need to be logically ``encoded'' using a YAML file which represents the desired state of the resources \cite{krateo_docs}.
 % Platform engineering
 % Developer platform: a unified environment providing tools, services, and infrastructure that enables teams to efficiently build, test, and deploy software without managing underlying complexity. This complexity is handled by the platform team.
 % Recognized by Gartner. Gartner said ... by 2025 companies without a ... (cite)
@@ -233,7 +233,7 @@ The architecture of the Krateo core-provider and Krateo composition-dynamic-cont
     \label{fig:krateo_core_provider}
 \end{figure}
 
-\section{Multi cloud resource management}
+\section{Multi-cloud resource management}
 \label{sec:multi_cloud_resource_management}
 
 The idea of a \textbf{dynamic management of workloads leveraging a multi-cloud paradigm} is not new. 

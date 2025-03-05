@@ -14,8 +14,8 @@ In this section we present the assumptions made during the design and implementa
 In this work, workloads has been modeled as \textbf{Virtual Machines (VMs)}, representing the \textbf{primary use case} considered during the system's initial design phase. 
 It is possible to define as ``interrupible workloads", those workloads that can be stopped and restarted without losing the work done. 
 For this first iteration of the system only ``\textbf{non-interruptible workloads}" are considered.
-This choice was driven by the fact the Virtual Machines are both a common and widely used cloud and one of the simplest cloud resources to provision and therefore ideal for the first iteration of the system.
-Having said that, for the purpose of this work, a formalization can be done.
+This choice was driven by the fact the Virtual Machines are both a common and widely used cloud resource and one of the simplest to provision on multiple cloud providers and therefore ideal for the first iteration of the system.
+Having said that, for the purpose of this work, a simple formalization can be done.
 
 A VM is defined as a tuple:
 
@@ -68,7 +68,7 @@ Not all cloud resources available in a provider’s portfolio are guaranteed to 
 Despite these constraints, the system architecture remains highly adaptable, and future enhancements could incorporate additional or alternative provisioning mechanisms. 
 An example of an alternative implementation could be the \textbf{direct API interactions} with cloud providers to bypass operator limitations. As a matter of fact, usually cloud provider Operators are leveraging these APIs under the hood to interact with the cloud provider’s services.
 Another approach could involve the development of custom operators or controllers to manage specific resource types not supported by existing operators.
-For instance, Krateo PlatformOps provides the so-called ``oasgen-provider'' that aims to fill the gaps of missing or incomplete Kubernetes operators. This module is a K8s controller that is able to generate Kubernetes CRDs and the related controllers from OpenAPI specifications \cite{krateo_oasgen_provider}. 
+For instance, Krateo PlatformOps provides the so-called ``oasgen-provider'' that aims to fill the gaps of missing or incomplete Kubernetes operators. This module is a Kubernetes controller that is able to generate Kubernetes CRDs and the related controllers from OpenAPI specifications \cite{krateo_oasgen_provider}. 
 
 \newpage
 
@@ -415,7 +415,7 @@ Helm allows the definition of \textbf{helper functions} which resides in the \te
 In our case, we defined a helper function called \textbf{\textit{findBestVmSize()}} that takes as input the CPU and RAM requirements of the VM and returns the best provider-specific VM size available.
 For instance: a generic requested VM specification could be (4 vCPU, 8 GiB of RAM) and this would be mapped to the ``\textit{Azure Standard\_A4\_v2}'' VM size.
 A prerequisite for that is to have a mapping between the tuple (CPU, RAM) and the VM sizes (a string) for each cloud provider.
-This mappings are were built using the cloud provider documentation and are stored in the Helm chart as a set of utilities files.
+This mappings are built using the cloud provider documentation and are stored in the Helm chart as a set of utilities files.
 Potentially, an automatic way to fetch the available VM sizes for each cloud provider could be implemented in the future.
 For our first iteration of the system we used a small subset of all the available instance types (i.e. 5 instance types for each cloud provider).
 
@@ -1199,7 +1199,7 @@ The system is designed to be highly flexible and extensible, allowing for the ad
 We can define as \textbf{\textit{Day 2 operations}} all the management operations that are performed after the deployment of a resource.
 These operations comprise tasks such as scaling up or down a VM based on the load, stopping a VM during off-peak hours, or migrating a VM to a different region to optimize costs.
 As we previously described, the mutating webhook configuration is set on both the CREATE and \textbf{UPDATE} operations.
-A possible UPDATE operation trigger could be Kubernetes Cronjob that attach a label ``\textit{"greenops-optimization": "123456789"}'' to the VmTemplate resource at a specific time of the day.
+A possible UPDATE operation trigger could be Kubernetes Cronjob that attach a label \textit{"greenops-optimization": "123456789"} to the VmTemplate resource at a specific time of the day.
 This could be useful to trigger specific policies that are only applied during the day 2 operations.
 In addition to that, the UPDATE operation could be useful for VMs that have already been scheduled in a distant future (due to their deadline very far in the future) to obtain a new scheduling decision based on new conditions (e.g. more recent carbon intensity forecast).
 
@@ -1310,7 +1310,7 @@ Some principles of MLOps can be summarized as follows \cite{mlops_ubuntu}:
   \item[$\bullet$] \textbf{Collaboration}: enable collaboration between data scientists, data engineers, and operations teams.
 \end{itemize}
 
-In the context of the proposed system, the MLOps infrastructure is used to deploy and manage the forecasting models that predict the carbon intensity of the electricity grid in different world regions.
+In the context of the proposed system, an MLOps infrastructure is used to deploy and manage the forecasting models that predict the carbon intensity of the electricity grid in different world regions.
 In particular, \textbf{MLflow} is used for model tracking, model selection, and model storage, while \textbf{KServe} is used for model deployment.
 
 \subsection{MLflow}
