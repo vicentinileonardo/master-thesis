@@ -15,13 +15,13 @@ The Cloud Computing definition by the National Institute of Standards and Techno
 These services, which are growing in number and complexity over time, range from computing resources to storage, networking, databases, machine learning solutions, and more. 
 Public cloud is a deployment model that allows organizations to consume cloud services without having to build and maintain their own physical infrastructure (e.g., private cloud), therefore reducing capital expenditure (CapEx) and shifting to an operational expense model (OpEx). 
 The public cloud model is actually a multi-tenant environment where physical resources maintained and operated by the cloud provider are shared among multiple customers (tenants) with the means of virtualization and isolation techniques.
-These resources are offered in the form of various services at different levels of abstraction (e.g., Infrastructure as a Service, Platform as a Service, Software as a Service) and are provided on-demand on a pay-as-you-go basis.
+These resources are offered in the form of various services at different levels of abstraction (e.g., Infrastructure as a Service (IaaS), Platform as a Service (PaaS), Software as a Service(SaaS)) and are provided on-demand on a pay-as-you-go basis.
 %Doing so requires public cloud provider to leverage paradigm and technique which were known in the industry well before the advent of cloud computing: virtualization and isolation.
 Currently, as of 2024, the public cloud market is dominated by three main hyperscalers: \textbf{Amazon Web Services (AWS)}, \textbf{Microsoft Azure}, and \textbf{Google Cloud Platform (GCP)}.
 An hyperscaler is generally a company (Cloud Service Provider) that operates a data center infrastructure at a massive scale and is able to provide cloud services to a global audience.
 Figure \ref{fig:pcp} shows the worldwide market share of leading cloud infrastructure service providers as of Q3 2024 \cite{statista_cloud_market_share}.
 
-\begin{figure}[htb]
+\begin{figure}[t]
     \centering
     \includegraphics[width=0.75\linewidth]{images/pcp.jpeg}
     \caption{Worldwide market share of leading cloud infrastructure service providers as of Q3 2024 \cite{statista_cloud_market_share}}
@@ -40,7 +40,7 @@ Table \ref{tab:cloud_regions_azs} shows the number of regions and availability z
 \cite{statista_cloud_regions} \cite{aws_infrastructure}.
 We must note that the number of regions and availability zones is constantly changing as cloud providers are expanding their global infrastructure.
 
-\begin{table}[H]
+\begin{table}[t]
     \centering
     \begin{tabular}{|l|c|c|}
     \hline
@@ -62,9 +62,10 @@ There is no standardization nor a convention in the industry for this and cloud 
 For instance, a region located in London is called ``\textit{eu-west-2}'' in AWS, ``\textit{uk-west}'' in Azure and ``\textit{europe-west2}'' in GCP.
 This detail must be taken into account when designing and implementing a multi-cloud system.
 For what concerns the geo-distribution of cloud regions, as an example, Figure \ref{fig:azure_data_centers} shows the location of \textbf{Azure cloud data centers} around the world and the country Grid Carbon Intensity as reported by Electricity Maps (year 2024) \cite{electricity_maps}.
+The Grid Carbon Intensity is a measure of the carbon intensity of the electricity grid of a country and is expressed in grams of CO2 equivalent per kilowatt-hour (gCO2eq/kWh) and it is included in the figure to provide an insight on the carbon footprint of the cloud regions as it will be a key factor in the scheduling policy of our system.
 Data center coordinates are retrieved by an Azure CLI command dump \cite{azure_data_centers_information} and plotted on a map using the Natural Earth dataset \cite{naturalearthdata}.
 
-\begin{figure}[htb]
+\begin{figure}[t]
     \centering
     \includegraphics[width=1\linewidth]{images/azure_data_centers.png}
     \caption{Geo-distribution of Azure data centers with country Grid Carbon Intensity}
@@ -77,33 +78,33 @@ The multi-cloud paradigm refers to the strategic utilization of cloud services f
 This approach allows organizations to distribute workloads, applications, and data across multiple public cloud providers \cite{google_multicloud}.
 On the other hand, the hybrid cloud paradigm refers to utilization of both public cloud services and on-premises infrastructure (e.g., a private cloud).
 The multi-cloud strategy is often adopted by organizations to \textbf{avoid vendor lock-in}, \textbf{increase redundancy}, \textbf{increase flexibility} and \textbf{optimize costs} \cite{google_multicloud}.
-For what concern flexibility and optimization, a multi-cloud strategy allows an organization to select the best service on a case-by-case basis, leveraging the strengths of each provider.
+For what concerns flexibility and optimization, a multi-cloud strategy allows an organization to select the best service on a case-by-case basis, leveraging the strengths of each provider.
 Moreover, single point of failure weaknesses are mitigated by distributing workloads or critical services across multiple providers.
 It could even be the case that, for the end user, the choice of the cloud provider for a service is transparent meaning that the organization itself (or the system) is the one that decides which cloud provider to use for a specific service based on some criteria.
-Vendor lock-in can be avoided by designing applications to be \textbf{cloud-agnostic} and by leveraging open-source technologies (e.g., Kubernetes) and standards \cite{google_multicloud}.
+
+To avoid vendor lock-in, applications must be designed to be \textbf{cloud-agnostic} and leverage open-source technologies (e.g., Kubernetes) and standards \cite{google_multicloud}.
 If an application is designed to be cloud-agnostic, it can be relatively easily migrated from one cloud provider to another.
 Multi-cloud is a strategy that might be more difficult to implement compared to a single cloud strategy but the long-term benefits are significant.
 \textbf{Challenges} and \textbf{disadvantages} are also present in a multi-cloud strategy \cite{google_multicloud}.
-As a matter of fact it can be safely said that \textbf{complexity in the overall infrastructure management is increased}.
+As a matter of fact, it can be safely said that \textbf{complexity in the overall infrastructure management is increased}.
 Another challenge is the \textbf{integration of services} across different cloud providers.
-An additional consideration could be done in terms of security: a multi-cloud strategy can \textbf{increase the attack surface} of an organization, therefore security measures must be carefully implemented.
+An additional consideration could be done in terms of security: a multi-cloud strategy can \textbf{increase the attack surface} of an organization, therefore increasing the requirement for security measures.
 \newline
 For the purpose of this work, adopting a multi-cloud strategy is beneficial for several reasons.
-First and foremost, \textbf{user-centric flexibility} is achieved bringing the benefits described above.
+First and foremost, it achieves \textbf{user-centric flexibility} bringing the benefits described above.
 If a user or organization has a preference for a specific cloud provider, the system can be configured to use only that provider or a specific subset of providers.
 Secondly, the system can be designed to be \textbf{cloud-agnostic}, meaning that the choice of the cloud provider is transparent to the end user. 
 With some specific configurations, the subset of providers to be used can be decided by the system itself based on some criteria.
 Currently, as described in section \ref{sec:scheduling_outcome_policy}, the user can specify a subset of cloud providers (among the 3 major ones) to be used for the deployment of resources.
-Finally, in theory, since different cloud providers have data centers in various locations around the world, some low-carbon regions might be available only on a specific cloud provider and this could be leveraged for the deployment of resources.
+Finally, since different cloud providers have data centers in various locations around the world, some low-carbon regions might be available only on a specific cloud provider and this could be leveraged for the deployment of resources.
 
 \section{Kubernetes}
 
 Kubernetes (K8s) is an open-source platform for automating the orchestration of containerized applications.
 It is widely used in the industry and became the \textbf{de-facto standard for container orchestration}.
-An extensive description of Kubernetes is out of the scope of this thesis but it is deemed necessary to provide a brief overview of the main concepts of Kubernetes that are relevant for the purpose of this work.
 Figure \ref{fig:kubernetes_architecture} shows the Kubernetes architecture as described by the Cloud Native Computing Foundation (CNCF) \cite{kubernetes_cnfc}.
 
-\begin{figure}[htb]
+\begin{figure}[t]
     \centering
     \includegraphics[width=1\linewidth]{images/kubernetes-architecture-diagram.png}
     \caption{Kubernetes architecture by CNCF \cite{kubernetes_cnfc}}
@@ -112,37 +113,36 @@ Figure \ref{fig:kubernetes_architecture} shows the Kubernetes architecture as de
 
 The main components of Kubernetes are:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
-    \item[$\bullet$] \textbf{Kubernetes API server}: the central component that manages the Kubernetes cluster. It exposes the Kubernetes API and is responsible for validating and mutating data related to Kubernetes objects before persisting them in the cluster state.
+    \item[$\bullet$] \textbf{API server}: the central component that manages the Kubernetes cluster. It exposes the Kubernetes API and is responsible for validating and mutating data related to Kubernetes objects before persisting them in the cluster state.
     \item[$\bullet$] \textbf{etcd}: a key-value store used to store the cluster state.
-    \item[$\bullet$] \textbf{Kubernetes controller manager}: a daemon that embeds the core control loops shipped with Kubernetes.
-    \item[$\bullet$] \textbf{Kubernetes scheduler}: a component that assigns Pods to nodes.
+    \item[$\bullet$] \textbf{Controller manager}: a daemon that embeds the core control loops shipped with Kubernetes.
+    \item[$\bullet$] \textbf{Scheduler}: a component that assigns Pods to nodes.
     \item[$\bullet$] \textbf{Kubelet}: an agent that runs on each node in the cluster. It makes sure that containers are correctly running in Pods.
-    \item[$\bullet$] \textbf{Kubernetes proxy}: a network proxy that runs on each node in the cluster. It maintains network rules and it is responsible for routing network traffic.
+    \item[$\bullet$] \textbf{Proxy}: a network proxy that runs on each node in the cluster. It maintains network rules and it is responsible for routing network traffic.
     \item[$\bullet$] \textbf{Container runtime}: the software that is responsible for running containers on the Node (in this case represented by Docker but other runtimes like containerd are supported).
 \end{itemize}
 
-The first four components are the main control plane components of Kubernetes while the last three are the main components of each worker node in the cluster.
-It must be noted that in our system we are not extending the Kubernetes scheduler as described for instance in the works described in section \ref{sec:low_carbon_k8s_scheduler} and \ref{sec:microsoft_carbon_aware_k8s}, since we are not dealing with the scheduling of in-cluster resources (e.g., Kubernetes Pods).
-We are instead focusing on the \textbf{management of external resources on cloud providers} (only VMs in this first iteration), leveraging Kubernetes as a control plane for the management of these resources.
-As described in the following section, our focus will be on the Kubernetes API server and in particular on Kubernetes Admission Control.
+The first four components of the above list are the main control plane components of Kubernetes while the last three are the main components of each worker node in the cluster.
+It must be noted that in our system we are not extending the Kubernetes scheduler as described in sections \ref{sec:low_carbon_k8s_scheduler} and \ref{sec:microsoft_carbon_aware_k8s}, since we are not dealing with the scheduling of in-cluster resources (e.g., Kubernetes Pods) nor with the provisioning of entire Kubernetes clusters.
+We are instead focusing on the \textbf{management of external resources on cloud providers}, leveraging Kubernetes as a control plane for the management of these resources.
+As described in the following section, our focus will be on the Kubernetes API server and in particular on Kubernetes admission control.
 
 \subsection{Kubernetes extensibility}
 \label{sec:kubernetes_extensibility}
 
 % https://www.cncf.io/blog/2022/06/15/kubernetes-operators-what-are-they-some-examples/
 
-Kubernetes allows for the extension of its functionalities through the use of \textbf{Custom Resource Definitions (CRDs)} and \textbf{Kubernetes Operators}, effectively adopting the so-called \textbf{Operator paradigm}.
-Simply put, Custom Resource Definitions are a way to instruct Kubernetes to manage new resource types. 
-CRDs can be added and removed from a Kubernetes cluster at runtime, through dynamic registration.
+Kubernetes allows for the extension of its functionalities through the use of \textbf{Custom Resource Definitions (CRDs)} and \textbf{Kubernetes Operators}, effectively adopting the so-called \textbf{operator paradigm}.
+Simply put, CRDs are a way to instruct Kubernetes to manage new resource types and can be added and removed from a Kubernetes cluster at runtime, through dynamic registration.
 They are a \textbf{schema} that defines the structure of the resource and the Kubernetes API server will validate the resource against the schema.
-\textbf{Custom Resources (CRs)} are actually instances of the resources defined by CRDs and are managed by an Operator.
-The Operator is a piece of software (controller) that is responsible for managing the lifecycle of the resources defined by the CRD.
+\textbf{Custom Resources (CRs)} are actually instances of the resources defined by CRDs and are managed by an operator.
+The Operator is a special type of controller tasked with managing the lifecycle of the CRs.
 Indeed they implement \textbf{control loops} to compare the \textbf{current state} of the resources they manage with the \textbf{desired state} and take actions to make the current state converge to the desired state.
-Effectively the code of an Operator is usually deployed on the Kubernetes cluster in the form of a Kubernetes Deployment.
-This concept is not much different of what actually happens for standard built-in Kubernetes resources which are however manged by built-in controllers (e.g., Deployment controller, ReplicaSet controller, part of Kubernetes controller manager).
-An high-level overview of the Operator paradigm is depicted in Figure \ref{fig:operator_paradigm}.
+A high-level overview of the Operator paradigm is depicted in Figure \ref{fig:operator_paradigm}.
+Effectively, the code of an operator is usually deployed on the Kubernetes cluster in the form of a Kubernetes Deployment.
+This concept is similar to the standard built-in Kubernetes resources which are however manged by built-in controllers (e.g., Deployment controller, ReplicaSet controller, part of Kubernetes controller manager).
 
-\begin{figure}[H]
+\begin{figure}[t]
     \centering
     \includegraphics[width=1\linewidth]{images/opeartor_paradigm.png}
     \caption{Operator paradigm}
@@ -159,19 +159,18 @@ This approach can be exemplified by the public cloud providers' operators which 
 For instance, Config Connector is a Kubernetes operator developed by Google Cloud that allows to configure numerous Google Cloud services and resources using Kubernetes tooling and APIs \cite{gcp_config_connector}.
 The general idea is that organizations might have to deal with a \textbf{heterogeneous infrastructure} composed of different cloud providers and on-premises resources. 
 By \textbf{unifying infrastructure management under Kubernetes}, complexity is reduced and velocity is increased because the same tools and APIs can be used to manage all the resources in a consistent way \cite{gcp_config_connector}.
-
+In particular, Config Connector provides a set of CRDs that represent Google Cloud resources and services (e.g., Google Compute Instances, Google Kubernetes Engine clusters, BigQuery datasets, etc.) and the Config Connector operator is responsible for managing the lifecycle of these resources.
 
 % https://aws.amazon.com/it/blogs/containers/kubernetes-as-a-platform-vs-kubernetes-as-an-api-2/
 
 \subsection{Helm}
 
-Helm is a \textbf{package manager} for Kubernetes. Therefore with Helm it is possible to define, install and manage Kubernetes applications in a simpler way compared to a manual management of Kubernetes resources manifests \cite{helm}.
-Helm is a graduated project in the CNCF and it is the de-facto standard for Kubernetes package management.
+Helm is the de-facto standard \textbf{package manager} for Kubernetes and it allows to define, install and manage applications in a simpler way compared to standard resource manifests \cite{helm}.
 The key concept is the \textbf{Helm chart}, which is a collection of files that describe a related set of Kubernetes resources. 
 These files are mainly of two types: templates and values.
 The \textbf{templates} are Kubernetes manifest files that are rendered by Helm's \textbf{powerful templating engine}. 
 The \textbf{values} are the set of variables that are used to render the templates.
-Upon an Helm chart installation, Helm will render the templates ``injecting" the values and deploy the resources in the Kubernetes cluster. 
+Upon a chart installation, Helm will render the templates ``injecting" the values and deploying the resources in the Kubernetes cluster. 
 One major advantage that Helm provides is the complete management of the lifecycle of the resources.
 As a matter of fact, Helm allows to easily \textbf{upgrade}, \textbf{rollback} and \textbf{uninstall} the Kubernetes resources deployed with a Helm chart reducing time and human errors in such operations \cite{helm}. 
 Without Helm, the user would have to deal with each single Kubernetes resource manifest file and manually apply changes to them.
@@ -182,56 +181,100 @@ Finally, users can benefit of Helm charts already developed by the community and
 
 Krateo PlatformOps (Krateo) is an \textbf{open-source Kubernetes-based platform} that aims to provide a unified interface for managing any desired resource on any infrastructure \cite{krateo_docs}.
 Krateo runs as a Kubernetes deployment inside a Kubernetes cluster but \textbf{acts as a control plane} even for resource external to the Kubernetes cluster.
-The only requirement for this management is that the resources need to be logically ``encoded'' using a YAML file which represents the desired state of the resources \cite{krateo_docs}.
+The only requirement for this management is that the resources need to be logically ``encoded'' using a YAML file which represents the desired state of the resources \cite{krateo_docs}. \newline
 % Platform engineering
 % Developer platform: a unified environment providing tools, services, and infrastructure that enables teams to efficiently build, test, and deploy software without managing underlying complexity. This complexity is handled by the platform team.
 % Recognized by Gartner. Gartner said ... by 2025 companies without a ... (cite)
-Krateo is composed of three main parts:
+Krateo has three main components:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
-    \item[$\bullet$] Krateo Composable Operations
-    \item[$\bullet$] Krateo Composable Portal
-    \item[$\bullet$] Krateo Composable FinOps
+    \item[$\bullet$] Krateo Composable Operations: the core of the Krateo platform [AGGIUNGERE]
+    \item[$\bullet$] Krateo Composable Portal: a web-based user interface [AGGIUNGERE]
+    \item[$\bullet$] Krateo Composable FinOps: a set of modules for cost management [AGGIUNGERE]
 \end{itemize}
 
 For the purpose of this work, we will focus on the \textbf{Krateo Composable Operations} part, which is the core of the Krateo platform and is responsible for managing the lifecycle of resources in a Kubernetes cluster \cite{krateo_docs}.
 Krateo Composable Operations is composed in turn by several components. 
-Due to their core importance in our system, we will briefly describe the functionalities of the \textbf{Krateo core-provider} and the \textbf{Krateo composition-dynamic-controller} as described in Krateo official documentation (\cite{krateo_core_provider} and \cite{krateo_composition_dynamic_controller}).
+Due to their core importance in our system, we will briefly describe the functionalities of the \textbf{Krateo core-provider} and the \textbf{Krateo composition-dynamic-controller} as described in Krateo's official documentation \cite{krateo_core_provider}, \cite{krateo_composition_dynamic_controller}.
 
 \subsection{Krateo core-provider}
 
 The Krateo core-provider, as its name suggests, is the core component of the Krateo platform.
 It is a \textbf{Kubernetes operator} that has the duty of downloading and managing Helm charts. 
-It first checks for the existence of a file named \textit{values.schema.json} in the chart folder and uses it to generate a Kubernetes Custom Resource Definition (CRD), accurately representing the possible values that can be expressed for the installation of the chart \cite{krateo_core_provider}.
+
+It first checks for the existence of a file named \textit{values.schema.json} in the chart folder and uses it to generate a Kubernetes CRD, accurately representing the possible values that can be expressed for the installation of the chart \cite{krateo_core_provider}.
 The file \textit{values.schema.json} is a JSON schema that describes the structure of the \textit{values.yaml} file for the related Helm chart and it is considered a standard best practice for Helm charts. 
 It basically provides a way to validate the \textit{values.yaml} file before the Helm chart is installed (i.e., to check if the values are in the correct format and if all the required values are present) \cite{krateo_core_provider}.
 Therefore, generally speaking, the file \textit{values.schema.json} could be useful in the context of DevOps practices and CI/CD pipelines but in the case of Krateo it is pivotal for the generation of the CRD.
 In other words, the Krateo core-provider operator is responsible for deploying the Helm chart as a \textbf{native Kubernetes resource}, which allows for the management of the whole Helm chart lifecycle through Kubernetes APIs \cite{krateo_core_provider}.
 As a matter of fact, out of the box, Kubernetes does not provide a way to manage Helm charts natively and the Krateo core-provider is one tool that allows to do so.
-The Kubernetes Custom Resource Definition introduced by the Krateo core-provider is called \textbf{\textit{CompositionDefinition}}. 
-It is a CRD that represents the Helm chart and its values (a Helm Chart archive (.tgz) with a JSON Schema for the values.yaml file) \cite{krateo_core_provider}.
+
+Krateo core-provider introduces a Kubernetes CRD introduced called \textbf{\textit{CompositionDefinition}} to represents the Helm chart and its values (a Helm Chart archive with a JSON Schema for the values.yaml file) \cite{krateo_core_provider}.
 Upon a CompositionDefinition manifest application to the Kubernetes cluster, the Krateo core-provider generates the CRD from the schema defined in the \textit{values.schema.json} file included in the chart. 
 It then deploys an instance of the Krateo composition-dynamic-controller, configuring it up to manage resources of the type defined by the CRD \cite{krateo_core_provider}.
-Therefore, this can be considered an example of the Operator paradigm described in section \ref{sec:kubernetes_extensibility} where the Krateo core-provider is the Operator and the CompositionDefinition is the Custom Resource Definition.
+This is another example of the Operator paradigm described in section \ref{sec:kubernetes_extensibility} where the Krateo core-provider is the Operator and the CompositionDefinition is the CRD.
 
 \subsection{Krateo composition-dynamic-controller}
 
-The Krateo composition-dynamic-controller is the Kubernetes operator that is instantiated by the Krateo core-provider to manage the specific Custom Resources whose Custom Resource Definition is generated by the core-provider.
-In practice, when a Custom Resource (CR) is created, the specific instance of Krateo composition-dynamic-controller checks if a Helm release associated with the CR already exists in the cluster \cite{krateo_composition_dynamic_controller}. 
+The Krateo composition-dynamic-controller is the Kubernetes operator that is instantiated by the Krateo core-provider to manage the specific CRs whose CRDs are generated by the core-provider.
+In practice, when a CR is created, the specific instance of Krateo composition-dynamic-controller checks if a Helm release associated with the CR already exists in the cluster \cite{krateo_composition_dynamic_controller}. 
 If this is not the case, it performs an \textit{helm install} operation using the values specified in the CR to create a new Helm release. 
 This will practically deploy all the resources defined in the Helm chart (in the folder ``/templates'') using \textbf{Helm's templating engine}.
 This feature is particularly important in the context of the system described in this thesis and in particular for multi-cloud resource management as explained in section \ref{sec:krateo_integration}.
 However, if the Helm release does already exist, it instead executes an \textit{helm upgrade} operation, updating the release's values with those specified in the CR, effectively updating the resources in the cluster.
 This mechanism will be leveraged as well for a particular feature  of our system (i.e., ``waiting logic'') described in section \ref{sec:scheduling_time_waiting_logic}.
 Finally, if and when the CR is deleted from the cluster, the instance of the Krateo composition-dynamic-controller performs an \textit{helm uninstall} on the Helm release, effectively removing all the resources defined in the Helm chart from the cluster \cite{krateo_composition_dynamic_controller}. \\
-It must be said that Krateo composition-dynamic-controller has a set of additional features that are not described in this work such as multi-version support.
-The architecture of the Krateo core-provider and Krateo composition-dynamic-controller is depicted in Figure \ref{fig:krateo_core_provider}, as described and depicted in \cite{krateo_core_provider}.
 
-\begin{figure}[htb]
+It must be said that Krateo composition-dynamic-controller has a set of additional features that are not described in this work such as multi-version support.
+Figure \ref{fig:krateo_core_provider} shows the architecture of the Krateo core-provider and Krateo composition-dynamic-controller, as described and depicted in \cite{krateo_core_provider}.
+
+\begin{figure}[t]
     \centering
     \includegraphics[width=1\linewidth]{images/kraeto_core_provider.png}
     \caption{Krateo core-provider and composition-dynamic-controller architecture \cite{krateo_core_provider}}
     \label{fig:krateo_core_provider}
 \end{figure}
+
+\section{Open Policy Agent}
+
+Open Policy Agent (OPA) is an open-source general-purpose \textbf{policy engine} that enables unified policy decision-making across several types of environments \cite{opa_docs}. 
+OPA provides a declarative language called \textbf{Rego} enabling a paradigm known as ``\textbf{Policy as Code}" \cite{opa_docs}.
+Open Policy Agent can be integrated as a sidecar container, host-level daemon, or library to perform policy decisions for a plethora of use cases: \textbf{Kubernetes admission control}, CI/CD pipelines, container images, microservices, etc.\cite{opa_docs}. 
+
+\subsection{Policy as Code paradigm}
+
+According to AWS, Policy as Code (PaC) is a software automation approach which is similar to Infrastructure as Code (IaC) \cite{pac_aws}. 
+PaC helps assess company system configurations and validate compliance requirements through software automation \cite{pac_aws}. 
+The perceived value of this type of automation in the software development lifecycle has grown significantly in modern enterprises. 
+This large adoption is probably driven by the inherent consistency and reliability it provides, ensuring standardized enforcement of policies and reducing human error, as what happened with the IaC approach \cite{pac_aws}.
+
+OPA's generic definition of policy is: ``\textit{A policy is a set of rules that governs the behavior of a software service}" \cite{opa_philosophy}. OPA provides a high-level declarative language called \textbf{Rego} to define policies in a flexible manner. 
+One of OPA's key strengths is its \textbf{domain-agnostic design}, allowing it to enforce policies across various systems and environments. 
+This makes it highly adaptable to different use cases, ranging from access control to infrastructure security. 
+Some representative examples of policies that OPA can enforce include:
+
+\begin{itemize}[itemsep=0.2pt, topsep=1pt] \item[$\bullet$] Restricting which image registries can be used for deploying new Pods in a Kubernetes cluster.
+    \item[$\bullet$] Restricting which specific image registries can be used for deploying new pods in a Kubernetes cluster.
+    \item[$\bullet$] Controlling whether a specific user is permitted to perform delete operations on certain resources on an API server.
+    \item[$\bullet$] Enforcing network security policies, such as blocking external access to sensitive internal services.
+    \item[$\bullet$] Ensuring cloud infrastructure compliance, for example, by verifying that new cloud resources to be provisioned follow predefined security configurations.
+    \item[$\bullet$] Enforcing that new deployed servers must have the prefix ``server-" in their name.
+\end{itemize}
+
+Another interesting example is the use of OPA for \textbf{compliance automation for AWS infrastructure} \cite{10612535}. 
+In this case, OPA is used by the authors as a step in a CI/CD pipeline to enforce compliance policies on AWS infrastructure represented with the IaC tool CloudFormation \cite{10612535}.
+Therefore, the use cases covered span from role-based access control to container image security and beyond.
+\newline
+
+Another important aspect of OPA is that it effectively \textbf{decouples} policy decision-making from policy enforcement \cite{opa_docs}.
+In practice, this means that when a software module needs to make a policy decision, it queries OPA, supplying relevant data as input. 
+In other words, policy decisions are \textbf{offloaded} to OPA rather than being hardcoded within individual services. 
+This approach offers several key advantages \cite{opa_docs}:
+\begin{itemize}[itemsep=0.2pt, topsep=1pt]
+  \item[$\bullet$] \textbf{Centralized policy management}: policies are defined in a single location, ensuring uniform enforcement across all services of an organization.
+  \item[$\bullet$] \textbf{Improved maintainability}: updating policies does not require modifying, recompiling or redeploying application code, reducing complexity, errors and deployment overhead.
+  \item[$\bullet$] \textbf{Greater flexibility}: policies can be dynamically updated (e.g., with CI/CD approaches) based on evolving security and compliance requirements. 
+  \item[$\bullet$] \textbf{Scalability}: since OPA and application modules requiring policy decisions are not tightly coupled.
+\end{itemize} 
 
 \section{Multi-cloud resource management}
 \label{sec:multi_cloud_resource_management}
@@ -244,31 +287,33 @@ The work of Simarro et al. \cite{Simarro_2011} back at the dawn of cloud computi
 The main objective of the system was cost optimization but this paradigm provides reliability and flexibility as well.
 The scheduling part is comprised of a ``\textbf{cloud broker}" that is responsible for VM placement \textbf{transparent to users} providing a single uniform interface to the cloud resources.
 Users can provide to the system a ``\textbf{service description template}'' to specify the number of VMs to provision and some constraints.
-The cloud broker architecture is composed of two major components: the \textbf{scheduler} and the \textbf{cloud manager} \cite{Simarro_2011}. The former is responsible for placement decision across multiple cloud providers, while the latter is responsible for the actual management of the VMs in the cloud providers. More precisely, the cloud manager is represented by the OpenNebula (ONE) virtual infrastructure manager \cite{Simarro_2011}.
+The cloud broker architecture is composed of two major components: the \textbf{scheduler} and the \textbf{cloud manager}. The former is responsible for placement decision across multiple cloud providers, while the latter is responsible for the actual management of the VMs in the cloud providers. More precisely, the cloud manager is represented by the OpenNebula (ONE) virtual infrastructure manager.
 OpenNebula is an open-source platform that aims to provide a unified management interface for multiple virtualization technologies and cloud providers \cite{open_nebula}.
 
 \subsection{Cloud service brokers}
-A CSB is a system that acts as an \textbf{intermediary} between cloud service providers and consumers, providing a \textbf{unified interface} to manage cloud resources across multiple providers \cite{Wadhwa_2013}.
+
 Cloud service brokers (CSBs) were described and categorized by Wadhwa et al. \cite{Wadhwa_2013} in their work of 2013.
-The emerging market of cloud computing led to the proliferation of cloud services and providers, and by consequence the need for mechanisms to manage costs, capacity and resources \cite{Wadhwa_2013}. 
+A CSB is a system that acts as an \textbf{intermediary} between cloud service providers and consumers, providing a \textbf{unified interface} to manage cloud resources across multiple providers.
+The emerging market of cloud computing led to the proliferation of cloud services and providers, and by consequence the need for mechanisms to manage costs, capacity and resources. 
 \newline
 
-An interesting CSB example in the literature is the \textbf{STRATOS} system by Pawluk et al. proposed in 2012. The work can be considered a pioneer in the field of multi-cloud resource management since it can be framed in the first years of cloud computing \cite{STRATOS} but the proposed paradigms and concepts are relevant today.
-STRATOS tried to \textbf{avoid the assumption of resource homogeneity} and represented an initial attempt to provide a ``\textbf{cross-cloud resource provisioning}'' system \cite{STRATOS}.
-The proposed architecture enables the specification of high-level objectives that can be assessed in a standardized manner across different providers. The decision-making process is fully automated, shifting the decision point from deployment to runtime \cite{STRATOS}.
-Users first submit a topology document, triggering the Cloud Manager to communicate with the Broker for topology instantiation. The Broker (implemented in Java) then conducts the initial resource acquisition decision (RAD), optimizing the allocation of resources across multiple providers (configured beforehand) \cite{STRATOS}.
-Experiments indicate that distributing workloads across different cloud providers can reduce the overall cost of the topology. The approach taken by the authors primarily focuses on two objectives: \textbf{cost efficiency} and \textbf{avoiding vendor lock-in}. The application environment was deployed on public cloud platforms, specifically AWS and Rackspace \cite{STRATOS}.
+An interesting CSB example in the literature is the \textbf{STRATOS} system by Pawluk et al. \cite{STRATOS} proposed in 2012. 
+The work can be considered a pioneer in the field of multi-cloud resource management since it can be framed in the first years of cloud computing but the proposed paradigms and concepts are relevant today.
+STRATOS tried to \textbf{avoid the assumption of resource homogeneity} and represented an initial attempt to provide a ``\textbf{cross-cloud resource provisioning}'' system.
+The proposed architecture enables the specification of high-level objectives that can be assessed in a standardized manner across different providers. The decision-making process is fully automated, shifting the decision point from deployment to runtime.
+Users first submit a topology document, triggering the Cloud Manager to communicate with the Broker for topology instantiation. The Broker then conducts the initial resource acquisition decision, optimizing the allocation of resources across multiple providers (configured beforehand).
+Experiments indicate that distributing workloads across different cloud providers can reduce the overall cost of the topology. The approach taken by the authors primarily focuses on two objectives: \textbf{cost efficiency} and \textbf{avoiding vendor lock-in}. The application environment was deployed on public cloud platforms, specifically AWS and Rackspace.
 \newline
 
-A more modern example of a similar strategy is the one developed at IBM and presented by Lublinsky et. al, denominated as ``\textbf{Kubernetes Bridge operator}'' in which the authors propose a system that allows to submit various types of workloads from Kubernetes to a \textbf{arbitrary external resource manager} \cite{lublinsky2022kubernetesbridgeoperatorcloud}.
+A more modern example of a similar strategy is the one developed at IBM and presented by Lublinsky et. al \cite{lublinsky2022kubernetesbridgeoperatorcloud}, denominated as ``\textbf{Kubernetes Bridge operator}'' in which the authors propose a system that allows to submit various types of workloads from Kubernetes to a \textbf{arbitrary external resource manager} .
 In particular, they tackle the problem that not every workload can be deployed on Kubernetes and that especially scientific workloads might require specific and dedicated computing resources.
 They refer, for instance, to \textbf{HPC clusters}, dedicated AI clusters, quantum computing cluster, etc.
 Indeed they rely on the fact that specific resource managers (e.g., Slurm, IBM Spectrum LSF, IBM Quantum service, Ray, etc.) usually expose a \textbf{HTTP API}.
-The proposed operator deploys Kubernetes Pods which in turn interact with external resource managers through HTTP APIs for job submission and monitoring \cite{lublinsky2022kubernetesbridgeoperatorcloud}.
+The proposed operator deploys Kubernetes Pods which in turn interact with external resource managers through HTTP APIs for job submission and monitoring.
 Each Custom Resource, which represent the configuration of an external job, is associated with a specific Kubernetes Pod named ``Controller Pod'' (one per remote job) that is responsible for the interaction with the external resource manager (effectively acting as a proxy).
 Credentials for external systems are stored in Kubernetes Secrets and are mounted in the Controller Pod.
 In other words, the Bridge Operator is \textbf{generic and agnostic} and has the duty of managing Controller Pods which are are specifically tailored for a particular external resource manager.
-The authors also provide an exemplificative set of implementations of controllers in the form of container images to be used in the Controller Pods \cite{lublinsky2022kubernetesbridgeoperatorcloud}.
+The authors also provide an exemplificative set of implementations of controllers in the form of container images to be used in the Controller Pods.
 
 \subsection{AI-based resource management in cloud computing}
 \label{sec:ai_based_resource_management}
@@ -276,39 +321,38 @@ The authors also provide an exemplificative set of implementations of controller
 More recent works have focused on the development of systems that leverage AI techniques for the optimization of resource management in cloud computing environments.
 
 The work of 2022 by Khan et al. \cite{KHAN2022103405} provides a comprehensive review of the state of the art in the field of machine learning (ML)-centric resource management in cloud computing.
-Although this works focuses on the cloud provider side (\textbf{resource management in data centers}), it provides some interesting insights that can be leveraged also at different levels of the cloud computing stack.
+Although this works focuses on the cloud provider side (\textbf{i.e., resource management in data centers}), it provides some interesting insights that can be leveraged also at different levels of the cloud computing stack.
 The authors highlight the fact that traditionally, only static policies were used for resource management in cloud computing, but the advent of ML techniques has enabled the development of more dynamic and adaptive resource management systems \cite{KHAN2022103405}. \newline
 % maybe add some more insights from this work
 
 Tuli et al. in their work of 2021 \cite{TULI2022111124} propose a system named \textbf{HUNTER} which stands for ``Holistic resoUrce
 maNagemenT technique for Energy-efficient cloud computing using aRtificial intelligence''. 
-In particular, in this work, tasks are modeled as \textbf{containers instances}.
-For the purpose of this thesis, we can describe how this system was implemented from a infrastructural point of view.
-The system is composed of four main components \cite{TULI2022111124}:
+In this work, tasks are modeled as \textbf{containers instances}.
+From a infrastructural point of view, the system is composed of four main components:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
-    \item[$\bullet$] \textbf{Cloud Workload Management Portal}: a web-based portal that allows users to submit their workloads and specify the requirements (SLA constraints, QoS constraints, etc.).
-    \item[$\bullet$] \textbf{Workload Manager}: a component that is responsible for the processing of incoming workloads.
-    \item[$\bullet$] \textbf{Cloud Broker}:  the component that is responsible for the allocation of resources to cloud worker nodes
-    \item[$\bullet$] \textbf{Cloud Hosts}: set of cloud worker nodes (in the form of both private and public cloud)
+    \item[$\bullet$] \textbf{Cloud Workload Management Portal}: a web-based portal that allows users to submit their workloads and specify the requirements (e.g., SLA constraints, QoS constraints, etc.).
+    \item[$\bullet$] \textbf{Workload Manager}: responsible for the processing of incoming workloads.
+    \item[$\bullet$] \textbf{Cloud Broker}: responsible for the allocation of resources to cloud worker nodes
+    \item[$\bullet$] \textbf{Cloud Hosts}: set of cloud worker nodes, in the form of both private and public cloud.
 \end{itemize}
-The Cloud Broker is the core of the system and is further divided into three sub-managers: Service Manager, CDC Manager, and Resource Manager.
-The Service Manager is responsible for SLAs and QoS constraints, the CDC Manager is responsible for the actual allocation (provisioning) and migration of resources to cloud worker nodes and resource monitoring and the Resource Manager is responsible for the scheduling of tasks and contains the actual sustainability models (energy, thermal, cooling.) \cite{TULI2022111124}.
+The Cloud Broker is the core of the system and is further divided into three sub-managers: Service Manager, Cloud Data Centers Manager (CDC Manager), and Resource Manager.
+The Service Manager is responsible for SLAs and QoS constraints, the CDC Manager is responsible for the actual allocation (provisioning) and migration of resources to cloud worker nodes and resource monitoring and the Resource Manager is responsible for the scheduling of tasks and contains the actual sustainability models (e.g., energy, thermal, cooling.).
 
 \subsection{Policy-driven resource management systems}
 
-García García et al. (2014) propose \textbf{Cloudcompaas} \cite{GARCIAGARCIA20141}, a Service Level Agreement (SLA)-driven platform for dynamic cloud resource management, focusing on the automation of resource provisioning, scheduling, and monitoring
-The aim of the work is to provide a SLA-aware Platform-as-a-Service platform for the entire management of cloud resource lifecycle \cite{GARCIAGARCIA20141}.
-The targeted resource to be manages spans from IaaS to PaaS and SaaS.
-Their approach leverage the WS-Agreement specification, a standard for SLA negotiation in web services, to define the SLA between the cloud provider and the cloud consumer \cite{GARCIAGARCIA20141}.
-Leveraging this representation, they propose a SLA-driven architecture with three main components: the \textbf{SLA Manager}, the \textbf{Orchestrator}, and the \textbf{Infrastructure Connector} \cite{GARCIAGARCIA20141}.
+García García et al. (2014) propose \textbf{Cloudcompaas} \cite{GARCIAGARCIA20141}, a Service Level Agreement (SLA)-driven platform for dynamic cloud resource management, focusing on the automation of resource provisioning, scheduling, and monitoring.
+The aim of the work is to provide a SLA-aware Platform-as-a-Service platform for the entire management of the cloud resource lifecycle \cite{GARCIAGARCIA20141}.
+The targeted resource to be managed spans from IaaS to PaaS and SaaS.
+Their approach leverage the WebService-Agreement specification, a standard for SLA negotiation in web services, to define the SLA between the cloud provider and the cloud consumer.
+Leveraging this representation, they propose a SLA-driven architecture with three main components: the \textbf{SLA Manager}, the \textbf{Orchestrator}, and the \textbf{Infrastructure Connector}.
 The SLA Manager is the entry point for users and essentially builds and register agreements starting from the user requirements.
 The Orchestrator, having a complete view of all the available cloud backends, performs the critical task of scheduling and resource allocation, considering the SLA constraints.
-The Infrastructure Connector is the component that actually interacts with the cloud providers, performing the actual resource allocation and deallocation (provisioning and deprovisioning) \cite{GARCIAGARCIA20141}.
+The Infrastructure Connector is the component that actually interacts with the cloud providers, performing the actual resource allocation and deallocation (provisioning and deprovisioning).
 An interesting feature of the Infrastructure Connector is the ``configuration step'' in which arbitrary actions can be performed such as the \textbf{injection of a monitoring agent on a Virtual Machine}.
 \newline
 
 In the context of serverless computing environments, the work of 2021 by Mampage et al. \cite{9499407} proposes a deadline-aware dynamic resource management system.
-The focus of the research is on both the provider and the consumer perspective, proposing a placement policy and ``dynamic resource management policy" that aims to minimize the cost of the provider while meeting the requirement of the consumer (i.e., the \textbf{deadline}) \cite{9499407}.
+The focus of the research is on both the provider and the consumer perspective, proposing a placement policy and ``dynamic resource management policy" that aims to minimize the cost of the provider while meeting the requirement of the consumer (i.e., the \textbf{deadline}).
 \newline
 
 
@@ -364,8 +408,8 @@ where:
 \label{sec:real_time_cloud}
 
 The Real Time Cloud project aims to provide a standard for real-time carbon emissions data reporting for cloud providers.
-The goal is to provide real-time access to information about cloud region, PUE, WUE, carbon-free energy from the grid and from Cloud provider individual initiatives.
-The concept is similar to FOCUS specification for FinOps but is at a very early stage and is not yet adopted by cloud providers as of 2025 \cite{real_time_cloud}.
+The goal is to provide real-time access to information about cloud regions, power usage effectiveness (PUE), water usage effectiveness (WUE), carbon-free energy from the grid and from Cloud provider individual initiatives.
+The concept is similar to FOCUS specification for FinOps \cite{finops_focus_spec} but is at a very early stage and is not yet adopted by cloud providers as of 2025 \cite{real_time_cloud}.
 
 %https://github.com/Green-Software-Foundation/real-time-cloud?tab=readme-ov-file
 
@@ -410,8 +454,9 @@ Having provided an overview of the existing works in the field of multi-cloud re
 In particular, implementation choices and design patterns that can be leveraged for the development of a carbon-aware resource management system will be discussed.
 \newline
 
-The work of 2023 by Sukprasert et al. named ``\textit{Spatiotemporal Carbon-aware Scheduling in the Cloud: Limits and Benefits}'' \cite{10.1145/3599733.3606301} is a comprehensive analysis on the limits and benefits of the employment of geographical shifting and time shifting for cloud workloads.
-The authors highlight the fact that different workloads have different characteristics and therefore different degrees of flexibility. Those include, for instance: \textbf{execution deadlines}, \textbf{data protection laws}, and \textbf{latency requirements}. Therefore, carbon savings are constrained by a complex set of factors that need to be taken into account when designing a carbon-aware system \cite{10.1145/3599733.3606301}.
+The work by Sukprasert et al. \cite{10.1145/3599733.3606301} is a comprehensive analysis on the limits and benefits of the employment of geographical shifting and time shifting for cloud workloads.
+The authors highlight the fact that different workloads have different characteristics and therefore different degrees of flexibility. Those include, for instance: \textbf{execution deadlines}, \textbf{data protection laws}, and \textbf{latency requirements}. Therefore, carbon savings are constrained by a complex set of factors that need to be taken into account when designing a carbon-aware system.
+
 The following sections will present systems that have been developed by various research groups to tackle the problem of carbon-aware resource management in cloud computing environments.
 
 %Bringing Carbon Awareness to Multi-cloud Application Delivery
@@ -419,50 +464,50 @@ The following sections will present systems that have been developed by various 
 \subsection{CASPER}
 
 CASPER (Carbon-Aware Scheduling and Provisioning for Distributed Web Services) is a carbon-aware scheduling and provisioning system whose primary purpose is to minimize the carbon footprint of distributed web services \cite{Souza_2023}.
-The system is defined as a multi-objective optimization problem that considers two factors: the \textbf{variable carbon intensity} and the \textbf{latency constraints} of the network \cite{Souza_2023}.
-By evaluating the framework in real-world scenarios, the authors demonstrate that CASPER achieves significant reductions in carbon emissions (up to 70\%) while meeting application \textbf{Service Level Objectives (SLOs)}, highlighting its potential for practical implementation in large-scale distributed systems \cite{Souza_2023}.
-The authors of CASPER highlight the importance of considering the workload characteristics such as memory state, \textbf{latency} and \textbf{regulatory constraints such as GDPR} \cite{Souza_2023}.
-The system is not adopting time-shifting since it is dealing with web services that are by their nature non-stopping workloads. The architecture is tied to scheduling K8s resources inside K8s clusters and does not consider external resource management.
+The system is defined as a multi-objective optimization problem that considers two factors: the \textbf{variable carbon intensity} and the \textbf{latency constraints} of the network.
+By evaluating the framework in real-world scenarios, the authors demonstrate that CASPER achieves significant reductions in carbon emissions (up to 70\%) while meeting application \textbf{Service Level Objectives (SLOs)}, highlighting its potential for practical implementation in large-scale distributed systems.
+The authors of CASPER highlight the importance of considering the workload characteristics such as memory state, \textbf{latency} and \textbf{regulatory constraints such as GDPR}.
+The system is not adopting time-shifting since it is dealing with web services that are by their nature non-stopping workloads. The architecture is tied to scheduling Kubernetes resources inside Kubernetes clusters and does not consider external resource management.
 %https://github.com/carbonfirst/casper?tab=readme-ov-file
 %[HOW is it deployed]
 
 \subsection{CASPIAN}
 
 A research on carbon-aware scheduling in Kubernetes environments was conducted by the authors of CASPIAN (A Carbon-aware Workload Scheduler in Multi-Cluster Kubernetes Environments) \cite{10786568}.
-The proposed system leverages Multi Cluster App Dispatcher (MCAD), a multi-cluster management platform, to provision workloads over distributed Kubernetes clusters \cite{10786568}.
-Caspian is a scheduling and placement controller which lives in a master cluster and interacts with the MCAD to provision workloads across multiple geographical distributed clusters \cite{10786568}.
+The proposed system leverages Multi Cluster App Dispatcher (MCAD), a multi-cluster management platform, to provision workloads over distributed Kubernetes clusters.
+Caspian is a scheduling and placement controller which lives in a master cluster and interacts with the MCAD to provision workloads across multiple geographical distributed clusters.
 In particular, two main components are described: the \textbf{carbon tracker} and the \textbf{scheduler}.
 The carbon tracker is responsible for the periodic collection of carbon intensity data along with worker cluster locations.
-The scheduler, taking into account cluster information (carbon intensity, power efficiency, etc.), and workload requirements (e.g, \textbf{run time}, \textbf{deadline}, etc.), is responsible for the scheduling (time) and placement (geographical) of the workloads \cite{10786568}.
+The scheduler, taking into account cluster information (i.e., carbon intensity, power efficiency, etc.), and workload requirements (e.g, \textbf{run time}, \textbf{deadline}, etc.), is responsible for the scheduling time and geographical placement of the workloads.
 
 \subsection{CarbonScaler}
 
-The work by Hanafy et al. ``\textit{CarbonScaler: Leveraging Cloud Workload Elasticity for Optimizing Carbon-Efficiency}" proposes a system that leverages the elasticity of batch cloud workloads to optimize carbon efficiency \cite{10.1145/3626788}.
+The work by Hanafy et al. \cite{10.1145/3626788} proposes a system that leverages the elasticity of batch cloud workloads to optimize carbon efficiency .
 The targeted workloads are for instance \textbf{MPI jobs} and \textbf{Machine Learning training jobs}.
-The system is entirely Kubernetes-based and it is composed of three main components: the \textbf{Carbon Profiler}, the \textbf{Carbon AutoScaler}, and the \textbf{Carbon Advisor} \cite{10.1145/3626788}.
+The system is entirely Kubernetes-based and it is composed of three main components: the \textbf{Carbon Profiler}, the \textbf{Carbon AutoScaler}, and the \textbf{Carbon Advisor}.
 The Carbon Profiler main duty is to estimate energy usage of jobs.
 The Carbon AutoScaler component is the core of the system and is a Kubernetes controller that leverage the \textbf{Kubeflow training operator}.
 Kubeflow is effectively used for the resource management of batch jobs.
-Finally, the Carbon Advisor simulates jobs execution in different configuration and allow the carbon reduction estimation \cite{10.1145/3626788}.
+Finally, the Carbon Advisor simulates jobs execution in different configuration and allow the carbon reduction estimation.
 
 \subsection{A Low Carbon Kubernetes Scheduler}
 \label{sec:low_carbon_k8s_scheduler}
 
 The work is focused on the extension of the Kubernetes scheduler (``kube-scheduler'') for the ranking and filtering of the ``greenest'' region for the deployment of entire Kubernetes clusters \cite{low_carbon_k8s_scheduler}.
 The system is tailored and tested on Azure but can be extended to other cloud providers.
-Provisioning  operations of the clusters are done by the system leveraging Kubernetes API or IaaS management APIs \cite{low_carbon_k8s_scheduler}.
+Provisioning  operations of the clusters are done by the system leveraging Kubernetes API or IaaS management APIs.
 Therefore Kubernetes is leveraged as a control plane to provision other Kubernetes clusters.
 An interesting feature proposed is the use of local air temperature and solar irradiance as tiebreaker for two datacenters with a similar carbon intense grid. 
-The claim is that the solar irradiance has a bigger spread than the carbon intensity across global regions and that the local air temperature surrounding a datacentre affects the amount of energy needed for cooling \cite{low_carbon_k8s_scheduler}. 
+The claim is that the solar irradiance has a bigger spread than the carbon intensity across global regions and that the local air temperature surrounding a datacentre affects the amount of energy needed for cooling. 
 
 \subsection{Microsoft's Carbon-Aware Kubernetes strategy}
 \label{sec:microsoft_carbon_aware_k8s}
 
-Citing the previous work, Microsoft proposes a simple carbon-aware strategy for Kubernetes \cite{microsoft_carbon_aware_k8s}, integrating carbon intensity data into the scheduling process of Kubernetes Pods (rather than entire clusters).
-The Kubernetes scheduler, which allows custom rules for assigning Nodes to Pods, can incorporate carbon metrics like the Marginal Operating Emissions Rate (MOER) as factors in placement decisions. 
+Microsoft proposes a simple carbon-aware strategy for Kubernetes \cite{microsoft_carbon_aware_k8s}, integrating carbon intensity data into the scheduling process of Kubernetes Pods.
+The Kubernetes scheduler, which allows custom rules for assigning nodes to pods, can incorporate carbon metrics like the Marginal Operating Emissions Rate (MOER) as factors in placement decisions. 
 A weighted distribution can be created by normalizing the MOER values across the available Nodes.
 These weightings are encoded in a YAML file and applied as a priority for the Scheduler, which out-of-the-box supports these kind of custom rules to extend the scheduling process.
-The claim is that by combining three elements (i.e., Kubernetes scheduler, carbon intensity data, and a weighting algorithm) any Kubernetes instance can be made carbon-aware, at least in a simplified way \cite{microsoft_carbon_aware_k8s}.
+The claim is that by combining three elements (i.e., Kubernetes scheduler, carbon intensity data, and a weighting algorithm) any Kubernetes instance can be made carbon-aware, at least in a simplified way.
 
 \section{Multi-cloud resource management - major components}
 \label{sec:multi_cloud_resource_management_components}
@@ -474,13 +519,14 @@ The claim is that by combining three elements (i.e., Kubernetes scheduler, carbo
 Many of the concepts described in this chapter are leveraged in the design and implementation of our system. 
 We can briefly list some of the major recurrent elements that are generally needed in order to build a system for multi-cloud resource management:
 \begin{enumerate}
-    \item representation of a generic workload (with its characteristics and constraints)
+    \item representation of a generic workload with its characteristics and constraints
     \item cloud service broker / orchestrator
     \item modules to directly interact with the cloud providers
 \end{enumerate}
 
 In the system proposed by this thesis, the elements listed above are represented by \textbf{cloud-native components} in the Kubernetes ecosystem as described in the following chapters.
 
+[EVIDENZIARE DIFFERENZE DA STATO DELL'ARTE]
+
 \newpage
 
-\section{Multi-cloud resource management - major components}
