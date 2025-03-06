@@ -15,8 +15,6 @@
 %contributo personale
 
 %\section{Context}
-
-
 In the last 20 years, cloud computing has steadily become the backbone of modern digital infrastructure, enabling scalable and flexible deployment of heterogeneous services across geographically distributed data centers around the world.
 It can be safely said that cloud computing can be labelled as a disruptive technology since it has revolutionized the way IT services and applications are designed, developed, delivered and consumed.
 Moreover, cloud computing is playing a crucial role in the current AI revolution, enabling the training of large-scale machine learning models (such as Large Language Models) in a distributed manner and facilitating the deployment of AI-based services (such as chatbots, AI-powered search engines, etc.).
@@ -28,7 +26,7 @@ Recent efforts in computational sustainability have been made and among these th
 It must be also said that majors public cloud providers (such as Amazon Web Services, Microsoft Azure, Google Cloud Platform) are already taking steps to reduce their carbon footprint in a variety of ways. 
 These spans from internal optimization of data centers, to bringing awareness to the customers on their individual carbon footprint. \newline
 
-The work described in this thesis is part of a larger project which has the primary goal of developing a system for reducing the carbon footprint of workloads in the cloud.
+The work described in this thesis is part of a larger project which has the primary goal of developing a system for \textbf{reducing the carbon footprint of workloads in the cloud}.
 Said system is mainly based on the idea of exploiting \textbf{time-shifting} and \textbf{geographical shifting} of cloud workloads to time periods and geographical regions with low carbon intensity.
 As a matter of fact, nowadays, the carbon intensity of electricity varies significantly depending on the time of day and the geographical region.
 Therefore, it is deemed interesting to leverage these fluctuations in electricity grid carbon intensity to schedule workloads in a way that reduces the carbon footprint of the workloads compared to a traditional scheduling approach.
@@ -38,8 +36,7 @@ Indeed a \textbf{policy-driven approach} is used to encode these requirements al
 The system is designed to be used in a multi-cloud setting, where workloads can be scheduled on different cloud providers.
 Adopting a multi-cloud paradigm offers several advantages, including user-centric flexibility, avoidance of vendor lock-in, and the ability to exploit multiple regions because cloud providers may have varying geographical coverage.
 Some of the guiding principles adopted in the design of the system are: flexibility, extensibility, cloud-agnosticism.
-In order to implement these principles, the use of \textbf{Kubernetes as a platform for multi-cloud resource management} is considered.
-
+In order to implement these principles, the use of \textbf{Kubernetes as a platform for multi-cloud resource management} is considered. \newline
 
 %The goal of the project is to employ mainly time-shifting and geographical shifting for the scheduling of workload leveraging a multi-cloud setting.
 %We can choose to schedule workloads in periods and regions with low carbon intensity (when renewables are plentiful). 
@@ -49,9 +46,8 @@ In order to implement these principles, the use of \textbf{Kubernetes as a platf
 %Long term goal: “Using electricity when the carbon intensity is low is the best way to ensure investment flows towards low-carbon emitting plants and away from high-carbon emitting plants”.
 
 %\section{Problem statement}
-\label{sec:problem}
 
-The traditional management of resources and workloads in the cloud does not consider the environmental impact, leading to suboptimal energy usage and excessive carbon emissions.
+The traditional management of resources and workloads in the cloud does not usually consider the environmental impact, leading to suboptimal energy usage and excessive carbon emissions.
 However, users and organizations, even if interested in reducing carbon emissions and energy consumption, may not have the necessary systems to do so.
 In addition, they may be reluctant to give up performance and cost requirements in favor of environmental sustainability.
 
@@ -60,21 +56,26 @@ The core challenge addressed in this thesis is:
     How can virtual machines (VMs) and cloud resources be scheduled in a way that reduces their carbon footprint while maintaining a varied set of requirements (QoS, cost, etc.)?
 \end{center}
 
-To tackle this wide and complex problem, the research proposes and describes a multi-cloud resource management system that is mainly built upon Kubernetes, Krateo PlatformOps and Open Policy Agent (OPA) to enable a dynamic policy-driven workload scheduling. 
+To tackle this wide and complex problem, this research proposes and describes a multi-cloud resource management system that is mainly built upon Kubernetes, Krateo PlatformOps and Open Policy Agent (OPA) to enable a dynamic policy-driven workload scheduling.
+System capabilities are leveraged to enable the scheduling of workloads in a way that that aims to reduce the carbon footprint of the workloads while satisfying other requirements.
 
+The objectives that the system aims to achieve are the following:
+\begin{itemize}
+    \item Multi-cloud compatibility: Providing a vendor-agnostic solution that can operate across multiple cloud providers.
+    \item Policy-driven resource management: Enabling the definition of policies that encode requirements and constraints of workloads (e.g., QoS, cost, carbon footprint reduction).
+    \item Extensibility and flexibility: Designing a modular system that can be adapted for additional use cases beyond VM scheduling and with arbitrary requirements.
+\end{itemize}
 
+%Use cases (basic ones for the beginning) higher level explanation here
+%first use case ("GreenOps" VM scheduling)
 
+%second: scaling down a vm 
+%nfrastructure already put in place
 
-Use cases (basic ones for the beginning) higher level explanation here
-first use case ("GreenOps" VM scheduling)
-
-second: scaling down a vm 
-infrastructure already put in place
-
-the system was designed with flexibility in mind therefore a workload could be potentially anything
-the condition is just to be represented in some way and have something else do certain actions based on that representation
-As we will see in section XXX, the most simple of this would be K8s operators
-this is described in section XYZ
+%the system was designed with flexibility in mind therefore a workload could be potentially anything
+%the condition is just to be represented in some way and have something else do certain actions based on that representation
+%As we will see in section XXX, the most simple of this would be K8s operators
+%this is described in section XYZ
 
 %\section{Method}
 
@@ -82,61 +83,61 @@ The research methodology follows a \textbf{hands-on approach} to developing a pr
 The phases of the methodology followed for this thesis are the following:
 \begin{enumerate}
     \item \textbf{Literature and Technology Review}: The first phase of the research methodology is to review the existing literature and technologies related to the problem statement. 
-    This includes understanding the state-of-the-art in cloud computing, cloud sustainability, and cloud resource management. 
-    In addition, the review includes understanding the existing tools and technologies that can be used to develop the solution.
+    This includes exploring the state-of-the-art of multi-cloud resource management and carbon-aware resource management.
+    A study on Public Cloud Providers and the multi-cloud paradigm is conducted.
+    In addition, the review includes identification of the existing open-source tools and technologies that can be used to develop the solution (e.g., Kubernetes, Krateo PlatformOps, Open Policy Agent).
+    \item \textbf{System Architecture Design}: The second phase of the methodology is to design the system architecture, including the components, interactions, and data flows.
+    This includes also the development of various Proof-of-Concepts in order to test the feasibility of the various identified candidate solutions and to understand tools' strengths, limitations, trade-offs.
+    \item \textbf{System Implementation}: The implementation phase involves the integration of the system components, the development of policies, the configuration of cloud resource templates.
+    \item \textbf{System deployment and End-to-End Testing}: The final phase of the methodology is to deploy the system on a real infrastructure and perform end-to-end testing to validate the system's functionality in a real-world multi-cloud scenario.
 \end{enumerate}
 
 
 
+%---
+%The method adopted in this thesis followed several principles described in this section.
+%First of all the main goal was to develop a solution to be integrated to be integrated into an existing platform \textbf{to support real use cases}.
+
+%Developing a real solution, integrating it on top of OSS
+
+%production-ready solution
+
+%we are on the consumer side, not on the provider side
+
+%System architecture to start with: Saima's + Krateo platform
+
+%integration into an existing platform (krateo)
+
+%leveraging krateo componenets is beneficial 
+
+%Krateo Core Provider and cdc instead of developing 1 or more K8s operators from scratch
 
 
+%analysis of possible solutions
+%implemnted poc 
 
+%Initial analysis of a solution with operators were tried
 
+%A PoC comprising 1 operator was created 
+%``Synchronization operation"
+%cons: maintainer costs
 
+%ideation and creation of architectural diagrams
 
----
-The method adopted in this thesis followed several principles described in this section.
-First of all the main goal was to develop a solution to be integrated to be integrated into an existing platform \textbf{to support real use cases}.
-
-Developing a real solution, integrating it on top of OSS
-
-production-ready solution
-
-we are on the consumer side, not on the provider side
-
-System architecture to start with: Saima's + Krateo platform
-
-integration into an existing platform (krateo)
-
-leveraging krateo componenets is beneficial 
-
-Krateo Core Provider and cdc instead of developing 1 or more K8s operators from scratch
-
-
-analysis of possible solutions
-implemnted poc 
-
-Initial analysis of a solution with operators were tried
-
-A PoC comprising 1 operator was created 
-``Synchronization operation"
-cons: maintainer costs
-
-ideation and creation of architectural diagrams
-
-tackling first use case: GreenOps scheeduling of virtual machines
-but create a system that is flexible and extendible enough to be used for other use cases as well
+%tackling first use case: GreenOps scheeduling of virtual machines
+%but create a system that is flexible and extendible enough to be used for other use cases as well
 
 %\section{Personal contribution}
 
 This thesis represents a technical and research contribution within a larger project supervised by Prof. Sandro Luigi Fiore. 
-
-The project is divided into three main parts: data analysis, machine learning, and cloud infrastructure as shown in Figure \ref{fig:project_parts}.
-The focus of this thesis is on the cloud infrastructure part.
-My specific contributions to the project include:
-
-
-
-
+The project is divided into three main parts: data analysis, machine learning, and cloud infrastructure.
+The contribution of this thesis is on the cloud infrastructure part and includes:
+\begin{itemize}
+    \item A detailed analysis of paradigms and technologies for multi-cloud resource management and carbon-aware resource management.
+    \item The design of the system architecture, including the identification of components, interactions, and data flows.
+    \item The development of a policy-driven approach to workload scheduling that also enables the encoding of requirements and constraints.
+    \item The implementation of the system, including the integration of the components, the development of policies, and the configuration of cloud resource templates.
+    \item The deployment of the system on a real infrastructure and the performance of end-to-end testing to validate the system's functionality in a production-like multi-cloud scenario.
+\end{itemize}
 
 \newpage

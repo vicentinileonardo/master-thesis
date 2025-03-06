@@ -126,7 +126,7 @@ When dealing with multi-cloud resource management with Kubernetes as a control p
   \item[$\bullet$] \textbf{Generic Kubernetes Custom Resources}, which represent generic provider-agnostic workloads.
   \item[$\bullet$] \textbf{Cloud provider-specific Custom Resources}, which correspond to the actual cloud resources provisioned through the respective Kubernetes operators provided by Azure, AWS or GCP (in our case).
 \end{itemize}
-This requirement was also highlighted in the literature review described in section \ref{sec:multi_cloud_resource_management_takeaways}.
+This requirement was also highlighted in the literature review described in section \ref{sec:multi_cloud_resource_management_components}.
 
 In this first approach, a custom Kubernetes ``Synchronization Operator" would be responsible for the mapping and synchronization of the above resource types. 
 Figure \ref{fig:k8s_operator} illustrates the high-level architecture of the system with the custom operator approach.

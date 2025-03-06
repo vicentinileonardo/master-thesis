@@ -4,9 +4,9 @@
 In this chapter, we provide an overview of the main concepts, paradigms and technologies that are relevant for the purpose of this work.
 We start by introducing the concept of \textbf{Public Cloud Providers} and the \textbf{Multi-Cloud paradigm}.
 We then provide a brief overview of \textbf{Kubernetes}, in particular focusing on the concept of \textbf{Kubernetes as a platform} and the \textbf{Helm} package manager.
-After that, \textbf{Krateo PlatformOps}, an open-source Kubernetes-based platform that is a fundamental part of our system, is introduced.
+After that, we describe \textbf{Krateo PlatformOps}, an open-source Kubernetes-based platform that is a fundamental part of our system.
 We also deemed valuable to provide an overview of the existing works in the field of \textbf{multi-cloud resource management} to highlight recurrent patterns and design choices.
-Finally, the \textbf{GreenOps landscape} is introduced, focusing on the the \textbf{Computational Sustainability} initiatives by Public Cloud Providers and on \textbf{carbon-aware systems for resource management}. 
+Finally, we present the \textbf{GreenOps landscape}, with a focus on the the \textbf{Computational Sustainability} initiatives by Public Cloud Providers and on \textbf{carbon-aware systems for resource management}. 
 
 \section{Public cloud providers}
 
@@ -464,8 +464,8 @@ A weighted distribution can be created by normalizing the MOER values across the
 These weightings are encoded in a YAML file and applied as a priority for the Scheduler, which out-of-the-box supports these kind of custom rules to extend the scheduling process.
 The claim is that by combining three elements (i.e., Kubernetes scheduler, carbon intensity data, and a weighting algorithm) any Kubernetes instance can be made carbon-aware, at least in a simplified way \cite{microsoft_carbon_aware_k8s}.
 
-\section{Multi-cloud resource management - major takeaways}
-\label{sec:multi_cloud_resource_management_takeaways}
+\section{Multi-cloud resource management - major components}
+\label{sec:multi_cloud_resource_management_components}
 
 %many simulation compared to real-world scenarios
 %no much flexibility for what concern variaty of resource managed
@@ -482,3 +482,5 @@ We can briefly list some of the major recurrent elements that are generally need
 In the system proposed by this thesis, the elements listed above are represented by \textbf{cloud-native components} in the Kubernetes ecosystem as described in the following chapters.
 
 \newpage
+
+\section{Multi-cloud resource management - major components}
