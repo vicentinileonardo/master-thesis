@@ -291,7 +291,7 @@ maxLatency: 100
 \newpage
 
 \lstset{style=jsonstyle}
-\begin{lstlisting}[caption={values.schema.json}]
+\begin{lstlisting}[caption={values.schema.json}, label={lst:values.schema.json}]
 {
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema",
@@ -446,7 +446,6 @@ We also make sure, for instance, that the generic CR contains a ``provider'' fie
 {{ $schedulingTime := .Values.schedulingTime | toDate "2006-01-02T15:04:05Z" }}
 {{ $now := now }}
 @\yellowhl{\{\{{ if \$now.After \$schedulingTime \}\}} }@
-{{ if $now.After $schedulingTime }}
 ...
 apiVersion: compute.azure.com/v1api20220301
 kind: VirtualMachine
@@ -520,7 +519,7 @@ The minimum set of resources needed for VM provisioning on Azure through Azure s
 \label{fig:azure}
 \end{figure}
 
-\begin{lstlisting}[language=yaml, caption={Azure Instance Custom Resource}, label={lst:azure}]
+\begin{lstlisting}[language=yaml, caption={Azure VM Custom Resource}, label={lst:azure}]
 apiVersion: compute.azure.com/v1api20220301
 kind: VirtualMachine
 metadata:
@@ -570,7 +569,7 @@ For what concerns the GCP Operator, the minimum set of resources needed for VM p
 We can mention the fact that some fields on GCP resource manifests are based on regions and some fields are based on avavilability zones.
 In order to select a zone, a helper function is used to select a zone based on the region.
 
-\begin{lstlisting}[language=yaml, caption={GCP Intance Custom Resource}, label={lst:gcp}]
+\begin{lstlisting}[language=yaml, caption={GCP ComputeInstance Custom Resource}, label={lst:gcp}]
   apiVersion: compute.cnrm.cloud.google.com/v1beta1
   kind: ComputeInstance
   metadata:
@@ -578,9 +577,7 @@ In order to select a zone, a helper function is used to select a zone based on t
     namespace: {{ .Values.namespace | default "greenops" }}
   spec:
    @\yellowhl{    machineType: \{\{{ \$vmSize \}\}} \#[2] }@
-    machineType: {{ $vmSize }} [2]
    @\yellowhl{    zone: \{\{{ \$zone \}\}} \#[1] }@
-    zone: {{ $zone }} [1]
     bootDisk:
       initializeParams:
         size: 24
@@ -601,6 +598,8 @@ In order to select a zone, a helper function is used to select a zone based on t
 AWS provides an entire collection of operators that are part of the AWS controllers for Kubernetes (ACK) project.
 Each controller is responsible for managing a specific AWS service, such as EC2, EBS, RDS, S3, and more. In the context of this research, the EC2 controller is used to manage virtual machines (called EC2 Instances) provisioning on AWS.
 An example of a AWS EC2 Instance Custom Resource is the one illustrated in listing \ref{lst:aws}.
+
+\vspace{2cm}
 The minimum set of resources needed for VM provisioning is:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt] 
 \item[$\bullet$] VPC
@@ -608,7 +607,7 @@ The minimum set of resources needed for VM provisioning is:
 \item[$\bullet$] Instance
 \end{itemize}
 
-\begin{figure}[H]
+\begin{figure}[t]
 \centering
 \includegraphics[width=0.75\linewidth]{images/aws.png}
 \caption{Minimum set of AWS resources for VM provisioning}
@@ -640,7 +639,7 @@ The Helm lookup function can be used to look up resources in a running cluster a
 In listing \ref{lst:helm_lookup}, the Helm lookup function retrieves the subnetID from a Subnet Custom Resource dynamically, based on the VM name and namespace. Then, the subnetID is injected into the Instance Custom Resource manifest, ensuring that the VM is provisioned in the correct subnet.
 An example by the same AWS Operator where instead a direct reference to a resource is allowed is the one illustrated in listing \ref{lst:aws_direct_reference}. \\
 
-\begin{lstlisting}[language=yaml, caption={AWS Operator direct reference example}, label={lst:aws_direct_reference}]
+\begin{lstlisting}[language=yaml, caption={AWS Operator direct reference example}, label={lst:aws_direct_reference}, float=htpb]
 ...
 apiVersion: ec2.services.k8s.aws/v1alpha1
 kind: Subnet
@@ -679,7 +678,7 @@ In order to select the most suitable AMI for a given VM, the system leverages a 
 
 \vspace{5.0cm}
 
-\begin{lstlisting}[language=yaml, caption={AWS}, label={lst:aws}]
+\begin{lstlisting}[language=yaml, caption={AWS EC2 Instance Custom Resource}, label={lst:aws}]
 apiVersion: ec2.services.k8s.aws/v1alpha1
 kind: Instance
 metadata:
@@ -749,7 +748,7 @@ In particular, OPA assumes the role of a \textbf{Kubernetes Mutating Webhook ser
 
 \subsection{OPA architecture overview}
 
-As mentioned in the introduction to this section, one common approach to integrating OPA into a software system is by deploying it as a host-level daemon. 
+As mentioned in the background chapter, one common approach to integrating OPA into a software system is by deploying it as a host-level daemon. 
 The latter is essentially a lightweight server that processes policy queries via HTTP requests. 
 This setup, represented in figure \ref{fig:opa_architecture} allows services to offload policy decision-making to OPA in a scalable and efficient manner since the two entities are not tightly coupled.
 
@@ -780,27 +779,28 @@ In order to get data from external sources, OPA provides several options that ca
 For the use case of this work, external data to be pulled is the \textbf{scheduling decision} from the GreenOps Scheduler in a synchronous way.
 The most suitable option is to \textbf{pull data during policy evaluation} since scheduling decisions must be made in real-time.
 The data is pulled from the GreenOps Scheduler through OPA built-in functions and libraries \cite{opa_external_data}.
-The listings \ref{lst:scheduler_req} and \ref{lst:opa_external_data} show an example of a HTTP request to the GreenOps Scheduler and how the OPA external data pull is implemented in Rego, respectively.
+Listing \ref{lst:opa_external_data} shows an example of how the external data pull is implemented in Rego.
 
-\begin{lstlisting}[language=sh, caption={GreenOps scheduler HTTP request example}, label={lst:scheduler_req}]
-#!/bin/bash
-curl -X POST -H "Content-Type: application/json" \
-  -d '{
-      "number_of_jobs" : 1,
-      "eligible_regions": ["FR", "IT", "FI"],
-      "deadline": "2025-06-09T10:00:00",
-      "duration": 6,
-      "cpu": 4,
-      "memory": 8,
-      "req_timeout": 180
- }' http://greenops-scheduler.greenops-scheduler-system.svc.cluster.local/scheduling
+%\begin{lstlisting}[language=sh, caption={GreenOps scheduler HTTP request example}, label={lst:scheduler_req}]
+%#!/bin/bash
+%curl -X POST -H "Content-Type: application/json" \
+%%  -d '{
+%      "number_of_jobs" : 1,
+%      "eligible_regions": ["FR", "IT", "FI"],
+%      "deadline": "2025-06-09T10:00:00",
+%      "duration": 6,
+%      "cpu": 4,
+%      "memory": 8,
+%      "req_timeout": 180
+% }' http://greenops-scheduler.greenops-scheduler-system.svc.cluster.local/scheduling
+%
+%# Response: 
+%# {"scheduling_location":"FR","scheduling_time":"2025-02-06T17:42:11Z"}
+%\end{lstlisting}
 
-# Response: 
-# {"scheduling_location":"FR","scheduling_time":"2025-02-06T17:42:11Z"}
-\end{lstlisting}
-
+\vspace{3.0cm}
 \begin{lstlisting}[language=rego, caption={OPA external data pull}, label={lst:opa_external_data}]
-scheduler_url := opa.runtime().env.SCHEDULER_URL
+scheduler_url := opa.runtime().env.SCHEDULER_URL # GreenOps Scheduler URL
 
 scheduling_details := http.send({
 	"method": "POST",
@@ -818,7 +818,7 @@ scheduling_details := http.send({
 	"headers": {
 		"Content-Type": "application/json"
 	},
-	"max_retry_attempts": 3,
+	"max_retry_attempts": 3, # retry 3 times in case of failure
 })
 \end{lstlisting}
 
@@ -882,7 +882,7 @@ deny contains msg if {
 }
 \end{lstlisting}
 
-\vspace{1cm}
+\vspace{5cm}
 
 \begin{lstlisting}[language=Rego, caption={Rego ``root" policy (system.main)}, label=lst:rego_root_policy]
 main := {
@@ -1059,7 +1059,7 @@ The inputs are defined as follows:
   \item GDPR compliancy: set in policies
   \item inter-region latency matrix: stored in policy data
 \end{itemize}
-\vspace{2cm}
+%\vspace{2cm}
 While the outputs are:
 \begin{itemize}[itemsep=0.2pt, topsep=0.2pt]
   \item provider
@@ -1086,6 +1086,7 @@ patchCode = {
 \end{lstlisting}
 
 \subsection{OPA Data mapping}
+\label{sec:opa_data_mapping}
 
 OPA is flexible enough to handle \textbf{data mapping operations} between different data models, enabling seamless integration with external systems. 
 In our GreenOps system, data mapping is essential for translating between ElectricityMaps regions and cloud provider regions. 
@@ -1154,8 +1155,6 @@ The main policy, namely the ``scheduling outcome policy'', is responsible for de
 OPA is also responsible for data mapping operations between ElectricityMaps regions and cloud provider regions, as described in section \ref{sec:opa_data_mapping}.
 The system is designed to be highly flexible and extensible, allowing for the addition of new policies and data mappings as needed.
 
-
-
 \subsubsection{Day 2 operations}
 \label{sec:day2_operations}
 
@@ -1166,8 +1165,6 @@ As we previously described, the mutating webhook configuration is set on both th
 A possible UPDATE operation trigger could be a Kubernetes Cronjob that attaches a label \textit{"greenops-optimization": "123456789"} to the VmTemplate resource at a specific time of the day.
 This could be useful to trigger specific policies that are only applied during the day 2 operations.
 In addition to that, the UPDATE operation could be useful for VMs that have already been scheduled in a distant future (due to their deadline being very far in the future) to obtain a new scheduling decision based on new conditions (e.g. more recent carbon intensity forecast).
-
-
 
 \subsection{OPA advanced features}
 
@@ -1212,9 +1209,9 @@ Figure \ref{fig:mlops} illustrates the general architecture of the MLOps infrast
 The architecture consists of two main components, described in the previous sections: MLflow and KServe.
 In particular, MLflow is used for model tracking, model selection, and model storage, while KServe is leveraged for model deployment. 
 
-\begin{figure}[H]
+\begin{figure}[t]
   \centering
-  \includegraphics[width=0.85\linewidth]{images/mlflow_vertical.png}
+  \includegraphics[width=0.75\linewidth]{images/mlflow_vertical.png}
   \caption{MLOps Architecture}
   \label{fig:mlops}
 \end{figure}
@@ -1225,7 +1222,7 @@ In the context of our system, MLflow is deployed on a Kubernetes cluster with a 
 This configuration is the most common in production environments, as it allows for better scalability and environment flexibility.
 The metadata store chosen for the system is \textbf{CrateDB}, while the artifact store is the \textbf{SeaweedFS} object storage service. \\
 
-\begin{figure}[H]
+\begin{figure}[t]
   \centering
   \includegraphics[width=0.50\linewidth]{images/mlflow_config.png}
   \caption{MLflow deployment configuration}
@@ -1246,9 +1243,9 @@ This translates into the deployment of multiple InferenceServices, each correspo
 This setting introduces a quite large amount of overhead in terms of resources, since each InferenceService sets up a whole new set of resources (e.g., large Kubernetes pods with underlying model serving environments) for each model.
 Figure \ref{fig:forecaster} illustrates the configuration of the InferenceServices used to deploy the forecasting models in the system.
 
-\begin{figure}[H]
+\begin{figure}[t]
   \centering
-  \includegraphics[width=1\linewidth]{images/forecaster.png}
+  \includegraphics[width=0.85\linewidth]{images/forecaster.png}
   \caption{Model deployment configuration and GreenOps system integration}
   \label{fig:forecaster}
 \end{figure}
@@ -1262,7 +1259,6 @@ apiVersion: "serving.kserve.io/v1beta1"
 kind: "InferenceService"
 metadata:
   name: "forecaster-IT-NO"
-  namespace: "model-inference"
 spec:
   predictor:
     serviceAccountName: sa-s3creds

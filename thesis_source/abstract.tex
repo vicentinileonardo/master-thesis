@@ -36,10 +36,12 @@ Indeed a \textbf{policy-driven approach} is used to encode these requirements al
 The system is designed to be used in a multi-cloud setting, where workloads can be scheduled on different cloud providers.
 Adopting a multi-cloud paradigm offers several advantages, including user-centric flexibility, avoidance of vendor lock-in, and the ability to exploit multiple regions because cloud providers may have varying geographical coverage.
 Some of the guiding principles adopted in the design of the system are: flexibility, extensibility, cloud-agnosticism.
-In order to implement these principles, the use of \textbf{Kubernetes as a platform for multi-cloud resource management} is considered. \newline
+In order to implement these principles, the use of \textbf{Kubernetes as a platform for multi-cloud resource management} is considered. 
 
-[collaborazione con krateo] \newline
-[collaborazione con electricity maps]
+The project is carried out in collaboration with Krateo SRL, a company that is developing a modular platform for resource management and with Electricity Maps, a company that provides historic and real-time data on the carbon intensity of electricity grids around the world. 
+The former provided support for platform integration and supplied the infrastructure used for testing while the latter was the data provider.
+\newline
+
 %The goal of the project is to employ mainly time-shifting and geographical shifting for the scheduling of workload leveraging a multi-cloud setting.
 %We can choose to schedule workloads in periods and regions with low carbon intensity (when renewables are plentiful). 
 %Therefore, targeted workloads are the ones that are not time-sensitive but instead are quite delay-tolerant. 
@@ -90,8 +92,8 @@ The phases of the methodology followed for this thesis are the following:
     In addition, the review includes identification of the existing open-source tools and technologies that can be used to develop the solution (e.g., Kubernetes, Krateo PlatformOps, Open Policy Agent).
     \item \textbf{System Architecture Design}: The second phase of the methodology is to design the system architecture, including the components, interactions, and data flows.
     This includes also the development of various Proof-of-Concepts in order to test the feasibility of the various identified candidate solutions and to understand tools' strengths, limitations, trade-offs.
-    \item \textbf{System Implementation}: The implementation phase involves the integration of the system components, the development of policies, the configuration of cloud resource templates.
-    \item \textbf{System deployment and End-to-End Testing}: The final phase of the methodology is to deploy the system on a real infrastructure and perform end-to-end testing to validate the system's functionality in a real-world multi-cloud scenario.
+    \item \textbf{System Implementation}: The implementation phase involves the integration of the system components, the development of policies and policy bundles pipelines, the configuration of cloud resource templates, the set up of the MLOps infrastructure.
+    \item \textbf{System Deployment and End-to-End Testing}: The final phase of the methodology is to deploy the system on a real infrastructure and perform end-to-end testing to validate the system's functionality in a real-world multi-cloud scenario.
 \end{enumerate}
 
 

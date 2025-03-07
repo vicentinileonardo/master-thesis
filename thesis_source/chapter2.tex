@@ -111,7 +111,7 @@ The TAG is part of the Cloud Native Computing Foundation (CNCF) and aims to prov
 % https://hbr.org/2020/09/how-green-is-your-software
 % https://www.usenix.org/publications/loginonline/slos-and-ghgs
 
-\subsection{Green Software foundation}
+\subsection{Green Software Foundation}
 
 Another pivotal actor in the GreenOps landscape is the Green Software Foundation.
 The Green Software Foundation is a non-profit organization, part of the Linux Foundation, that aims to promote the development of green software and to provide a set of standards, tooling and best practices for the industry \cite{green_software_foundation}.
@@ -271,9 +271,9 @@ The only requirement for this management is that the resources need to be logica
 % Recognized by Gartner. Gartner said ... by 2025 companies without a ... (cite)
 Krateo has three main components:
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
-    \item[$\bullet$] Krateo Composable Operations: the core of the Krateo platform [AGGIUNGERE]
-    \item[$\bullet$] Krateo Composable Portal: a web-based user interface [AGGIUNGERE]
-    \item[$\bullet$] Krateo Composable FinOps: a set of modules for cost management [AGGIUNGERE]
+    \item[$\bullet$] Krateo Composable Operations: a set of core modules needed for resource managment
+    \item[$\bullet$] Krateo Composable Portal: a web-based declarative user interface
+    \item[$\bullet$] Krateo Composable FinOps: a set of modules for advanced cost optimization
 \end{itemize}
 
 For the purpose of this work, we will focus on the \textbf{Krateo Composable Operations} part, which is the core of the Krateo platform and is responsible for managing the lifecycle of resources in a Kubernetes cluster \cite{krateo_docs}.
@@ -387,9 +387,10 @@ deny[msg] {
 }
 \end{lstlisting}
 
-The second example, illustrated in listing \ref{lst:gatekeeper-template} utilizes OPA Gatekeeper, which extends Kubernetes with Kubernetes-native Custom Resource Definitions (CRDs), enabling declarative policy management. By using a ConstraintTemplate, policies can be enforced dynamically through Kubernetes, making them easier to distribute and manage.
+The second example, illustrated in listing \ref{lst:gatekeeper-template} utilizes OPA Gatekeeper, which extends Kubernetes with Kubernetes CRDs, enabling declarative policy management. By using a ConstraintTemplate, policies can be enforced dynamically through Kubernetes, making them easier to distribute and manage.
 In other words, with this kind of setting, OPA policy bundles are not employed in the same way as in the standard OPA server. Instead, policies are defined as Kubernetes resources, allowing for more straightforward policy enforcement and management within a Kubernetes environment.
 
+\vspace{5cm}
 \begin{lstlisting}[language=yaml, caption={OPA Gatekeeper ConstraintTemplate}, label={lst:gatekeeper-template}]
 apiVersion: templates.gatekeeper.sh/v1
 kind: ConstraintTemplate
@@ -497,7 +498,7 @@ The Open Inference Protocol has been adopted by several inference servers, inclu
 As mentioned in the previous section, the InferenceService CRs used in the system are leveraging the ``kserve-mlserver" ClusterServingRuntime, which under the hood uses MLserver that is compliant with the Open Inference Protocol.
 The list of API endpoints specified by the Open Inference Protocol is shown in Table \ref{tab:oip_endpoints}.
 
-\begin{table}[h!]
+\begin{table}[t]
 \centering
 \begin{tabular}{|l|l|l|}
 \hline
@@ -522,12 +523,12 @@ This information could be related to performance, behavior, resource utilization
 In the context of cloud resource management, metrics are essential for monitoring the \textbf{performance and health of cloud resources}, enabling organizations to make informed decisions about resource allocation, scaling, and optimization.
 Focusing on the first use case of the proposed system (i.e., VM scheduling for carbon footprint optimization), carbon metrics could be used to determine the carbon footprint of a scheduled VM.
 How to measure the carbon footprint of a resource managed in the cloud is a complex and challenging task.
-The carbon footprint of a cloud resource is influenced by several factors, such as the energy efficiency of the data center where the resource is hosted (PUE), the carbon intensity of the electricity grid in the region where the data center is located, whether the data center uses additional energy sources off the grid, and finally the energy consumption of the resource itself.
+The carbon footprint of a cloud resource is influenced by several factors, such as the power usage effectiveness (PUE) of the data center where the resource is hosted, the carbon intensity of the electricity grid in the region where the data center is located, whether the data center uses additional energy sources off the grid, and finally the energy consumption of the resource itself.
 The last factor is probably the most difficult to measure, as a cloud resource is an \textbf{entity that is abstracted from the physical infrastructure}, and therefore it is not straightforward to measure its power consumption. 
 In this first iteration of the system we are dealing for instance with virtual machines (VMs).
 On the other hand, an on-premises server, for instance, could be potentially equipped with physical sensors that measure the direct power consumption of the server, but this is not the case for any cloud resource, especially since this work is focused on the consumer side of the cloud, where the consumer does not have access to any physical infrastructure.
-Moreover, public cloud providers do not provide fine grained and real-time data about the carbon footprint of a resource, as they do not adhere yet to a common standard for carbon footprint calculation (e.g., Real Time Cloud proposed by the Green Software Foundation), like they instead do for the FOCUS standard for FinOps.
-In this section we want to give an brief overview of several metrics and methodologies that can be used totextbf{estimate the carbon footprint of a cloud resource}.
+Moreover, public cloud providers do not provide fine grained and real-time data about the carbon footprint of a resource, as they do not adhere yet to a common standard for carbon footprint calculation (e.g., Real Time Cloud proposed by the Green Software Foundation), like they instead do for the FOCUS standard for FinOps \cite{finops_focus_spec}.
+In this section we want to give an brief overview of several metrics and methodologies that can be used \textbf{estimate the carbon footprint of a cloud resource}.
 In addition, we will also discuss the \textbf{challenges and limitations} that can be encountered when dealing with this kind of task.
 
 \subsection{System performance metrics}
@@ -553,7 +554,7 @@ In particular, the Node exporter collects metrics such as CPU usage, memory usag
 Metrics are pulled by the Prometheus server, which stores them in a time-series database and makes them available for querying and visualization (e.g., using Grafana). 
 In addition, the Prometheus server can be configured to send alerts based on the collected metrics leveraging the Alertmanager component. \newline
 
-\begin{figure}[htb]
+\begin{figure}[t]
   \centering
   \includegraphics[width=1\linewidth]{images/prometheus.png}
   \caption{Standard Prometheus architecture for system performance metrics collection}
@@ -570,6 +571,7 @@ The optimizations are encoded in a set of Kubernetes Custom Resources (CRs) that
 %- “forward the optimization to the Krateo operator that manages the services that need to be optimized, for example, the Azure Operator to modify the size of a Virtual Machine;”
 %- “the optimization is automatically encoded in a CR for the finops-operator-vm-manager, which then analyzes it and decides how to manage the Virtual Machine. For example, it could scale up or down the virtual machine, stop it for the night, etc.”
 \newline
+
 As Microsoft Azure documentation describes, there are actually two different categories of metrics that can be collected from a VM in the cloud: the \textbf{guest-level metrics} and the \textbf{hypervisor-level or host-level metrics} \cite{azure_vm_monitoring}.
 The first category of metrics is collected by agents directly installed on the VMs, as described above.
 The second category of metrics is collected by \textbf{cloud provider APIs}, and they provide information about the VMs from the hypervisor or host level.
@@ -611,7 +613,7 @@ The goal would be to have a \textbf{real-time carbon metric} to be used for opti
 However, this standard is not yet adopted by any major Public Cloud Provider which in turn provide only high-level monthly reports for carbon emission data.
 A brief summary, as reported by one of the proposers of Real Time Cloud \cite{cloud_provider_sustainability_reports}, is shown in Table \ref{tab:cloud_carbon_emissions_reports}.
 
-\begin{table}[H]
+\begin{table}[t]
   \centering
   \renewcommand{\arraystretch}{1.2} % Increase row height for readability
   \setlength{\extrarowheight}{2pt} % Add extra space between rows
@@ -727,7 +729,6 @@ The focus of the research is on both the provider and the consumer perspective, 
 % Optimizing Cost and Maximizing Profit for Multi-Cloud-Based Big Data Computing by Deadline-Aware Optimize Resource Allocation
 % https://link.springer.com/chapter/10.1007/978-981-15-8469-5_3
 
-
 \section{Carbon-aware systems for resource management}
 
 Having provided an overview of the existing works in the field of multi-cloud resource management and having introduced the GreenOps landscape, we now focus on the state of the art in the field of carbon-aware resource management.
@@ -801,12 +802,18 @@ We can briefly list some of the major recurrent elements that are generally need
 \begin{enumerate}
     \item representation of a generic workload with its characteristics and constraints
     \item cloud service broker / orchestrator
+    \item representations of constraint and objectives (e.g., SLAs, QoS)
     \item modules to directly interact with the cloud providers
 \end{enumerate}
 
-In the system proposed by this thesis, the elements listed above are represented by \textbf{cloud-native components} in the Kubernetes ecosystem as described in the following chapters.
+\subsection{Differences with respect to the state of the art}
 
-[EVIDENZIARE DIFFERENZE DA STATO DELL'ARTE]
+In the system proposed by this thesis, the elements listed above are represented by \textbf{cloud-native components} in the Kubernetes ecosystem as described in the following chapters and as shown in Table \ref{tab:components_mapping}.
+
+
+From a general standpoint, the system proposed in this thesis is different from the state of the ar
+[real production system, not simulation]
+[variety of resources managed thanks to how the system is designed]
+
 
 \newpage
-
