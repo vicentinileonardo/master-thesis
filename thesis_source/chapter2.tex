@@ -106,7 +106,7 @@ Table \ref{tab:system_components} provides an overview of the main components of
 \begin{figure}[t]
   \centering
   \includegraphics[width=1\linewidth]{images/architecture.png}
-  \caption{General architecture}
+  \caption{General architecture of the system}
   \label{fig:architecture}
 \end{figure}
 
@@ -131,7 +131,7 @@ When dealing with multi-cloud resource management with Kubernetes as a control p
   \item[$\bullet$] \textbf{Generic Kubernetes Custom Resources}, which represent generic provider-agnostic workloads.
   \item[$\bullet$] \textbf{Cloud provider-specific Custom Resources}, which correspond to the actual cloud resources provisioned through the respective Kubernetes operators provided by Azure, AWS or GCP (in our case).
 \end{itemize}
-This requirement was also highlighted in the literature review described in section \ref{sec:multi_cloud_resource_management_components}.
+This requirement was also highlighted in the literature review described in section \ref{sec:multi_cloud_resource_management_outcomes}.
 
 In this first approach, a custom Kubernetes ``Synchronization Operator" would be responsible for the mapping and synchronization of the above resource types. 
 Figure \ref{fig:k8s_operator} illustrates the high-level architecture of the system with the custom operator approach.
@@ -584,7 +584,6 @@ In order to select a zone, a helper function is used to select a zone based on t
         type: pd-ssd
         sourceImageRef:
          @\yellowhl{    external: debian-cloud/debian-11 \#[3] }@
-          external: debian-cloud/debian-11
     networkInterface:
       - subnetworkRef:
           name: {{ .Values.vmName }}-subnetwork
@@ -741,7 +740,7 @@ In this case, the Kubernetes Mutating Webhook server that is the target of the M
 OPA is used to assign scheduling decisions to VmTemplates based on policies. 
 OPA sends back to the API server the mutation (patches) to be applied to the VmTemplate CR.
 
-\section{OPA integration in the system}
+\section{Open Policy Agent integration}
 
 In the context of our system, OPA and the Policy-as-Code paradigm are mainly leveraged to define \textbf{policies for workload scheduling}: encoding the output of a \textbf{scheduling decision} coming from an external GreenOps Scheduler and ensuring compliance with \textbf{additional policies} related to latency requirements and legal constraints (QoS, data residency, etc.).
 In particular, OPA assumes the role of a \textbf{Kubernetes Mutating Webhook server} to apply scheduling decisions to VmTemplate Custom Resources based on policies.
@@ -1142,7 +1141,7 @@ map_from_electricitymaps(em_region, provider) = cloud_region if {
 
 \end{lstlisting}
 
-\subsection{OPA integration in the system}
+\subsection{OPA role within the system}
 
 In this section we describe the integration of OPA in the system.
 The entire architecture of the system and the integration of OPA is illustrated in figure \ref{fig:architecture}.
@@ -1180,6 +1179,7 @@ This feature could be used in the context of the system described in this thesis
 For instance, in the event of a region being added or removed from a public cloud provider, a delta bundle could be used to add only the new region and update the existing latency matrix.
 
 \section{MLOps infrastructure}
+\label{sec:mlops_infrastructure}
 
 MLOps is the abbreviation of ``\textbf{Machine Learning Operations}", and it broadly refers to a set of methods designed to improve workflow procedures and automate machine learning deployments. 
 It enables the reliable and efficient management, maintenance and deployment of models at scale \cite{mlops_ubuntu}.
@@ -1268,6 +1268,11 @@ spec:
       protocolVersion: v2  
       storageUri: s3://mlartifacts/forecaster-IT-NO
 \end{lstlisting}
+
+We can see that the InferenceService CR showed in \ref{lst:inference_service} is quite simple and self-explanatory. 
+The most important fields are the \textit{model} field, which specifies the model format, the protocol version, and the storage URI.
+The storage URI is the location of the model artifacts in the artifact store, which in the case of the system is the SeaweedFS object storage service with S3 compatibility. 
+At the location specified by the storage URI, the model artifacts are stored in the self-contained directory created by MLflow after the model training session as described in section \ref{sec:mlflow_tracking_server}.
 
 \subsubsection{Model compatibility}
 

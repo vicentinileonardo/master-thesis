@@ -477,18 +477,12 @@ The following is an example of the structure of the self-contained directory cre
 \section{KServe}
 \label{sec:kserve}
 
-KServe is an open-source model inference platform that extends Kubernetes with a set of Custom Resource Definitions (CRDs) to \textbf{deploy} and scale machine learning models in production environments \cite{kserve_docs}.
+KServe is an open-source model inference platform that extends Kubernetes with a set of CRDs to \textbf{deploy} and scale machine learning models in production environments \cite{kserve_docs}.
 KServe can be deployed in several ways, one of which is the ``\textit{Serverless mode}'' which is built on top of Istio and Knative, leveraging their powerful capabilities such as automatic scaling. 
 There are two main CRs that can be used to set up a model serving environment: \textit{\textbf{ServingRuntimes}} (or \textit{\textbf{ClusterServingRuntimes}}) and \textit{\textbf{InferenceServices}} \cite{krateo_docs}.
 The former are abstractions that define model serving environments, specifying the templates for Kubernetes Pods capable of serving particular model formats. 
 The latter are actually leveraging the available ServingRuntimes to deploy the models in the system.  
 KServe provides several out-of-the-box ClusterServingRuntimes for common model formats, such as TensorFlow, PyTorch, and XGBoost, which can be used to deploy models without the need to define and configure the runtimes themselves.
-
-
-We can see that the InferenceService CR is quite simple and self-explanatory. 
-The most important fields are the \textit{model} field, which specifies the model format, the protocol version, and the storage URI.
-The storage URI is the location of the model artifacts in the artifact store, which in the case of the system is the SeaweedFS object storage service with S3 compatibility. 
-At the location specified by the storage URI, the model artifacts are stored in the self-contained directory created by MLflow after the model training session as described in section \ref{sec:mlflow_tracking_server}.
 
 \subsection{Open Inference Protocol}
 
@@ -730,6 +724,7 @@ The focus of the research is on both the provider and the consumer perspective, 
 % https://link.springer.com/chapter/10.1007/978-981-15-8469-5_3
 
 \section{Carbon-aware systems for resource management}
+\label{sec:carbon_aware_resource_management}
 
 Having provided an overview of the existing works in the field of multi-cloud resource management and having introduced the GreenOps landscape, we now focus on the state of the art in the field of carbon-aware resource management.
 In particular, implementation choices and design patterns that can be leveraged for the development of a carbon-aware resource management system will be discussed.
@@ -790,8 +785,10 @@ A weighted distribution can be created by normalizing the MOER values across the
 These weightings are encoded in a YAML file and applied as a priority for the Scheduler, which out-of-the-box supports these kind of custom rules to extend the scheduling process.
 The claim is that by combining three elements (i.e., Kubernetes scheduler, carbon intensity data, and a weighting algorithm) any Kubernetes instance can be made carbon-aware, at least in a simplified way.
 
-\section{Multi-cloud resource management - major components}
-\label{sec:multi_cloud_resource_management_components}
+\newpage
+
+\section{Multi-cloud resource management - major outcomes}
+\label{sec:multi_cloud_resource_management_outcomes}
 
 %many simulation compared to real-world scenarios
 %no much flexibility for what concern variaty of resource managed
@@ -800,20 +797,42 @@ The claim is that by combining three elements (i.e., Kubernetes scheduler, carbo
 Many of the concepts described in this chapter are leveraged in the design and implementation of our system. 
 We can briefly list some of the major recurrent elements that are generally needed in order to build a system for multi-cloud resource management:
 \begin{enumerate}
-    \item representation of a generic workload with its characteristics and constraints
-    \item cloud service broker / orchestrator
-    \item representations of constraint and objectives (e.g., SLAs, QoS)
-    \item modules to directly interact with the cloud providers
+    \item Representation of a generic workload
+    \item Representations of constraint and objectives (e.g., SLAs, QoS)
+    \item Cloud service broker / Orchestrator
+    \item Modules to directly interact with the cloud providers
 \end{enumerate}
 
 \subsection{Differences with respect to the state of the art}
 
-In the system proposed by this thesis, the elements listed above are represented by \textbf{cloud-native components} in the Kubernetes ecosystem as described in the following chapters and as shown in Table \ref{tab:components_mapping}.
+In the system proposed by this thesis, the elements needed for multi-cloud resource management (listed in the above section) are represented by \textbf{cloud-native components} in the Kubernetes ecosystem as described in the following chapters and as shown in Table \ref{tab:components_mapping}.
 
+\begin{table}[t]
+  \centering
+  \renewcommand{\arraystretch}{1.3} % Adjust row height for readability
+  \begin{tabularx}{\textwidth}{| l | X |} % 'X' makes the second column auto-wrap
+    \hline
+    \textbf{Generic component} & \textbf{Candidate solution} \\
+    \hline
+    Representation of a generic workload & Krateo CompositionDefinition \\
+    \hline
+    Representations of constraint and objectives (e.g., SLAs, QoS) & Open Policy Agent policies \\
+    \hline
+    Cloud service broker / Orchestrator & Krateo composition-dynamic-controller with Helm templating engine \\
+    \hline
+    Modules to directly interact with the cloud providers & Kubernetes operators of cloud providers \\
+    \hline
+  \end{tabularx}
+  \caption{Mapping of main generic components for multi-cloud resource management to the components of the system proposed in this thesis}
+  \label{tab:components_mapping}
+\end{table}
 
-From a general standpoint, the system proposed in this thesis is different from the state of the ar
-[real production system, not simulation]
-[variety of resources managed thanks to how the system is designed]
-
+From a general standpoint, the system proposed in this thesis is different from the state of the art analyzed for a number of reasons.
+First of all, the system was designed to be easily integrated in a production environment rather than be used in a ``sandboxed" or simulation environment.
+The system is designed to be \textbf{flexible} and \textbf{agnostic} with respect to the type of resources managed and the cloud providers used.
+On the other hand, the works described in sections \ref{sec:multi_cloud_resource_management} and  \ref{sec:carbon_aware_resource_management} are usually tied to one type of resource (e.g., VMs, K8s pods) or when they are not, like in the case of the Kubernetes Bridge Operator \cite{lublinsky2022kubernetesbridgeoperatorcloud}, a specific controller must be implemented for each time for each external resource manager.
+In our case, we leverage Kubernetes as a control plane to manage the resources of the cloud providers.
+We do not need to implement a specific controller for each cloud provider but we leverage the Kubernetes ecosystem of operators to manage cloud resources.
+We then leverage Open Policy Agent and the ``Policy as Code'' paradigm to encode the constraints and objectives of the system, which we believe is a more flexible and powerful approach than the one used in the works described in the previous sections.
 
 \newpage

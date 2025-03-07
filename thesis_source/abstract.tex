@@ -57,18 +57,18 @@ In addition, they may be reluctant to give up performance and cost requirements 
 
 The core challenge addressed in this thesis is:
 \begin{center}
-    How can virtual machines (VMs) and cloud resources be scheduled in a way that reduces their carbon footprint while maintaining a varied set of requirements (QoS, cost, etc.)?
+    How can virtual machines (VMs) and cloud resources be scheduled in a way that reduces their carbon footprint while maintaining a varied set of requirements (Service Level Agreements, Quality of Service, cost, etc.)?
 \end{center}
 
 To tackle this wide and complex problem, this research proposes and describes a multi-cloud resource management system that is mainly built upon Kubernetes, Krateo PlatformOps and Open Policy Agent (OPA) to enable a dynamic policy-driven workload scheduling.
 System capabilities are leveraged to enable the scheduling of workloads in a way that that aims to reduce the carbon footprint of the workloads while satisfying other requirements.
 
-The objectives that the system aims to achieve are the following:
-\begin{itemize}
-    \item Multi-cloud compatibility: Providing a vendor-agnostic solution that can operate across multiple cloud providers.
-    \item Policy-driven resource management: Enabling the definition of policies that encode requirements and constraints of workloads (e.g., QoS, cost, carbon footprint reduction).
-    \item Extensibility and flexibility: Designing a modular system that can be adapted for additional use cases beyond VM scheduling and with arbitrary requirements.
-\end{itemize}
+Some of the objectives that the system aims to achieve are the following multi-cloud compatibility, policy-driven resource management, extensibility and flexibility.
+Multi-cloud compatibility is achieved by providing a vendor-agnostic solution that can operate across multiple cloud providers.
+Enabling the definition of policies that encode requirements and constraints of workloads (e.g., Service Level Agreements, Quality of Service, cost, carbon footprint reduction) is how policy-driven resource management is enabled.
+Extensibility and flexibility are obtained by designing a modular system that can be adapted for additional use cases beyond VM scheduling and with arbitrary requirements. \newline
+    
+
 
 %Use cases (basic ones for the beginning) higher level explanation here
 %first use case ("GreenOps" VM scheduling)
@@ -83,17 +83,17 @@ The objectives that the system aims to achieve are the following:
 
 %\section{Method}
 
-The research methodology follows a \textbf{hands-on approach} to developing a practical, production-ready solution, integrating existing open-source technologies and tools.
+The research methodology follows a \textbf{hands-on approach} to developing a practical, production-ready solution, integrating and leveraging existing open-source technologies and tools.
 The phases of the methodology followed for this thesis are the following:
 \begin{enumerate}
     \item \textbf{Literature and Technology Review}: The first phase of the research methodology is to review the existing literature and technologies related to the problem statement. 
     This includes exploring the state-of-the-art of multi-cloud resource management and carbon-aware resource management.
-    A study on Public Cloud Providers and the multi-cloud paradigm is conducted.
-    In addition, the review includes identification of the existing open-source tools and technologies that can be used to develop the solution (e.g., Kubernetes, Krateo PlatformOps, Open Policy Agent).
+    A study on Public Cloud Providers and the multi-cloud paradigm is also conducted.
+    In addition, the review includes identification and study of the existing open-source tools and technologies that can be used to develop the solution (e.g., Kubernetes, Krateo PlatformOps, Open Policy Agent).
     \item \textbf{System Architecture Design}: The second phase of the methodology is to design the system architecture, including the components, interactions, and data flows.
     This includes also the development of various Proof-of-Concepts in order to test the feasibility of the various identified candidate solutions and to understand tools' strengths, limitations, trade-offs.
     \item \textbf{System Implementation}: The implementation phase involves the integration of the system components, the development of policies and policy bundles pipelines, the configuration of cloud resource templates, the set up of the MLOps infrastructure.
-    \item \textbf{System Deployment and End-to-End Testing}: The final phase of the methodology is to deploy the system on a real infrastructure and perform end-to-end testing to validate the system's functionality in a real-world multi-cloud scenario.
+    \item \textbf{System Deployment and End-to-End Testing}: The final phase of the methodology is to deploy the system on a real infrastructure and perform end-to-end testing to validate the system's functionality in a real-world multi-cloud scenario. \newline
 \end{enumerate}
 
 
@@ -137,11 +137,13 @@ This thesis represents a technical and research contribution within a larger pro
 The project is divided into three main parts: data analysis, machine learning, and cloud infrastructure.
 The contribution of this thesis is on the cloud infrastructure part and includes:
 \begin{itemize}
-    \item A detailed analysis of paradigms and technologies for multi-cloud resource management and carbon-aware resource management.
     \item The design of the system architecture, including the identification of components, interactions, and data flows.
-    \item The development of a policy-driven approach to workload scheduling that also enables the encoding of requirements and constraints.
-    \item The implementation of the system, including the integration of the components, the development of policies, and the configuration of cloud resource templates.
+    \item The study and development of a policy-driven approach to workload scheduling that also enables the encoding of requirements and constraints.
+    \item The implementation of the system, including the integration of the system components, the development of policies and policy bundles pipelines, the configuration of cloud resource templates, the set up of the MLOps infrastructure.
     \item The deployment of the system on a real infrastructure and the performance of end-to-end testing to validate the system's functionality in a production-like multi-cloud scenario.
 \end{itemize}
+
+For what concerns the integration with the other parts of the project, the system developed in this thesis is designed to be integrated with the machine learning part of the project which can be summarized as a series of machine learning models that predict the carbon intensity of electricity grids and a scheduler that uses these predictions to schedule workloads. 
+In order to carry out the end-to-end testing, this scientific work is deployed on the infrastructure leveraging tools described in section \ref{sec:mlops_infrastructure} and referred as MLOps infrastructure.
 
 \newpage
