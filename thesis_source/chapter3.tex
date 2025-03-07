@@ -204,7 +204,7 @@ This means that the custom Kubernetes operator itself must handle a time schedul
 If the operator, upon the creation of a generic CR, immediately creates the cloud-provider specific CR (without a ``waiting logic''), the cloud provider Operator will trigger and provision the VM immediately, ignoring scheduling constraints.
 Due to these limitations and complexities, we explored and leveraged an \textbf{alternative template-driven approach} using Krateo PlatformOps, described in the next section.
 
-\begin{figure}[htb]
+\begin{figure}[t]
   \centering
   \includegraphics[width=1\linewidth]{images/k8s_operator.png}
   \caption{Multi-cloud resource management with Custom Kubernetes ``Synchronization Operator'' approach}
@@ -213,7 +213,7 @@ Due to these limitations and complexities, we explored and leveraged an \textbf{
 
 \subsection{Resource management: the Krateo PlatformOps approach}
 
-\begin{figure}[htb]
+\begin{figure}[t]
   \centering
   \includegraphics[width=1\linewidth]{images/krateo.png}
   \caption{Multi-cloud resource management with Krateo PlatformOps approach}
@@ -402,7 +402,7 @@ The directory structure of the Helm chart is the following:
 .2 values.yaml.
 }
 
-\vspace{0.5cm}
+\vspace{3.0cm}
 
 \begin{lstlisting}[language=yaml, caption={Helm Template guards example}, label={lst:guards}]
 {{ if hasKey .Values "provider" }}
@@ -411,8 +411,6 @@ The directory structure of the Helm chart is the following:
 ...
 apiVersion: compute.azure.com/v1api20220301
 kind: VirtualMachine
-metadata:
-  name: {{ .Values.vmName }}
 ...
 \end{lstlisting}
 
@@ -679,6 +677,8 @@ Official Ubuntu AMIs were collected from a dedicated Ubuntu repository.
 Nonetheless, this does not limit the applicability of this architecture since VMs with other operating systems could be also used.
 In order to select the most suitable AMI for a given VM, the system leverages a custom helper function to dynamically select the appropriate AMI ID based on the region and other parameters specified in the VmTemplate Kubernetes Custom Resource (CR).
 
+\vspace{5.0cm}
+
 \begin{lstlisting}[language=yaml, caption={AWS}, label={lst:aws}]
 apiVersion: ec2.services.k8s.aws/v1alpha1
 kind: Instance
@@ -741,7 +741,6 @@ In our system, we configured a \textbf{\textit{MutatingWebhookConfiguration}} to
 In this case, the Kubernetes Mutating Webhook server that is the target of the MutatingWebhookConfiguration is OPA.
 OPA is used to assign scheduling decisions to VmTemplates based on policies. 
 OPA sends back to the API server the mutation (patches) to be applied to the VmTemplate CR.
-
 
 \section{OPA integration in the system}
 
@@ -883,21 +882,16 @@ deny contains msg if {
 }
 \end{lstlisting}
 
+\vspace{1cm}
+
 \begin{lstlisting}[language=Rego, caption={Rego ``root" policy (system.main)}, label=lst:rego_root_policy]
-package system
-
-import data.kubernetes.admission
-
 main := {
 	"apiVersion": "admission.k8s.io/v1",
 	"kind": "AdmissionReview",
 	"response": response,
 }
-
 default uid := ""
-
 uid := input.request.uid
-
 response := {
 	"allowed": false,
 	"uid": uid,
@@ -906,7 +900,6 @@ response := {
 	reason := concat(", ", admission.deny)
 	reason != ""
 }
-
 else := {"allowed": true, "uid": uid}
 \end{lstlisting}
 
@@ -976,7 +969,7 @@ One of the major advantages of this approach is the ability to dynamically updat
 This is particularly useful in production environments where service availability is critical and downtime must be minimized. 
 The overall process of policy distribution adopted and implemented in our system is illustrated in figure \ref{fig:opa_bundles}.
 
-\begin{figure}[H]
+\begin{figure}[t]
 \centering
 \includegraphics[width=1\linewidth]{images/opa_bundles.png}
 \caption{OPA policy bundles}
@@ -1009,7 +1002,7 @@ Figure \ref{fig:latency_matrix} illustrates a small example (4 regions subset) o
 \end{figure}
 
 \lstset{style=jsonstyle}
-\begin{lstlisting}[caption={Latancy matrix example encoded in JSON format}, label={lst:latency_matrix_example}]
+\begin{lstlisting}[caption={Latancy matrix example encoded in JSON format}, label={lst:latency_matrix_example}, float=t]
 {
   "italynorth": {
       "italynorth": 0,
@@ -1043,7 +1036,7 @@ For what concern data sources, cloud-specific inter-regional latency data were o
 Microsoft Azure provides monthly ``Percentile P50 round trip times'' between Azure regions in its documentation \cite{azure_network_latency}. 
 This data was automatically scraped, merged and used to build the latency matrix for Azure regions.
 For AWS a similar approach was used, but the data was obtained from a third-party website that provides latency data between AWS regions calculating using AWS Lambda functions \cite{cloudping}.
-For Google Cloud Platform, no official data was found, so the latency matrix was built using synthetic data.
+For Google Cloud Platform, no official data was found, so the latency matrix was built using synthetic data that simulates realistic latencies between regions, similar to other cloud providers.
 
 \subsection{GDPR policy}
 
@@ -1058,29 +1051,26 @@ It must be noted that this policy is \textbf{not intended to be a comprehensive 
 \label{sec:scheduling_outcome_policy}
 
 In the context of this work, the ``Scheduling outcome policy'' is a policy that determines the scheduling decision for a given workload based on the output of the GreenOps Scheduler which is queried in real-time, as described in section \ref{sec:opa_external_data}.
-The inputs and outputs of this policy are as follows:
-
+The inputs are defined as follows:
 \begin{itemize}[itemsep=0.2pt, topsep=0.2pt]
-  \item[$\bullet$] Given:
-  \begin{itemize}[label=$\circ$]
-    \item \{CPU, RAM, duration, deadline, max latency\}: set at request time
-    \item eligible cloud providers: set at request time or in policies (configurable)
-    \item origin region: set in policies
-    \item GDPR compliancy: set in policies
-    \item inter-region latency matrix: stored in policy data
-  \end{itemize}
-  \item[$\bullet$] Output decision:
-  \begin{itemize}[label=$\circ$]
-    \item provider
-    \item schedulingLocation
-    \item schedulingTime
-  \end{itemize}
+  \item \{CPU, RAM, duration, deadline, max latency\}: set at request time
+  \item eligible cloud providers: set at request time or in policies (configurable)
+  \item origin region: set in policies
+  \item GDPR compliancy: set in policies
+  \item inter-region latency matrix: stored in policy data
+\end{itemize}
+\vspace{2cm}
+While the outputs are:
+\begin{itemize}[itemsep=0.2pt, topsep=0.2pt]
+  \item provider
+  \item schedulingLocation
+  \item schedulingTime
 \end{itemize}
 
 It is therefore a policy that has the duty to mutate (patch) the VmTemplate Kubernetes resource (Generic VM), adding the scheduling information (provider, schedulingLocation, schedulingTime) to the resource.
 According to Kubernetes documentation, this can be done using ``\textit{patch}'' and ``\textit{patchType}" fields in the AdmissionReview response \cite{kubernetes_dynamic_admission_control}.
 The ``\textit{patchType}'' field must be ``\textit{JSONPatch}'' and the ``\textit{patch}'' field must contain a base64-encoded array of JSON patch operations to be applied to the resource.
-JSON Patch is a format for describing changes to a JSON document which avoid the need to send the entire document when only a part of it has changed. 
+JSON Patch is a format for describing changes to a JSON document which avoids the need to send the entire document when only a part of it has changed. 
 Effectively, only deltas are sent back to the requester which are themselves JSON documents.
 The format is defined in RFC 6902 from the IETF \cite{json_patch}.
 As an example, a single patch operation is the one shown in listing \ref{lst:json_patch}, where a new field ``schedulingTime'' is added to the resource.
@@ -1101,7 +1091,7 @@ OPA is flexible enough to handle \textbf{data mapping operations} between differ
 In our GreenOps system, data mapping is essential for translating between ElectricityMaps regions and cloud provider regions. 
 At some point in the system this mapping needed to be done and we deemed that inside the OPA policies was the best place to
 do it.
-In particular, this mappings are needed since the GreenOps scheduler knows only the notion of ElectricityMaps regions, and do not possess the knowledge of cloud provider regions. 
+In particular, this mappings are needed since the GreenOps scheduler knows only the notion of ElectricityMaps regions, and does not possess the knowledge of cloud provider regions. 
 Therefore, a mapping is needed to translate the ElectricityMaps regions to cloud provider regions and vice versa.
 
 The entire data mapping process can be broken down into the following steps:
@@ -1116,12 +1106,14 @@ The entire data mapping process can be broken down into the following steps:
 
 This process is illustrated in figure \ref{fig:data_mapping} and the Rego code in listing \ref{lst:rego_data_mapping} illustrates the Rego functions used for data mapping between cloud provider regions and ElectricityMaps regions. \newline
 
-\begin{figure}[htb]
+\begin{figure}[t]
   \centering
   \includegraphics[width=1\linewidth]{images/data_mapping.png}
   \caption{OPA Data mapping}
   \label{fig:data_mapping}
 \end{figure}
+
+\vspace{5cm}
 
 \begin{lstlisting}[language=Rego, caption=Rego data mapping, label=lst:rego_data_mapping]
 # Utility functions to map between cloud provider regions 
@@ -1154,6 +1146,7 @@ map_from_electricitymaps(em_region, provider) = cloud_region if {
 In this section we describe the integration of OPA in the system.
 The entire architecture of the system and the integration of OPA is illustrated in figure \ref{fig:architecture}.
 OPA has the role of \textbf{mutating webhook server} which is consulted by the Kubernetes API server when a CREATE or UPDATE operation is performed on a VmTemplate Custom Resource.
+
 The OPA server is responsible for evaluating the policies and returning the AdmissionReview response to the API server.
 The AdmissionReview response contains the decision of the policy evaluation (i.e. scheduling outcome) and the JSON patch operations to be applied to the VmTemplate resource by the Kubernetes API server.
 OPA is periodically polling the policy bundles from an external container registry (e.g., DockerHub) to ensure that the policies are up to date.
@@ -1166,85 +1159,15 @@ The system is designed to be highly flexible and extensible, allowing for the ad
 \subsubsection{Day 2 operations}
 \label{sec:day2_operations}
 
+What was analyzed so far can be defined as ``Day 1'' optimization, i.e., the optimization of resources at deployment time.
 We can define as \textbf{\textit{Day 2 operations}} all the management operations that are performed after the deployment of a resource.
 These operations comprise tasks such as scaling up or down a VM based on the load, stopping a VM during off-peak hours, or migrating a VM to a different region to optimize costs.
 As we previously described, the mutating webhook configuration is set on both the CREATE and \textbf{UPDATE} operations.
-A possible UPDATE operation trigger could be Kubernetes Cronjob that attach a label \textit{"greenops-optimization": "123456789"} to the VmTemplate resource at a specific time of the day.
+A possible UPDATE operation trigger could be a Kubernetes Cronjob that attaches a label \textit{"greenops-optimization": "123456789"} to the VmTemplate resource at a specific time of the day.
 This could be useful to trigger specific policies that are only applied during the day 2 operations.
-In addition to that, the UPDATE operation could be useful for VMs that have already been scheduled in a distant future (due to their deadline very far in the future) to obtain a new scheduling decision based on new conditions (e.g. more recent carbon intensity forecast).
+In addition to that, the UPDATE operation could be useful for VMs that have already been scheduled in a distant future (due to their deadline being very far in the future) to obtain a new scheduling decision based on new conditions (e.g. more recent carbon intensity forecast).
 
-\subsection{OPA Gatekeeper}
 
-OPA Gatekeeper is a Kubernetes-native policy engine that extends OPA with \textbf{Custom Resources (CRs)} and controllers to enforce policies across a Kubernetes cluster \cite{opa_gatekeeper}. 
-It integrates natively with Kubernetes and provides a declarative approach to defining and enforcing policies using Kubernetes Custom Resources (CRs). 
-This makes it an excellent choice for basic and standard policy enforcement scenarios, such as RBAC (Role-Based Access Control), security compliance, and resource constraints \cite{opa_gatekeeper}.
-However, while OPA Gatekeeper is \textbf{well-suited for simple use cases}, it presents \textbf{limitations} when addressing complex policy requirements, particularly when policies involve \textbf{mutations} or require access to \textbf{external data sources} \cite{opa_gatekeeper_external_data}. 
-Indeed, these limitations make it unsuitable for the specific challenges tackled in this system. 
-Therefore, after an initial investigation and Proof of Concept implementation, we decided to use a standard OPA server deployment for policy enforcement mainly due to the flexibility it provides in handling diverse scenarios.
-To illustrate the differences between a standard OPA policy and an OPA Gatekeeper policy, we present two examples:  
-\begin{itemize}[itemsep=0.2pt, topsep=1pt]
-  \item[$\bullet$] a simple Rego policy that enforces a basic constraint on Pod creation in a Kubernetes cluster.
-  \item[$\bullet$] the corresponding policy implemented as an OPA Gatekeeper \textbf{ConstraintTemplate} and \textbf{Constraint} Kubernetes custom resources.
-\end{itemize}
-
-The first example demonstrates a standalone Rego policy, which can be evaluated directly by an OPA instance. 
-While this approach is flexible and allows for fine-grained policy definition, it requires manual integration into the system, including policy distribution and enforcement setup.  
-
-\begin{lstlisting}[language=rego, caption={Simple OPA Rego Policy}, label={lst:opa-rego}]
-package kubernetes.admission
-
-deny[msg] {
-  input.request.kind.kind == "Pod"
-  input.request.object.metadata.namespace == "restricted"
-  msg := "Pods cannot be created in the 'restricted' namespace."
-}
-\end{lstlisting}
-
-The second example, illustrated in listing \ref{lst:gatekeeper-template} utilizes OPA Gatekeeper, which extends Kubernetes with Kubernetes-native Custom Resource Definitions (CRDs), enabling declarative policy management. By using a ConstraintTemplate, policies can be enforced dynamically through Kubernetes, making them easier to distribute and manage.
-In other words, with this kind of setting, OPA policy bundles are not employed in the same way as in the standard OPA server. Instead, policies are defined as Kubernetes resources, allowing for more straightforward policy enforcement and management within a Kubernetes environment.
-
-\begin{lstlisting}[language=yaml, caption={OPA Gatekeeper ConstraintTemplate}, label={lst:gatekeeper-template}]
-apiVersion: templates.gatekeeper.sh/v1
-kind: ConstraintTemplate
-metadata:
-  name: podnamespaceconstraint
-spec:
-  crd:
-    spec:
-      names:
-        kind: PodNamespaceConstraint
-  targets:
-    - target: admission.k8s.gatekeeper.sh
-      rego: |
-        package kubernetes.admission
-        deny[msg] {
-          input.review.object.metadata.namespace == "restricted"
-          msg := "Pods cannot be created in the 'restricted' namespace."
-        }
-\end{lstlisting}
-
-\begin{lstlisting}[language=yaml, caption={OPA Gatekeeper Constraint}, label={lst:gatekeeper-constraint}, float=htpb]
-apiVersion: constraints.gatekeeper.sh/v1beta1
-kind: PodNamespaceConstraint
-metadata:
-  name: restrict-namespace
-spec:
-  match:
-    kinds:
-      - apiGroups: [""]
-        kinds: ["Pod"]
-  parameters: {}
-\end{lstlisting}
-
-In the example, the policy is defined as a ConstraintTemplate, which is then instantiated as a Constraint Custom Resource of kind defined in the ConstraintTemplate. 
-The ConstraintTemplate specifies the Rego policy logic, while the Constraint defines the target resources and parameters for policy enforcement. Therefore a ConstraintTemplate can be used by multiple Constraints, allowing for policy reuse.
-
-OPA Gatekeeper also provides additional Kubernetes Custom Resources called \textit{mutators} (Assign, AssignMetadata, AssignImage, ModifySet) that allow modifying resource fields without writing Rego code \cite{opa_gatekeeper}. 
-These mutators are useful for simple transformations, such as setting default labels or annotations. However simultaneous mutation of multiple fields leveraging external data is not supported \cite{opa_gatekeeper_external_data}. 
-This limitation, in the context of our system, determined the choice of the standard OPA server for policy enforcement. \newline
-
-It must be noted that OPA Gatekeeper limitations could be potentially addressed in future releases, making it a more viable option for complex policy enforcement scenarios. 
-However, for the current system requirements, the standard OPA server was deemed more suitable due to its flexibility.
 
 \subsection{OPA advanced features}
 
@@ -1256,8 +1179,8 @@ This feature allow policy developer to digitally sign their policies bundles by 
 OPA also provides a more efficient way to distribute policies using \textbf{Delta Bundles} \cite{opa_delta_bundles}.
 Normally, when a policy bundle is downloaded, OPA will download the entire bundle, erase and overwrite the current policies and data with the new ones.
 Delta Bundles are composed of a single ``patch.json'' file that contains a set of JSON Patch operations that can be applied to the current data to update it to the new version. Currently only data updates are supported (``data.json") and not policy updates (``policy.rego") \cite{opa_delta_bundles}.
-
-\newpage
+This feature could be used in the context of the system described in this thesis to update in a more efficient way the contextual data used by the policies. 
+For instance, in the event of a region being added or removed from a public cloud provider, a delta bundle could be used to add only the new region and update the existing latency matrix.
 
 \section{MLOps infrastructure}
 
@@ -1280,56 +1203,29 @@ Some principles of MLOps can be summarized as follows \cite{mlops_ubuntu}:
   \item[$\bullet$] \textbf{Collaboration}: enable collaboration between data scientists, data engineers, and operations teams.
 \end{itemize}
 
-In the context of the proposed system, an MLOps infrastructure is used to deploy and manage the forecasting models that predict the carbon intensity of the electricity grid in different world regions.
+The proposed system deploys an MLOps infrastructure to manage the forecasting models that predict the carbon intensity of the electricity grid in different world regions.
 In particular, \textbf{MLflow} is used for model tracking, model selection, and model storage, while \textbf{KServe} is used for model deployment.
 
-\subsection{MLflow}
+\subsection{MLOps general architecture}
 
-MLflow is an open-source platform designed to facilitate and enhance the overall machine learning lifecycle. 
-In particular, it offers tooling for \textbf{experiment tracking}, \textbf{model management}, and \textbf{model storage} \cite{mlflow_docs}.
-It is compatible with various ML frameworks, including scikit-learn, PyTorch, TensorFlow, and XGBoost.
-In particular, in the case of our system, PyTorch is the ML framework used for the forecasting models making MLflow a suitable choice for model management.
-For what concerns model deployment, MLflow does not provide a built-in solution, but it is compatible with other tools like KServe which will be described in section \ref{sec:kserve}.
+Figure \ref{fig:mlops} illustrates the general architecture of the MLOps infrastructure deployed in the Kubernetes environment. 
+The architecture consists of two main components, described in the previous sections: MLflow and KServe.
+In particular, MLflow is used for model tracking, model selection, and model storage, while KServe is leveraged for model deployment. 
 
-\subsubsection{MLflow Tracking Server}
-\label{sec:mlflow_tracking_server}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{images/mlflow_vertical.png}
+  \caption{MLOps Architecture}
+  \label{fig:mlops}
+\end{figure}
 
-MLflow Tracking Server is the central component of the MLflow platform which is responsible for logging and storing model training data, parameters, and metrics. 
-It enables ML practitioners to track experiments, compare results, and reproduce models easily in a collaborative environment.
-MLflow Tracking Server revolves around the concepts of \textbf{experiments}, which are collections of \textbf{runs}. 
-Each run represents a single model training session, and it contains information such as parameters, metrics, and artifacts (e.g., model files).
-Selected models can then be registered in the MLflow Model Registry, which is essentially an optional subset of the selected models that are ready for deployment.
-Model selection can done with the aid of a user interface that allows ML practitioners to visualize and compare the results of different experiments, making it easier to select the best model for deployment.
-MLflow Tracking Server, as the name suggest, is a server that is constantly waiting for new data to be logged. 
-Said data comes from the various training scripts that are executed by the data scientists or machine learning engineers which are run in  training environments.
-In particular the training scripts must be instrumented with the \textbf{MLflow API calls} to log the data in the remote MLflow Tracking Server.
-This setting is very flexible since the training scripts can be run in any environment (e.g., local environment, Universities' HPC clusters), as long as they have access to the MLflow Tracking Server.
-It is deemed important to mention some of the MLflow API calls that are used in the training scripts: the \textit{infer\_signature} and \textit{autolog} functions \cite{mlflow_docs}.
-The \textit{infer\_signature} function captures the \textbf{input and output schema of the model}, which is important for the deployment of the model.
-The \textit{autolog} function is used to automatically log the parameters and metrics of the model training session, without the need to manually log them. In particular, each supported ML framework has its own autolog function which is used to automatically log the parameters and metrics of the model training session.
-The final phase of a model training session is the automatic creation of a \textbf{self-contained directory}, named after the experiment and run IDs, that contains all the necessary files to deploy the model. 
-In particular, the folder contains: the serialized model with model weights, the configuration files (conda.yaml, requirements.txt), and the MLmodel file that contains additional configuration, among which, the model signature.
-The self-contained folder is then automatically uploaded to the MLflow Tracking Server as an artifact.
-The following is an example of the structure of the self-contained directory created by MLflow after a PyTorch model training session: \\
-
-\dirtree{%
-.1 model/.
-.2 MLmodel.
-.2 conda.yaml.
-.2 python\_env.yaml.
-.2 requirements.txt.
-.2 data/.
-.3 model.pth.
-.3 pickle\_module\_info.txt.
-}
-
-\subsubsection{MLflow deployment configuration}
+\subsection{MLflow deployment configuration}
 
 In the context of our system, MLflow is deployed on a Kubernetes cluster with a loosely coupled architecture as can be seen in Figure \ref{fig:mlflow_config}, where the MLflow Tracking Server is decoupled from its storage: the metadata store (backend store) and the artifact store.
 This configuration is the most common in production environments, as it allows for better scalability and environment flexibility.
 The metadata store chosen for the system is \textbf{CrateDB}, while the artifact store is the \textbf{SeaweedFS} object storage service. \\
 
-\begin{figure}[htb]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.50\linewidth]{images/mlflow_config.png}
   \caption{MLflow deployment configuration}
@@ -1338,17 +1234,25 @@ The metadata store chosen for the system is \textbf{CrateDB}, while the artifact
 
 During the design phase, \textbf{alternative configurations} were considered.
 One of the alternative configurations was to use a single CrateDB instance as both the metadata store and the artifact store. This configuration was not implemented due to the lack of native support of object storage in CrateDB.
-A second theorized approach was to use a sidecar container with the duty of watching the MLflow Tracking Server local directory in the container filesystem (e.g., using \textit{watchdog} Python package), packaging the model artifacts as an OCI image, and uploading them to an image registry. This approach could be implemented to offer an alternative to the MLflow Tracking Server artifact store in environment where adding a new storage service is not feasible.
+A second theorized approach was to use a sidecar container with the duty of watching the MLflow Tracking Server local directory in the container filesystem (e.g., using \textit{watchdog} Python package), packaging the model artifacts as an OCI image, and uploading them to an image registry. This approach could be implemented to offer an alternative to the MLflow Tracking Server artifact store in environments where adding a new storage service is not feasible.
 
-\subsection{KServe}
-\label{sec:kserve}
+\subsection{Model deployment}
+\label{sec:model_deployment}
 
-KServe is an open-source model inference platform that extends Kubernetes with a set of Custom Resource Definitions (CRDs) to \textbf{deploy} and scale machine learning models in production environments \cite{kserve_docs}.
-KServe can be deployed in several ways, one of which is the ``\textit{Serverless mode}'' which is built on top of Istio and Knative, leveraging their powerful capabilities such as automatic scaling. 
-There are two main CRs that can be used to set up a model serving environment: \textit{\textbf{ServingRuntimes}} (or \textit{\textbf{ClusterServingRuntimes}}) and \textit{\textbf{InferenceServices}} \cite{krateo_docs}.
-The former are abstractions that define model serving environments, specifying the templates for Kubernetes Pods capable of serving particular model formats. 
-The latter are actually leveraging the available ServingRuntimes to deploy the models in the system.  
-KServe provides several out-of-the-box ClusterServingRuntimes for common model formats, such as TensorFlow, PyTorch, and XGBoost, which can be used to deploy models without the need to define and configure the runtimes themselves.
+Our specific use case requires the deployment of multiple models, each corresponding to a different region.
+This is true if we want to achieve better model performance compared to a single model that tries to predict the carbon intensity of all the regions.
+The current strategy adopted for the system is the following: \textbf{one model per region} is deployed, and a \textbf{generic model is used as a fallback} if the specific model is not available.
+This translates into the deployment of multiple InferenceServices, each corresponding to a specific region, and one InferenceService that acts as a fallback.
+This setting introduces a quite large amount of overhead in terms of resources, since each InferenceService sets up a whole new set of resources (e.g., large Kubernetes pods with underlying model serving environments) for each model.
+Figure \ref{fig:forecaster} illustrates the configuration of the InferenceServices used to deploy the forecasting models in the system.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=1\linewidth]{images/forecaster.png}
+  \caption{Model deployment configuration and GreenOps system integration}
+  \label{fig:forecaster}
+\end{figure}
+
 In particular, in our specific use case, since the forecasting models are PyTorch models, packaged by MLflow as described in the previous section, InferenceServices with ``kserve-mlserver" ClusterServingRuntime are used. 
 As a matter of fact, this runtime is the one that supports models packaged with MLflow \cite{kserve_mlflow}.
 Listing \ref{lst:inference_service} shows an example of the InferenceService Custom Resource used to deploy a model in the system, namely the forectaser related to the ``\textit{IT-NO}'' ElectricityMaps region (northern Italy) \\
@@ -1369,201 +1273,13 @@ spec:
       storageUri: s3://mlartifacts/forecaster-IT-NO
 \end{lstlisting}
 
-We can see that the InferenceService CR is quite simple and self-explanatory. 
-The most important fields are the \textit{model} field, which specifies the model format, the protocol version, and the storage URI.
-The storage URI is the location of the model artifacts in the artifact store, which in the case of the system is the SeaweedFS object storage service with S3 compatibility. 
-At the location specified by the storage URI, the model artifacts are stored in the self-contained directory created by MLflow after the model training session as described in section \ref{sec:mlflow_tracking_server}.
-
-\subsubsection{Open Inference Protocol}
-
-Interoperability is key in a fast-moving environment as the one of machine learning and AI. 
-Therefore KServe has introduced the \textbf{Open Inference Protocol specification} to standardize the communication between inference servers and clients. 
-The Open Inference Protocol has been adopted by several inference servers, including NVIDIA's Triton and Seldon MLserver \cite{kserve_oip}.
-As mentioned in the previous section, the InferenceService CRs used in the system are leveraging the ``kserve-mlserver" ClusterServingRuntime, which under the hood uses MLserver that is compliant with the Open Inference Protocol.
-The list of API endpoints specified by the Open Inference Protocol is shown in Table \ref{tab:oip_endpoints}.
-
-% 
-
-\begin{table}[h!]
-\centering
-\begin{tabular}{|l|l|l|}
-\hline
-\textbf{API}    & \textbf{Verb} & \textbf{Path}                                                                                         \\ \hline
-Inference       & POST          & v2/models/{[}/versions/\textless{}model\_version\textgreater{}{]}/infer                               \\ \hline
-Model Ready     & GET           & v2/models/\textless{}model\_name\textgreater{}{[}/versions/{]}/ready                                  \\ \hline
-Model Metadata  & GET           & v2/models/\textless{}model\_name\textgreater{}{[}/versions/\textless{}model\_version\textgreater{}{]} \\ \hline
-Server Ready    & GET           & v2/health/ready                                                                                       \\ \hline
-Server Live     & GET           & v2/health/live                                                                                        \\ \hline
-Server Metadata & GET           & v2                                                                                                    \\ \hline
-\end{tabular}
-\caption{Open Inference Protocol API endpoints specification \cite{kserve_oip}}
-\label{tab:oip_endpoints}
-\end{table}
-
-\subsubsection{Model deployment}
-\label{sec:model_deployment}
-
-Our specific use case requires the deployment of multiple models, each corresponding to a different region.
-This is true if we want to achieve better model performance compared to a single model that tries to predict the carbon intensity of all the regions.
-The current strategy adopted for the system is the following: \textbf{one model per region} is deployed, and a \textbf{generic model is used as a fallback} if the specific model is not available.
-This translates into the deployment of multiple InferenceServices, each corresponding to a specific region, and one InferenceService that acts as a fallback.
-This setting introduces a quite large amount of overhead in terms of resources, since each InferenceService set up a whole new set of resources (e.g., large Kubernetes Pods with underlying model serving environments) for each model.
-Figure \ref{fig:forecaster} illustrates the configuration of the InferenceServices used to deploy the forecasting models in the system.
-
-\begin{figure}[htb]
-  \centering
-  \includegraphics[width=1\linewidth]{images/forecaster.png}
-  \caption{Model deployment configuration and GreenOps system integration}
-  \label{fig:forecaster}
-\end{figure}
-
 \subsubsection{Model compatibility}
 
 In scenarios where ML models produce outputs in formats not directly compatible with the serving runtime, some workarounds are necessary, such as model wrapping. This process involves adapting the model's input and output interfaces to align with the expected formats of the serving runtime, ensuring a correct model deployment.
-For instance, in the case of the forecasting models, the output format was not directly compatible with the serving runtime: the output was a custom defined class specific to the model, instead of a single tensor. Therefore, a simple model wrapping was needed to make the model compatible with the serving runtime, effectively operation a selection of output fields from the model output and returning them as a single tensor.
+For instance, in the case of the forecasting models, the output format was not directly compatible with the serving runtime: the output was a custom defined class specific to the model, instead of a single tensor. 
+Therefore, a simple model wrapping was needed to make the model compatible with the serving runtime, effectively extracting a subset of the model output fields and returning them as a single tensor.
 
-\subsection{MLOps general architecture}
-
-Figure \ref{fig:mlops} illustrates the general architecture of the MLOps infrastructure deployed in the Kubernetes environment. 
-The architecture consists of two main components, described in the previous sections: MLflow and KServe.
-In particular, MLflow is used for model tracking, model selection, and model storage, while KServe is leveraged for model deployment. 
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=1.00\linewidth]{images/mlflow_vertical.png}
-  \caption{MLOps Architecture}
-  \label{fig:mlops}
-\end{figure}
-
-\newpage
-
-\section{Cloud resource metrics}
-
-% https://dynamorio.org/google_workload_traces.html
-
-Metrics are data points that provide information about a system.
-This information could be related to performance, behavior, resource utilization or any other aspect of the system that could be relevant.
-In the context of cloud resource management, metrics are essential for monitoring the \textbf{performance and health of cloud resources}, enabling organizations to make informed decisions about resource allocation, scaling, and optimization.
-Focusing on the first use case of the proposed system (i.e., VM scheduling for carbon footprint optimization), carbon metrics could be used to determine the carbon footprint of a scheduled VM.
-How to measure the carbon footprint of a resource managed in the cloud is a complex and challenging task.
-The carbon footprint of a cloud resource is influenced by several factors, such as the energy efficiency of the data center where the resource is hosted (PUE), the carbon intensity of the electricity grid in the region where the data center is located, whether the data center uses additional energy sources off the grid, and finally the energy consumption of the resource itself.
-The last factor is probably the most difficult to measure, as a cloud resource is an \textbf{entity that is abstracted from the physical infrastructure}, and therefore it is not straightforward to measure its power consumption. 
-In this first iteration of the system we are dealing for instance with virtual machines (VMs).
-On the other hand, an on-premises server, for instance, could be potentially equipped with physical sensors that measure the direct power consumption of the server, but this is not the case for any cloud resource, especially since this work is focused on the consumer side of the cloud, where the consumer does not have access to any physical infrastructure.
-Moreover, public cloud providers do not provide fine grained and real-time data about the carbon footprint of a resource, as they do not adhere yet to a common standard for carbon footprint calculation (e.g., Real Time Cloud proposed by the Green Software Foundation), like they instead do for the FOCUS standard for FinOps.
-In this section we want to give an brief overview of several metrics and methodologies that can be used totextbf{estimate the carbon footprint of a cloud resource}.
-In addition, we will also discuss the \textbf{challenges and limitations} that can be encountered when dealing with this kind of task.
-
-\subsection{System performance metrics}
-
-System performance metrics are a category of metrics that provide information about the health and performance of a system.
-Usually these metrics are related to bare-metal servers or virtual machines.
-Other cloud resources that have a higher level of abstraction (e.g., containers, Kubernetes Pods, serverless functions) may expose a slighlty different set of metrics that fall into this category as well.
-This category of metrics are also useful for the ``\textbf{day 2 operations}'', which are operations that are performed after the resource has been deployed and monitored for a certain period of time, briefly described in section \ref{sec:day2_operations}.
-
-System performance metrics comprise, for instance:
-\begin{itemize}[itemsep=0.2pt, topsep=1pt]
-  \item[$\bullet$] CPU usage
-  \item[$\bullet$] Memory usage
-  \item[$\bullet$] Disk usage
-  \item[$\bullet$] Network usage
-  \item[$\bullet$] Processes related metrics \\
-\end{itemize}
-
-A standard strategy to collect these metrics is to use \textbf{agents} that are directly installed on the VMs and operate at the Operating System level.
-Some examples of this kind of agents are the \textbf{Prometheus Node exporter} and the \textbf{Prometheus Process exporter}.
-Figure \ref{fig:prometheus} shows an example of a standard Prometheus architecture used to collect system performance metrics using the Node exporter and the Process exporter on a set of Linux VMs.
-In particular, the Node exporter collects metrics such as CPU usage, memory usage, disk usage, and network usage, while the Process exporter collects metrics about the various processes running on the VM (e.g., CPU and memory usage per process group).
-Metrics are pulled by the Prometheus server, which stores them in a time-series database and makes them available for querying and visualization (e.g., using Grafana). 
-In addition, the Prometheus server can be configured to send alerts based on the collected metrics leveraging the Alertmanager component. \newline
-
-\begin{figure}[htb]
-  \centering
-  \includegraphics[width=1\linewidth]{images/prometheus.png}
-  \caption{Standard Prometheus architecture for system performance metrics collection}
-  \label{fig:prometheus}
-\end{figure}
-
-An example of how these metrics can be used for ``day 2 operations" is the one put in place by the \textbf{Krateo Composable FinOps} component \cite{krateo_docs}.
-In this case, the system uses a set of Prometheus exporters and scrapers, configured through Kubernetes Custom Resources, to collect metrics about the VMs managed by the system.
-The optimizations are encoded in a set of Kubernetes Custom Resources (CRs) that are used by the specific operators (e.g., \textit{finops-operator-vm-manager}) to performs operations on the VMs, such as scaling up or down the VMs, stopping them during off-peak hours, etc \cite{krateo_docs}.
-%Prometheus exporters (https://prometheus.io/docs/instrumenting/exporters/) + Prometheus scrapers for data collection.
-%Generic Prometheus exporters and scrapers already used for Krateo Composable FinOps leveraging specific K8s Custom Resources. These exporters are generic and can scrape arbitrary metrics configured in specific CRs (for instance, collecting VMs CPU consumption though Azure APIs).
-%From the Krateo Composable FinOps document: 
-%- “we transform all optimizations into a set of Kubernetes Custom Resources (CRs) to act upon newly found cost-related deficiencies. This allows us to use Kubernetes operators (explicitly coded to interact with cloud services) to monitor these metrics and act automatically to apply changes to remote resources.”
-%- “forward the optimization to the Krateo operator that manages the services that need to be optimized, for example, the Azure Operator to modify the size of a Virtual Machine;”
-%- “the optimization is automatically encoded in a CR for the finops-operator-vm-manager, which then analyzes it and decides how to manage the Virtual Machine. For example, it could scale up or down the virtual machine, stop it for the night, etc.”
-\newline
-As Microsoft Azure documentation describes, there are actually two different categories of metrics that can be collected from a VM in the cloud: the \textbf{guest-level metrics} and the \textbf{hypervisor-level or host-level metrics} \cite{azure_vm_monitoring}.
-The first category of metrics is collected by agents directly installed on the VMs, as described above.
-The second category of metrics is collected by \textbf{cloud provider APIs}, and they provide information about the VMs from the hypervisor or host level.
-For instance, in the case of Azure Virtual Machines, this date is relaated to the Hyper-V host that runs the VM \cite{azure_vm_monitoring}.
-The difference between these two categories of metrics is that the guest-level metrics are more fine-grained and provide information about the actual resource usage of the VM (being collected at the OS level), while the hypervisor-level metrics are more high-level. \newline
-%Azure monitoring REST API: https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/rest-api-walkthrough?tabs=rest%2Cportal
-%https://learn.microsoft.com/en-us/rest/api/monitor/metrics/list?view=rest-monitor-2023-10-01&tabs=HTTP
-%https://learn.microsoft.com/en-us/azure/virtual-machines/monitor-vm 
-To support the collection of metrics, several cloud providers offer agents that can be installed on the provider-specific VMs they manage.
-One of the goal of these agents comparared to standard cloud-agnostic agents is to provide a more convenient experience for the user managing the VMs in the context of the cloud provider. 
-Therefore these agents are usually more integrated with other cloud provider services and APIs.
-In particular, we can cite the following agents: \textbf{Azure Monitor Agent} for Azure VMs, the \textbf{Google Ops Agent} for Google Compute Engine instances, and the \textbf{Amazon CloudWatch Agent} for AWS EC2 instances.
-%Azure Monitor Agent (https://learn.microsoft.com/en-us/azure/azure-monitor/agents/azure-monitor-agent-overview)
-%\textbf{Google Ops Agent}: “the primary agent for collecting telemetry from your Compute Engine instances” (https://cloud.google.com/monitoring/agent/ops-agent)
-%Can be installed in various ways: manual installation, Usining Google Cloud Agent policies from glcoud CLI or using a configuration management tool like Terraform
-
-\subsection{Power consumption metrics}
-
-In the context of our use case, power consumption metrcis could be theoretically used to estimate the carbon footprint of a VM instance.
-However, Public Cloud Providers do not provide real-time data about power consumption of a VM instance. \\
-
-\textbf{Scaphandre} is an open-source monitoring agent designed to collect energy consumption metrics of a system \cite{scaphandre}.
-Scaphandre represents a promising solution only for on-premises servers, as it relies on the Intel \textbf{Running Average Power Limit (RAPL)} sensors to collect power consumption data.
-As a matter of fact, due to security and privacy concerns, public cloud providers do not expose to tenants the underlying RAPL sensors that Scaphandre relies on to track energy consumption \cite{scaphandre_github_issue}.
-Therefore, Scaphandre is unsuitable for our current use case.
-Another interesting and quite mature project is \textbf{Kepler} \cite{kepler}, which is a tool designed to monitor the energy consumption of Kubernetes resources (e.g., Nodes, Pods).
-Being Kubernetes-centric, Kepler is not suitable for our first use case, as it does not provide real-time data about the power consumption of a generic VM instance.
-However, Kepler could be potentially used in a future iteration of the system.
-
-%manually estimate power consumption based on CPU utilization, memory usage. Could be a very difficult task. 
-%there is the TEADS metodology like 
-
-\subsection{Carbon metrics}
-\label{sec:carbon_metrics}
-
-As briefly mentioned in the beginning of this section, there is no adopted standard adopted by Public Cloud Providers to calculate and expose the carbon footprint of a cloud resource.
-In section \ref{sec:real_time_cloud}, we briefly described that the Green Software Foundation is working on a standard called \textbf{Real Time Cloud} that aims to provide a common standard for carbon footprint calculation.
-The goal would be to have a \textbf{real-time carbon metric} to be used for optimization and this metric would be added to the set of metrics that are already provided by the cloud providers (e.g., CPU usage, memory usage).
-However, this standard is not yet adopted by any major Public Cloud Provider which in turn provide only high-level monthly reports for carbon emission data.
-A brief summary, as reported by one of the proposers of Real Time Cloud \cite{cloud_provider_sustainability_reports}, is shown in Table \ref{tab:cloud_carbon_emissions_reports}.
-
-\begin{table}[H]
-  \centering
-  \renewcommand{\arraystretch}{1.2} % Increase row height for readability
-  \setlength{\extrarowheight}{2pt} % Add extra space between rows
-  \begin{tabularx}{\textwidth}{|X|X|X|X|X|X|}
-  \hline
-  \textbf{Cloud Provider}     & \textbf{Project name}                          & \textbf{Scope}            & \textbf{Geographical resolution} & \textbf{Carbon resolution} & \textbf{Time resolution} \\ \hline
-  Amazon Web Services (AWS)   & AWS Customer Carbon Footprint Tool             & Account, EC2, S3, Other   & Continental                      & 0.001 Metric Tons of CO2e  & Monthly                  \\ \hline
-  Microsoft Azure             & Azure Carbon Footprint API Schema              & Account, Service          & Country and region               & 0.001 Metric Tons of CO2e  & Monthly                  \\ \hline
-  Google Cloud Platform (GCP) & Google Carbon Footprint BigQuery Export Schema & Account, Project, Service & Country, region and zone         & 0.1 Kilograms of CO2e      & Monthly                  \\ \hline
-  \end{tabularx}
-  \caption{Cloud provider sustainability reports}
-  \label{tab:cloud_carbon_emissions_reports}
-\end{table}
-%Export Azure carbon optimization emissions data (Preview) (probably not fine-grained as we want)
-
-We deem interesting to mention some of the existing projects that can be used to estimate the carbon footprint of a cloud resource.
-\textbf{Cloud Carbon Footprint} \cite{cloud_carbon_footprint} is a tool that uses cloud provider billing (i.e., AWS Cost and Usage Reports with Amazon Athena, GCP Billing Export Table using BigQuery, Azure Consumption Management API) and resource usage metrics to provide an estimation of the carbon footprint of a cloud resource. For live grid carbon intensity an integration with Electricity Maps API is supported \cite{cloud_carbon_footprint}.
-Another tool within the GreenOps ecosystem is the \textbf{Aether} calculation engine \cite{aether}
-Currently only AWS and GCP are supported as it uses AWS CloudWatch and Google monitoring
-There is not the possibility to use a real-time Grid Carbon Intensity Coefficient since carbon data is extrapolated from “governative” data reports \cite{aether}.
-A different approach to estimate the carbon footprint of resource, in particualar a virtual machine is the one proposed by the \textbf{carbond} agent \cite{carbond:2023:hotcarbon}. 
-This agent must be installed on the VM and aims to provide a real-time estimation of the carbon footprint of the VM via a file-system API \cite{carbond:2023:hotcarbon}.
-It should be investigated further whether this agent could be use in cloud environments, since those settings, as described above, do not provide access to the underlying hardware sensors that are usually used by agents to estimate the power consumption of the VM
-
-%Example of a manual approach (not scalable due to tech specs research): https://devblogs.microsoft.com/sustainable-software/how-can-i-calculate-co2eq-emissions-for-my-azure-vm/ 
-%The critical point here is to get/calculate the energy consumed by a cloud instance, since there are a huge number of technical configurations to find, retrieve and use for calculations.
-
-\subsection{Impact framework potential integration}
+\section{Impact framework potential integration}
 \label{sec:impact_framework_integration}
 
 A potential integration with the Green Software Foundation's Impact Framework is envisioned for the system.

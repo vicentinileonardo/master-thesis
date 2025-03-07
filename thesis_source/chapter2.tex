@@ -98,6 +98,90 @@ With some specific configurations, the subset of providers to be used can be dec
 Currently, as described in section \ref{sec:scheduling_outcome_policy}, the user can specify a subset of cloud providers (among the 3 major ones) to be used for the deployment of resources.
 Finally, since different cloud providers have data centers in various locations around the world, some low-carbon regions might be available only on a specific cloud provider and this could be leveraged for the deployment of resources.
 
+\section{GreenOps landscape}
+
+GreenOps is the abbreviation for ``\textbf{Green Operations}" and is the term used to describe an operational model that aims to integrate sustainable practices into an organization's digital operations, with a particular focus on cloud computing and data centers.
+The interest in GreenOps has been growing in the last years due to the increasing awareness of the environmental impact of data centers and cloud infrastructures.
+%As a matter of fact according to various sources, the carbon footprint of data centers is [...]
+The rising interest in the GreenOps ecosystem is also influenced by political and regulatory factors as the European Union's ambitious goals for the reduction of greenhouse gas emissions.
+In particular, the \textit{Climate Neutral Data Centre Pact in Europe}, is an EU initiative which aims for making climate-neutral data centers by 2030 \cite{climate_neutral_data_centre_pact}.
+Being the work of this thesis focused on the cloud ecosystem, we deem useful to cite the Technical Advisory Group (TAG) on Environmental Sustainability which is focused on the cloud-native sustainability landscape.
+The TAG is part of the Cloud Native Computing Foundation (CNCF) and aims to provide guidance, standards, and best practices for the industry \cite{tag_env_sustainability}.
+
+% https://hbr.org/2020/09/how-green-is-your-software
+% https://www.usenix.org/publications/loginonline/slos-and-ghgs
+
+\subsection{Green Software foundation}
+
+Another pivotal actor in the GreenOps landscape is the Green Software Foundation.
+The Green Software Foundation is a non-profit organization, part of the Linux Foundation, that aims to promote the development of green software and to provide a set of standards, tooling and best practices for the industry \cite{green_software_foundation}.
+It is considered useful to provide a quick summary of the foundation's major projects that are relevant to the context of this work.
+
+\subsubsection{Software Carbon Intensity Specification}
+
+Software Carbon Intensity Specification (SCI) is a specification that aims to provide a standard way to measure the carbon intensity of software systems.
+SCI is defined as a rate: the amount of carbon emissions per one unit of $R$ where $R$ is a functional unit for the software system (e.g., API call, new user, DB query, etc.) \cite{sci}.
+
+The SCI can be defined as follows:
+\[
+SCI = C \times R = (O + M) \times R = ((E \times I) + M) \times R
+\]
+
+where:
+\begin{itemize}[itemsep=0.2pt, topsep=1pt]
+    \item[$\bullet$] $SCI$ is the Software Carbon Intensity
+    \item[$\bullet$] $C$ is the carbon emissions
+    \item[$\bullet$] $R$ is the functional unit
+    \item[$\bullet$] $O$ is the operational emissions
+    \item[$\bullet$] $M$ is the embodied emissions
+    \item[$\bullet$] $E$ is the energy consumption
+    \item[$\bullet$] $I$ is the carbon intensity
+\end{itemize}
+
+\subsubsection{Real Time Cloud}
+\label{sec:real_time_cloud}
+
+The Real Time Cloud project aims to provide a standard for real-time carbon emissions data reporting for cloud providers.
+The goal is to provide real-time access to information about cloud regions, power usage effectiveness (PUE), water usage effectiveness (WUE), carbon-free energy from the grid and from Cloud provider individual initiatives.
+The concept is similar to FOCUS specification for FinOps \cite{finops_focus_spec} but is at a very early stage and is not yet adopted by cloud providers as of 2025 \cite{real_time_cloud}.
+
+%https://github.com/Green-Software-Foundation/real-time-cloud?tab=readme-ov-file
+
+\subsubsection{Impact Framework}
+\label{sec:impact_framework}
+
+The Impact Framework is a flexible framework for measuring and reporting the environmental impact of software systems \cite{impact_framework}.
+The core of the framework is represented by a \textbf{Manifest file} which is a YAML file that is used both for describing \textbf{calculation pipelines} and for storing the results of the calculations.
+Pre-built plugins are available for the most common calculations (e.g., carbon intensity, energy consumption, etc.) but custom plugins can be developed as well \cite{impact_framework}.
+A potential integration of this framework with our system is described in section \ref{sec:impact_framework_integration}.
+
+%https://patterns.greensoftware.foundation/catalog/cloud/choose-region-closest-to-users
+%[which patterns are used in our system]
+
+\subsection{Computational Sustainability by Public Cloud Providers}
+
+For the purpose of ths work, we assume that a cloud data center will likely rely on the same energy sources that characterize a specific geographical region.
+Indeed, cloud data centers typically draw power from their local electrical grids, meaning their carbon emissions are closely tied to the energy mix of their specific geographical regions just like any other industrial facility.
+For instance, if Finland's energy production is characterized by low carbon emissions, data centers located there are likely powered by clean energy sources. 
+However, some public cloud providers may implement individual initiatives to enhance their access to renewable energy or enhance their energy efficiency and by consequence to reduce their carbon footprints.
+For instance, according to an AWS internal report, thanks to their works towards sustainability, they have been able to obtain an infrastructure that is up to 4.1 times more energy efficient than an equivalent on-premise infrastructure \cite{aws_sustainability}.
+%what are they already doing
+%improving energy efficiency by reducing their PUE
+%(Power Usage Effectiveness (PUE) is the ratio of the total energy used by a data center to the energy used for computing.)
+%what microsoft is already doing with alternative energy sources apart from grid
+%https://blog.google/inside-google/infrastructure/data-centers-work-harder-sun-shines-wind-blows/
+%Google CFE\%: “This is the average percentage of carbon free energy consumed in a particular location on an hourly basis, while taking into account the investments we have made in carbon-free energy in that location. This means that in addition to the carbon free energy that's already supplied by the grid, we have added carbon-free energy generation in that location”.
+%When selecting a Google Cloud region, the user can see the carbon-free energy percentage (CFE\%) for that region.
+%usually big companies leverage financial instruments like PPAs to buy renewable energy therefore their emissions are not zero but they are offset by the renewable energy they buy.
+As an example of the efforts made by public cloud providers in the field of carbon-aware computing, we can describe how Google has been working on carbon-aware computing for internal use. 
+In particular, they exploit workload flexibility to shift when, where and how computing is done to reduce carbon emissions \cite{google_carbon_aware_computing}.
+Some of the types of workloads they identified as flexible are: \textbf{video processing}, \textbf{training large-scale machine learning models}, \textbf{simulation pipelines}.
+The main components they recognized to be necessary for carbon-aware computing are: accurate carbon intensity data, scalable infrastructures and migrations mechanisms \cite{google_carbon_aware_computing}.
+Another important point is to adopt a \textbf{data-driven methodology}.
+Indeed, at Google the total amount of work (computing) that needs to get done per day is quite predictable thanks to the large amount of data they can analyze to make predictions \cite{google_carbon_aware_computing}.
+
+In section \ref{sec:carbon_metrics} we will briefly describe how public cloud providers are already providing carbon footprint data reports to their customers.
+
 \section{Kubernetes}
 
 Kubernetes (K8s) is an open-source platform for automating the orchestration of containerized applications.
@@ -276,6 +360,285 @@ This approach offers several key advantages \cite{opa_docs}:
   \item[$\bullet$] \textbf{Scalability}: since OPA and application modules requiring policy decisions are not tightly coupled.
 \end{itemize} 
 
+\subsection{OPA Gatekeeper}
+
+OPA Gatekeeper is a Kubernetes-native policy engine that extends OPA with \textbf{Custom Resources (CRs)} and controllers to enforce policies across a Kubernetes cluster \cite{opa_gatekeeper}. 
+It integrates natively with Kubernetes and provides a declarative approach to defining and enforcing policies using Kubernetes Custom Resources (CRs). 
+This makes it an excellent choice for basic and standard policy enforcement scenarios, such as RBAC (Role-Based Access Control), security compliance, and resource constraints \cite{opa_gatekeeper}.
+However, while OPA Gatekeeper is \textbf{well-suited for simple use cases}, it presents \textbf{limitations} when addressing complex policy requirements, particularly when policies involve \textbf{mutations} or require access to \textbf{external data sources} \cite{opa_gatekeeper_external_data}. 
+Indeed, these limitations make it unsuitable for the specific challenges tackled in this system. 
+Therefore, after an initial investigation and Proof of Concept implementation, we decided to use a standard OPA server deployment for policy enforcement mainly due to the flexibility it provides in handling diverse scenarios.
+To illustrate the differences between a standard OPA policy and an OPA Gatekeeper policy, we present two examples:  
+\begin{itemize}[itemsep=0.2pt, topsep=1pt]
+  \item[$\bullet$] a simple Rego policy that enforces a basic constraint on Pod creation in a Kubernetes cluster.
+  \item[$\bullet$] the corresponding policy implemented as an OPA Gatekeeper \textbf{ConstraintTemplate} and \textbf{Constraint} Kubernetes custom resources.
+\end{itemize}
+
+The first example demonstrates a standalone Rego policy, which can be evaluated directly by an OPA instance. 
+While this approach is flexible and allows for fine-grained policy definition, it requires manual integration into the system, including policy distribution and enforcement setup.  
+
+\begin{lstlisting}[language=rego, caption={Simple OPA Rego Policy}, label={lst:opa-rego}]
+package kubernetes.admission
+
+deny[msg] {
+  input.request.kind.kind == "Pod"
+  input.request.object.metadata.namespace == "restricted"
+  msg := "Pods cannot be created in the 'restricted' namespace."
+}
+\end{lstlisting}
+
+The second example, illustrated in listing \ref{lst:gatekeeper-template} utilizes OPA Gatekeeper, which extends Kubernetes with Kubernetes-native Custom Resource Definitions (CRDs), enabling declarative policy management. By using a ConstraintTemplate, policies can be enforced dynamically through Kubernetes, making them easier to distribute and manage.
+In other words, with this kind of setting, OPA policy bundles are not employed in the same way as in the standard OPA server. Instead, policies are defined as Kubernetes resources, allowing for more straightforward policy enforcement and management within a Kubernetes environment.
+
+\begin{lstlisting}[language=yaml, caption={OPA Gatekeeper ConstraintTemplate}, label={lst:gatekeeper-template}]
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: podnamespaceconstraint
+spec:
+  crd:
+    spec:
+      names:
+        kind: PodNamespaceConstraint
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package kubernetes.admission
+        deny[msg] {
+          input.review.object.metadata.namespace == "restricted"
+          msg := "Pods cannot be created in the 'restricted' namespace."
+        }
+\end{lstlisting}
+
+\begin{lstlisting}[language=yaml, caption={OPA Gatekeeper Constraint}, label={lst:gatekeeper-constraint}, float=htpb]
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: PodNamespaceConstraint
+metadata:
+  name: restrict-namespace
+spec:
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+  parameters: {}
+\end{lstlisting}
+
+In the example, the policy is defined as a ConstraintTemplate, which is then instantiated as a Constraint Custom Resource of kind defined in the ConstraintTemplate. 
+The ConstraintTemplate specifies the Rego policy logic, while the Constraint defines the target resources and parameters for policy enforcement. Therefore a ConstraintTemplate can be used by multiple Constraints, allowing for policy reuse.
+
+OPA Gatekeeper also provides additional Kubernetes Custom Resources called \textit{mutators} (Assign, AssignMetadata, AssignImage, ModifySet) that allow modifying resource fields without writing Rego code \cite{opa_gatekeeper}. 
+These mutators are useful for simple transformations, such as setting default labels or annotations. However simultaneous mutation of multiple fields leveraging external data is not supported \cite{opa_gatekeeper_external_data}. 
+This limitation, in the context of our system, determined the choice of the standard OPA server for policy enforcement. \newline
+
+It must be noted that OPA Gatekeeper limitations could be potentially addressed in future releases, making it a more viable option for complex policy enforcement scenarios. 
+However, for the current system requirements, the standard OPA server was deemed more suitable due to its flexibility.
+
+\section{MLflow}
+
+MLflow is an open-source platform designed to facilitate and enhance the overall machine learning lifecycle. 
+In particular, it offers tooling for \textbf{experiment tracking}, \textbf{model management}, and \textbf{model storage} \cite{mlflow_docs}.
+It is compatible with various ML frameworks, including scikit-learn, PyTorch, TensorFlow, and XGBoost.
+In particular, in the case of our system, PyTorch is the ML framework used for the forecasting models making MLflow a suitable choice for model management.
+For what concerns model deployment, MLflow does not provide a built-in solution, but it is compatible with other tools like KServe which will be described in section \ref{sec:kserve}.
+
+\subsection{MLflow Tracking Server}
+\label{sec:mlflow_tracking_server}
+
+MLflow Tracking Server is the central component of the MLflow platform which is responsible for logging and storing model training data, parameters, and metrics. 
+It enables machine learning practitioners (e.g., data scientists, machine learning engineers) to track experiments, compare results, and reproduce models easily in a collaborative environment.
+MLflow Tracking Server revolves around the concepts of \textbf{experiments}, which are collections of \textbf{runs}. 
+Each run represents a single model training session, and it contains information such as parameters, metrics, and artifacts (e.g., model files).
+Selected models can then be registered in the MLflow Model Registry, which is essentially an optional subset of the selected models that are ready for deployment.
+Model selection can done with the aid of a user interface that allows ML practitioners to visualize and compare the results of different experiments, making it easier to select the best model for deployment.
+MLflow Tracking Server, as the name suggest, is a server that is constantly waiting for new data to be logged. 
+Said data comes from the various training scripts that are executed by the data scientists or machine learning engineers which are run in  training environments.
+In particular the training scripts must be instrumented with the \textbf{MLflow API calls} to log the data in the remote MLflow Tracking Server.
+This setting is very flexible since the training scripts can be run in any environment (e.g., local environment, Universities' HPC clusters), as long as they have access to the MLflow Tracking Server.
+It is deemed important to mention some of the MLflow API calls that are used in the training scripts: the \textit{infer\_signature} and \textit{autolog} functions \cite{mlflow_docs}.
+The \textit{infer\_signature} function captures the \textbf{input and output schema of the model}, which is important for the deployment of the model.
+The \textit{autolog} function is used to automatically log the parameters and metrics of the model training session, without the need to manually log them. In particular, each supported ML framework has its own autolog function which is used to automatically log the parameters and metrics of the model training session.
+The final phase of a model training session is the automatic creation of a \textbf{self-contained directory}, named after the experiment and run IDs, that contains all the necessary files to deploy the model. 
+In particular, the folder contains: the serialized model with model weights, the configuration files (conda.yaml, requirements.txt), and the MLmodel file that contains additional configuration, among which, the model signature.
+The self-contained folder is then automatically uploaded to the MLflow Tracking Server as an artifact.
+The following is an example of the structure of the self-contained directory created by MLflow after a PyTorch model training session: \\
+
+\dirtree{%
+.1 model/.
+.2 MLmodel.
+.2 conda.yaml.
+.2 python\_env.yaml.
+.2 requirements.txt.
+.2 data/.
+.3 model.pth.
+.3 pickle\_module\_info.txt.
+}
+
+\section{KServe}
+\label{sec:kserve}
+
+KServe is an open-source model inference platform that extends Kubernetes with a set of Custom Resource Definitions (CRDs) to \textbf{deploy} and scale machine learning models in production environments \cite{kserve_docs}.
+KServe can be deployed in several ways, one of which is the ``\textit{Serverless mode}'' which is built on top of Istio and Knative, leveraging their powerful capabilities such as automatic scaling. 
+There are two main CRs that can be used to set up a model serving environment: \textit{\textbf{ServingRuntimes}} (or \textit{\textbf{ClusterServingRuntimes}}) and \textit{\textbf{InferenceServices}} \cite{krateo_docs}.
+The former are abstractions that define model serving environments, specifying the templates for Kubernetes Pods capable of serving particular model formats. 
+The latter are actually leveraging the available ServingRuntimes to deploy the models in the system.  
+KServe provides several out-of-the-box ClusterServingRuntimes for common model formats, such as TensorFlow, PyTorch, and XGBoost, which can be used to deploy models without the need to define and configure the runtimes themselves.
+
+
+We can see that the InferenceService CR is quite simple and self-explanatory. 
+The most important fields are the \textit{model} field, which specifies the model format, the protocol version, and the storage URI.
+The storage URI is the location of the model artifacts in the artifact store, which in the case of the system is the SeaweedFS object storage service with S3 compatibility. 
+At the location specified by the storage URI, the model artifacts are stored in the self-contained directory created by MLflow after the model training session as described in section \ref{sec:mlflow_tracking_server}.
+
+\subsection{Open Inference Protocol}
+
+Interoperability is key in a fast-moving environment as the one of machine learning and AI. 
+Therefore KServe has introduced the \textbf{Open Inference Protocol specification} to standardize the communication between inference servers and clients. 
+The Open Inference Protocol has been adopted by several inference servers, including NVIDIA's Triton and Seldon MLserver \cite{kserve_oip}.
+As mentioned in the previous section, the InferenceService CRs used in the system are leveraging the ``kserve-mlserver" ClusterServingRuntime, which under the hood uses MLserver that is compliant with the Open Inference Protocol.
+The list of API endpoints specified by the Open Inference Protocol is shown in Table \ref{tab:oip_endpoints}.
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{API}    & \textbf{Verb} & \textbf{Path}                                                                                         \\ \hline
+Inference       & POST          & v2/models/{[}/versions/\textless{}model\_version\textgreater{}{]}/infer                               \\ \hline
+Model Ready     & GET           & v2/models/\textless{}model\_name\textgreater{}{[}/versions/{]}/ready                                  \\ \hline
+Model Metadata  & GET           & v2/models/\textless{}model\_name\textgreater{}{[}/versions/\textless{}model\_version\textgreater{}{]} \\ \hline
+Server Ready    & GET           & v2/health/ready                                                                                       \\ \hline
+Server Live     & GET           & v2/health/live                                                                                        \\ \hline
+Server Metadata & GET           & v2                                                                                                    \\ \hline
+\end{tabular}
+\caption{Open Inference Protocol API endpoints specification \cite{kserve_oip}}
+\label{tab:oip_endpoints}
+\end{table}
+
+\section{Cloud resource metrics}
+
+% https://dynamorio.org/google_workload_traces.html
+
+Metrics are data points that provide information about a system.
+This information could be related to performance, behavior, resource utilization or any other aspect of the system that could be relevant.
+In the context of cloud resource management, metrics are essential for monitoring the \textbf{performance and health of cloud resources}, enabling organizations to make informed decisions about resource allocation, scaling, and optimization.
+Focusing on the first use case of the proposed system (i.e., VM scheduling for carbon footprint optimization), carbon metrics could be used to determine the carbon footprint of a scheduled VM.
+How to measure the carbon footprint of a resource managed in the cloud is a complex and challenging task.
+The carbon footprint of a cloud resource is influenced by several factors, such as the energy efficiency of the data center where the resource is hosted (PUE), the carbon intensity of the electricity grid in the region where the data center is located, whether the data center uses additional energy sources off the grid, and finally the energy consumption of the resource itself.
+The last factor is probably the most difficult to measure, as a cloud resource is an \textbf{entity that is abstracted from the physical infrastructure}, and therefore it is not straightforward to measure its power consumption. 
+In this first iteration of the system we are dealing for instance with virtual machines (VMs).
+On the other hand, an on-premises server, for instance, could be potentially equipped with physical sensors that measure the direct power consumption of the server, but this is not the case for any cloud resource, especially since this work is focused on the consumer side of the cloud, where the consumer does not have access to any physical infrastructure.
+Moreover, public cloud providers do not provide fine grained and real-time data about the carbon footprint of a resource, as they do not adhere yet to a common standard for carbon footprint calculation (e.g., Real Time Cloud proposed by the Green Software Foundation), like they instead do for the FOCUS standard for FinOps.
+In this section we want to give an brief overview of several metrics and methodologies that can be used totextbf{estimate the carbon footprint of a cloud resource}.
+In addition, we will also discuss the \textbf{challenges and limitations} that can be encountered when dealing with this kind of task.
+
+\subsection{System performance metrics}
+
+System performance metrics are a category of metrics that provide information about the health and performance of a system.
+Usually these metrics are related to bare-metal servers or virtual machines.
+Other cloud resources that have a higher level of abstraction (e.g., containers, Kubernetes Pods, serverless functions) may expose a slighlty different set of metrics that fall into this category as well.
+This category of metrics are also useful for the ``\textbf{day 2 operations}'', which are operations that are performed after the resource has been deployed and monitored for a certain period of time, briefly described in section \ref{sec:day2_operations}.
+
+System performance metrics comprise, for instance:
+\begin{itemize}[itemsep=0.2pt, topsep=1pt]
+  \item[$\bullet$] CPU usage
+  \item[$\bullet$] Memory usage
+  \item[$\bullet$] Disk usage
+  \item[$\bullet$] Network usage
+  \item[$\bullet$] Processes related metrics \\
+\end{itemize}
+
+A standard strategy to collect these metrics is to use \textbf{agents} that are directly installed on the VMs and operate at the Operating System level.
+Some examples of this kind of agents are the \textbf{Prometheus Node exporter} and the \textbf{Prometheus Process exporter}.
+Figure \ref{fig:prometheus} shows an example of a standard Prometheus architecture used to collect system performance metrics using the Node exporter and the Process exporter on a set of Linux VMs.
+In particular, the Node exporter collects metrics such as CPU usage, memory usage, disk usage, and network usage, while the Process exporter collects metrics about the various processes running on the VM (e.g., CPU and memory usage per process group).
+Metrics are pulled by the Prometheus server, which stores them in a time-series database and makes them available for querying and visualization (e.g., using Grafana). 
+In addition, the Prometheus server can be configured to send alerts based on the collected metrics leveraging the Alertmanager component. \newline
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=1\linewidth]{images/prometheus.png}
+  \caption{Standard Prometheus architecture for system performance metrics collection}
+  \label{fig:prometheus}
+\end{figure}
+
+An example of how these metrics can be used for ``day 2 operations" is the one put in place by the \textbf{Krateo Composable FinOps} component \cite{krateo_docs}.
+In this case, the system uses a set of Prometheus exporters and scrapers, configured through Kubernetes Custom Resources, to collect metrics about the VMs managed by the system.
+The optimizations are encoded in a set of Kubernetes Custom Resources (CRs) that are used by the specific operators (e.g., \textit{finops-operator-vm-manager}) to performs operations on the VMs, such as scaling up or down the VMs, stopping them during off-peak hours, etc \cite{krateo_docs}.
+%Prometheus exporters (https://prometheus.io/docs/instrumenting/exporters/) + Prometheus scrapers for data collection.
+%Generic Prometheus exporters and scrapers already used for Krateo Composable FinOps leveraging specific K8s Custom Resources. These exporters are generic and can scrape arbitrary metrics configured in specific CRs (for instance, collecting VMs CPU consumption though Azure APIs).
+%From the Krateo Composable FinOps document: 
+%- “we transform all optimizations into a set of Kubernetes Custom Resources (CRs) to act upon newly found cost-related deficiencies. This allows us to use Kubernetes operators (explicitly coded to interact with cloud services) to monitor these metrics and act automatically to apply changes to remote resources.”
+%- “forward the optimization to the Krateo operator that manages the services that need to be optimized, for example, the Azure Operator to modify the size of a Virtual Machine;”
+%- “the optimization is automatically encoded in a CR for the finops-operator-vm-manager, which then analyzes it and decides how to manage the Virtual Machine. For example, it could scale up or down the virtual machine, stop it for the night, etc.”
+\newline
+As Microsoft Azure documentation describes, there are actually two different categories of metrics that can be collected from a VM in the cloud: the \textbf{guest-level metrics} and the \textbf{hypervisor-level or host-level metrics} \cite{azure_vm_monitoring}.
+The first category of metrics is collected by agents directly installed on the VMs, as described above.
+The second category of metrics is collected by \textbf{cloud provider APIs}, and they provide information about the VMs from the hypervisor or host level.
+For instance, in the case of Azure Virtual Machines, this date is relaated to the Hyper-V host that runs the VM \cite{azure_vm_monitoring}.
+The difference between these two categories of metrics is that the guest-level metrics are more fine-grained and provide information about the actual resource usage of the VM (being collected at the OS level), while the hypervisor-level metrics are more high-level. \newline
+%Azure monitoring REST API: https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/rest-api-walkthrough?tabs=rest%2Cportal
+%https://learn.microsoft.com/en-us/rest/api/monitor/metrics/list?view=rest-monitor-2023-10-01&tabs=HTTP
+%https://learn.microsoft.com/en-us/azure/virtual-machines/monitor-vm 
+To support the collection of metrics, several cloud providers offer agents that can be installed on the provider-specific VMs they manage.
+One of the goal of these agents comparared to standard cloud-agnostic agents is to provide a more convenient experience for the user managing the VMs in the context of the cloud provider. 
+Therefore these agents are usually more integrated with other cloud provider services and APIs.
+In particular, we can cite the following agents: \textbf{Azure Monitor Agent} for Azure VMs, the \textbf{Google Ops Agent} for Google Compute Engine instances, and the \textbf{Amazon CloudWatch Agent} for AWS EC2 instances.
+%Azure Monitor Agent (https://learn.microsoft.com/en-us/azure/azure-monitor/agents/azure-monitor-agent-overview)
+%\textbf{Google Ops Agent}: “the primary agent for collecting telemetry from your Compute Engine instances” (https://cloud.google.com/monitoring/agent/ops-agent)
+%Can be installed in various ways: manual installation, Usining Google Cloud Agent policies from glcoud CLI or using a configuration management tool like Terraform
+
+\subsection{Power consumption metrics}
+
+In the context of our use case, power consumption metrcis could be theoretically used to estimate the carbon footprint of a VM instance.
+However, Public Cloud Providers do not provide real-time data about power consumption of a VM instance. \\
+
+\textbf{Scaphandre} is an open-source monitoring agent designed to collect energy consumption metrics of a system \cite{scaphandre}.
+Scaphandre represents a promising solution only for on-premises servers, as it relies on the Intel \textbf{Running Average Power Limit (RAPL)} sensors to collect power consumption data.
+As a matter of fact, due to security and privacy concerns, public cloud providers do not expose to tenants the underlying RAPL sensors that Scaphandre relies on to track energy consumption \cite{scaphandre_github_issue}.
+Therefore, Scaphandre is unsuitable for our current use case.
+Another interesting and quite mature project is \textbf{Kepler} \cite{kepler}, which is a tool designed to monitor the energy consumption of Kubernetes resources (e.g., Nodes, Pods).
+Being Kubernetes-centric, Kepler is not suitable for our first use case, as it does not provide real-time data about the power consumption of a generic VM instance.
+However, Kepler could be potentially used in a future iteration of the system.
+
+%manually estimate power consumption based on CPU utilization, memory usage. Could be a very difficult task. 
+%there is the TEADS metodology like 
+
+\subsection{Carbon metrics}
+\label{sec:carbon_metrics}
+
+As briefly mentioned in the beginning of this section, there is no adopted standard adopted by Public Cloud Providers to calculate and expose the carbon footprint of a cloud resource.
+In section \ref{sec:real_time_cloud}, we briefly described that the Green Software Foundation is working on a standard called \textbf{Real Time Cloud} that aims to provide a common standard for carbon footprint calculation.
+The goal would be to have a \textbf{real-time carbon metric} to be used for optimization and this metric would be added to the set of metrics that are already provided by the cloud providers (e.g., CPU usage, memory usage).
+However, this standard is not yet adopted by any major Public Cloud Provider which in turn provide only high-level monthly reports for carbon emission data.
+A brief summary, as reported by one of the proposers of Real Time Cloud \cite{cloud_provider_sustainability_reports}, is shown in Table \ref{tab:cloud_carbon_emissions_reports}.
+
+\begin{table}[H]
+  \centering
+  \renewcommand{\arraystretch}{1.2} % Increase row height for readability
+  \setlength{\extrarowheight}{2pt} % Add extra space between rows
+  \begin{tabularx}{\textwidth}{|X|X|X|X|X|X|}
+  \hline
+  \textbf{Cloud Provider}     & \textbf{Project name}                          & \textbf{Scope}            & \textbf{Geographical resolution} & \textbf{Carbon resolution} & \textbf{Time resolution} \\ \hline
+  Amazon Web Services (AWS)   & AWS Customer Carbon Footprint Tool             & Account, EC2, S3, Other   & Continental                      & 0.001 Metric Tons of CO2e  & Monthly                  \\ \hline
+  Microsoft Azure             & Azure Carbon Footprint API Schema              & Account, Service          & Country and region               & 0.001 Metric Tons of CO2e  & Monthly                  \\ \hline
+  Google Cloud Platform (GCP) & Google Carbon Footprint BigQuery Export Schema & Account, Project, Service & Country, region and zone         & 0.1 Kilograms of CO2e      & Monthly                  \\ \hline
+  \end{tabularx}
+  \caption{Cloud provider sustainability reports}
+  \label{tab:cloud_carbon_emissions_reports}
+\end{table}
+%Export Azure carbon optimization emissions data (Preview) (probably not fine-grained as we want)
+
+We deem interesting to mention some of the existing projects that can be used to estimate the carbon footprint of a cloud resource.
+\textbf{Cloud Carbon Footprint} \cite{cloud_carbon_footprint} is a tool that uses cloud provider billing (i.e., AWS Cost and Usage Reports with Amazon Athena, GCP Billing Export Table using BigQuery, Azure Consumption Management API) and resource usage metrics to provide an estimation of the carbon footprint of a cloud resource. For live grid carbon intensity an integration with Electricity Maps API is supported \cite{cloud_carbon_footprint}.
+Another tool within the GreenOps ecosystem is the \textbf{Aether} calculation engine \cite{aether}
+Currently only AWS and GCP are supported as it uses AWS CloudWatch and Google monitoring
+There is not the possibility to use a real-time Grid Carbon Intensity Coefficient since carbon data is extrapolated from “governative” data reports \cite{aether}.
+A different approach to estimate the carbon footprint of resource, in particualar a virtual machine is the one proposed by the \textbf{carbond} agent \cite{carbond:2023:hotcarbon}. 
+This agent must be installed on the VM and aims to provide a real-time estimation of the carbon footprint of the VM via a file-system API \cite{carbond:2023:hotcarbon}.
+It should be investigated further whether this agent could be use in cloud environments, since those settings, as described above, do not provide access to the underlying hardware sensors that are usually used by agents to estimate the power consumption of the VM
+
+%Example of a manual approach (not scalable due to tech specs research): https://devblogs.microsoft.com/sustainable-software/how-can-i-calculate-co2eq-emissions-for-my-azure-vm/ 
+%The critical point here is to get/calculate the energy consumed by a cloud instance, since there are a huge number of technical configurations to find, retrieve and use for calculations.
+
 \section{Multi-cloud resource management}
 \label{sec:multi_cloud_resource_management}
 
@@ -364,89 +727,6 @@ The focus of the research is on both the provider and the consumer perspective, 
 % Optimizing Cost and Maximizing Profit for Multi-Cloud-Based Big Data Computing by Deadline-Aware Optimize Resource Allocation
 % https://link.springer.com/chapter/10.1007/978-981-15-8469-5_3
 
-\section{GreenOps landscape}
-
-GreenOps is the abbreviation for ``\textbf{Green Operations}" and is the term used to describe an operational model that aims to integrate sustainable practices into an organization's digital operations, with a particular focus on cloud computing and data centers.
-The interest in GreenOps has been growing in the last years due to the increasing awareness of the environmental impact of data centers and cloud infrastructures.
-%As a matter of fact according to various sources, the carbon footprint of data centers is [...]
-The rising interest in the GreenOps ecosystem is also influenced by political and regulatory factors as the European Union's ambitious goals for the reduction of greenhouse gas emissions.
-In particular, the \textit{Climate Neutral Data Centre Pact in Europe}, is an EU initiative which aims for making climate-neutral data centers by 2030 \cite{climate_neutral_data_centre_pact}.
-Being the work of this thesis focused on the cloud ecosystem, we deem useful to cite the Technical Advisory Group (TAG) on Environmental Sustainability which is focused on the cloud-native sustainability landscape.
-The TAG is part of the Cloud Native Computing Foundation (CNCF) and aims to provide guidance, standards, and best practices for the industry \cite{tag_env_sustainability}.
-
-% https://hbr.org/2020/09/how-green-is-your-software
-% https://www.usenix.org/publications/loginonline/slos-and-ghgs
-
-\subsection{Green Software foundation}
-
-Another pivotal actor in the GreenOps landscape is the Green Software Foundation.
-The Green Software Foundation is a non-profit organization, part of the Linux Foundation, that aims to promote the development of green software and to provide a set of standards, tooling and best practices for the industry \cite{green_software_foundation}.
-It is considered useful to provide a quick summary of the foundation's major projects that are relevant to the context of this work.
-
-\subsubsection{Software Carbon Intensity Specification}
-
-Software Carbon Intensity Specification (SCI) is a specification that aims to provide a standard way to measure the carbon intensity of software systems.
-SCI is defined as a rate: the amount of carbon emissions per one unit of $R$ where $R$ is a functional unit for the software system (e.g., API call, new user, DB query, etc.) \cite{sci}.
-
-The SCI can be defined as follows:
-\[
-SCI = C \times R = (O + M) \times R = ((E \times I) + M) \times R
-\]
-
-where:
-\begin{itemize}[itemsep=0.2pt, topsep=1pt]
-    \item[$\bullet$] $SCI$ is the Software Carbon Intensity
-    \item[$\bullet$] $C$ is the carbon emissions
-    \item[$\bullet$] $R$ is the functional unit
-    \item[$\bullet$] $O$ is the operational emissions
-    \item[$\bullet$] $M$ is the embodied emissions
-    \item[$\bullet$] $E$ is the energy consumption
-    \item[$\bullet$] $I$ is the carbon intensity
-\end{itemize}
-
-\subsubsection{Real Time Cloud}
-\label{sec:real_time_cloud}
-
-The Real Time Cloud project aims to provide a standard for real-time carbon emissions data reporting for cloud providers.
-The goal is to provide real-time access to information about cloud regions, power usage effectiveness (PUE), water usage effectiveness (WUE), carbon-free energy from the grid and from Cloud provider individual initiatives.
-The concept is similar to FOCUS specification for FinOps \cite{finops_focus_spec} but is at a very early stage and is not yet adopted by cloud providers as of 2025 \cite{real_time_cloud}.
-
-%https://github.com/Green-Software-Foundation/real-time-cloud?tab=readme-ov-file
-
-\subsubsection{Impact Framework}
-\label{sec:impact_framework}
-
-The Impact Framework is a flexible framework for measuring and reporting the environmental impact of software systems \cite{impact_framework}.
-The core of the framework is represented by a \textbf{Manifest file} which is a YAML file that is used both for describing \textbf{calculation pipelines} and for storing the results of the calculations.
-Pre-built plugins are available for the most common calculations (e.g., carbon intensity, energy consumption, etc.) but custom plugins can be developed as well \cite{impact_framework}.
-A potential integration of this framework with our system is described in section \ref{sec:impact_framework_integration}.
-
-%https://patterns.greensoftware.foundation/catalog/cloud/choose-region-closest-to-users
-%[which patterns are used in our system]
-
-\subsection{Computational Sustainability by Public Cloud Providers}
-
-For the purpose of ths work, we assume that a cloud data center will likely rely on the same energy sources that characterize a specific geographical region.
-Indeed, cloud data centers typically draw power from their local electrical grids, meaning their carbon emissions are closely tied to the energy mix of their specific geographical regions just like any other industrial facility.
-For instance, if Finland's energy production is characterized by low carbon emissions, data centers located there are likely powered by clean energy sources. 
-However, some public cloud providers may implement individual initiatives to enhance their access to renewable energy or enhance their energy efficiency and by consequence to reduce their carbon footprints.
-For instance, according to an AWS internal report, thanks to their works towards sustainability, they have been able to obtain an infrastructure that is up to 4.1 times more energy efficient than an equivalent on-premise infrastructure \cite{aws_sustainability}.
-%what are they already doing
-%improving energy efficiency by reducing their PUE
-%(Power Usage Effectiveness (PUE) is the ratio of the total energy used by a data center to the energy used for computing.)
-%what microsoft is already doing with alternative energy sources apart from grid
-%https://blog.google/inside-google/infrastructure/data-centers-work-harder-sun-shines-wind-blows/
-%Google CFE\%: “This is the average percentage of carbon free energy consumed in a particular location on an hourly basis, while taking into account the investments we have made in carbon-free energy in that location. This means that in addition to the carbon free energy that's already supplied by the grid, we have added carbon-free energy generation in that location”.
-%When selecting a Google Cloud region, the user can see the carbon-free energy percentage (CFE\%) for that region.
-%usually big companies leverage financial instruments like PPAs to buy renewable energy therefore their emissions are not zero but they are offset by the renewable energy they buy.
-As an example of the efforts made by public cloud providers in the field of carbon-aware computing, we can describe how Google has been working on carbon-aware computing for internal use. 
-In particular, they exploit workload flexibility to shift when, where and how computing is done to reduce carbon emissions \cite{google_carbon_aware_computing}.
-Some of the types of workloads they identified as flexible are: \textbf{video processing}, \textbf{training large-scale machine learning models}, \textbf{simulation pipelines}.
-The main components they recognized to be necessary for carbon-aware computing are: accurate carbon intensity data, scalable infrastructures and migrations mechanisms \cite{google_carbon_aware_computing}.
-Another important point is to adopt a \textbf{data-driven methodology}.
-Indeed, at Google the total amount of work (computing) that needs to get done per day is quite predictable thanks to the large amount of data they can analyze to make predictions \cite{google_carbon_aware_computing}.
-
-In section \ref{sec:carbon_metrics} we will briefly describe how public cloud providers are already providing carbon footprint data reports to their customers.
 
 \section{Carbon-aware systems for resource management}
 
