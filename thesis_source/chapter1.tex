@@ -3,10 +3,14 @@
 
 In this chapter, we provide an overview of the main concepts, paradigms and technologies that are relevant for the purpose of this work.
 We start by introducing the concept of \textbf{Public Cloud Providers} and the \textbf{Multi-Cloud paradigm}.
-We then provide a brief overview of \textbf{Kubernetes}, in particular focusing on the concept of \textbf{Kubernetes as a platform} and the \textbf{Helm} package manager.
+We then provide an overview of the \textbf{GreenOps landscape}, with a focus on the the \textbf{Computational Sustainability} initiatives by Public Cloud Providers.
+A brief overview of \textbf{Kubernetes}, in particular focusing on the concept of \textbf{Kubernetes as a platform} and the \textbf{Helm} package manager is deemed necessary.
 After that, we describe \textbf{Krateo PlatformOps}, an open-source Kubernetes-based platform that is a fundamental part of our system.
-We also deemed valuable to provide an overview of the existing works in the field of \textbf{multi-cloud resource management} to highlight recurrent patterns and design choices.
-Finally, we present the \textbf{GreenOps landscape}, with a focus on the the \textbf{Computational Sustainability} initiatives by Public Cloud Providers and on \textbf{carbon-aware systems for resource management}. 
+Then we introduce \textbf{Open Policy Agent} and the \textbf{Policy as Code} paradigm.
+A pair of MLOps tools are then introduced: \textbf{MLflow} and \textbf{KServe}.
+An analysis of \textbf{cloud resource metrics} and their uses is then provided.
+We deemed particularly valuable to provide an overview of the existing works in the field of \textbf{multi-cloud resource management} to highlight recurrent patterns and design choices.
+Finally, we present some works on \textbf{carbon-aware systems for resource management}. 
 
 \section{Public cloud providers}
 
@@ -14,7 +18,7 @@ The Cloud Computing definition by the National Institute of Standards and Techno
 \textbf{Public Cloud Providers} or Cloud Service Providers (CSPs) are companies that have as their core business the provisioning of cloud computing services. 
 These services, which are growing in number and complexity over time, range from computing resources to storage, networking, databases, machine learning solutions, and more. 
 Public cloud is a deployment model that allows organizations to consume cloud services without having to build and maintain their own physical infrastructure (e.g., private cloud), therefore reducing capital expenditure (CapEx) and shifting to an operational expense model (OpEx). 
-The public cloud model is actually a multi-tenant environment where physical resources maintained and operated by the cloud provider are shared among multiple customers (tenants) with the means of virtualization and isolation techniques.
+The public cloud model is actually a multi-tenant environment where physical resources, maintained and operated by the cloud provider, are shared among multiple customers (tenants) with the means of virtualization and isolation techniques.
 These resources are offered in the form of various services at different levels of abstraction (e.g., Infrastructure as a Service (IaaS), Platform as a Service (PaaS), Software as a Service(SaaS)) and are provided on-demand on a pay-as-you-go basis.
 %Doing so requires public cloud provider to leverage paradigm and technique which were known in the industry well before the advent of cloud computing: virtualization and isolation.
 Currently, as of 2024, the public cloud market is dominated by three main hyperscalers: \textbf{Amazon Web Services (AWS)}, \textbf{Microsoft Azure}, and \textbf{Google Cloud Platform (GCP)}.
@@ -85,6 +89,7 @@ It could even be the case that, for the end user, the choice of the cloud provid
 To avoid vendor lock-in, applications must be designed to be \textbf{cloud-agnostic} and leverage open-source technologies (e.g., Kubernetes) and standards \cite{google_multicloud}.
 If an application is designed to be cloud-agnostic, it can be relatively easily migrated from one cloud provider to another.
 Multi-cloud is a strategy that might be more difficult to implement compared to a single cloud strategy but the long-term benefits are significant.
+
 \textbf{Challenges} and \textbf{disadvantages} are also present in a multi-cloud strategy \cite{google_multicloud}.
 As a matter of fact, it can be safely said that \textbf{complexity in the overall infrastructure management is increased}.
 Another challenge is the \textbf{integration of services} across different cloud providers.
@@ -173,7 +178,7 @@ For instance, according to an AWS internal report, thanks to their works towards
 %Google CFE\%: “This is the average percentage of carbon free energy consumed in a particular location on an hourly basis, while taking into account the investments we have made in carbon-free energy in that location. This means that in addition to the carbon free energy that's already supplied by the grid, we have added carbon-free energy generation in that location”.
 %When selecting a Google Cloud region, the user can see the carbon-free energy percentage (CFE\%) for that region.
 %usually big companies leverage financial instruments like PPAs to buy renewable energy therefore their emissions are not zero but they are offset by the renewable energy they buy.
-As an example of the efforts made by public cloud providers in the field of carbon-aware computing, we can describe how Google has been working on carbon-aware computing for internal use. 
+As another example of the efforts made by public cloud providers in the field of carbon-aware computing, we can describe how Google has been working on carbon-aware computing for internal use. 
 In particular, they exploit workload flexibility to shift when, where and how computing is done to reduce carbon emissions \cite{google_carbon_aware_computing}.
 Some of the types of workloads they identified as flexible are: \textbf{video processing}, \textbf{training large-scale machine learning models}, \textbf{simulation pipelines}.
 The main components they recognized to be necessary for carbon-aware computing are: accurate carbon intensity data, scalable infrastructures and migrations mechanisms \cite{google_carbon_aware_computing}.
@@ -186,7 +191,7 @@ In section \ref{sec:carbon_metrics} we will briefly describe how public cloud pr
 
 Kubernetes (K8s) is an open-source platform for automating the orchestration of containerized applications.
 It is widely used in the industry and became the \textbf{de-facto standard for container orchestration}.
-Figure \ref{fig:kubernetes_architecture} shows the Kubernetes architecture as described by the Cloud Native Computing Foundation (CNCF) \cite{kubernetes_cnfc}.
+Figure \ref{fig:kubernetes_architecture} shows the Kubernetes architecture as described and depicted by the Cloud Native Computing Foundation (CNCF) \cite{kubernetes_cnfc}.
 
 \begin{figure}[t]
     \centering
@@ -220,10 +225,10 @@ Kubernetes allows for the extension of its functionalities through the use of \t
 Simply put, CRDs are a way to instruct Kubernetes to manage new resource types and can be added and removed from a Kubernetes cluster at runtime, through dynamic registration.
 They are a \textbf{schema} that defines the structure of the resource and the Kubernetes API server will validate the resource against the schema.
 \textbf{Custom Resources (CRs)} are actually instances of the resources defined by CRDs and are managed by an operator.
-The Operator is a special type of controller tasked with managing the lifecycle of the CRs.
+An operator is a special type of controller tasked with managing the lifecycle of the CRs.
 Indeed they implement \textbf{control loops} to compare the \textbf{current state} of the resources they manage with the \textbf{desired state} and take actions to make the current state converge to the desired state.
-A high-level overview of the Operator paradigm is depicted in Figure \ref{fig:operator_paradigm}.
-Effectively, the code of an operator is usually deployed on the Kubernetes cluster in the form of a Kubernetes Deployment.
+A high-level overview of the operator paradigm is depicted in Figure \ref{fig:operator_paradigm}.
+Effectively, the code of an operator is usually deployed on the Kubernetes cluster in the form of a Kubernetes deployment.
 This concept is similar to the standard built-in Kubernetes resources which are however manged by built-in controllers (e.g., Deployment controller, ReplicaSet controller, part of Kubernetes controller manager).
 
 \begin{figure}[t]
@@ -292,14 +297,14 @@ Therefore, generally speaking, the file \textit{values.schema.json} could be use
 In other words, the Krateo core-provider operator is responsible for deploying the Helm chart as a \textbf{native Kubernetes resource}, which allows for the management of the whole Helm chart lifecycle through Kubernetes APIs \cite{krateo_core_provider}.
 As a matter of fact, out of the box, Kubernetes does not provide a way to manage Helm charts natively and the Krateo core-provider is one tool that allows to do so.
 
-Krateo core-provider introduces a Kubernetes CRD introduced called \textbf{\textit{CompositionDefinition}} to represents the Helm chart and its values (a Helm Chart archive with a JSON Schema for the values.yaml file) \cite{krateo_core_provider}.
+Krateo core-provider introduces a Kubernetes CRD introduced called \textbf{\textit{CompositionDefinition}} to represents the Helm chart and its values (a Helm Chart archive with a JSON Schema for the \textit{values.yaml} file) \cite{krateo_core_provider}.
 Upon a CompositionDefinition manifest application to the Kubernetes cluster, the Krateo core-provider generates the CRD from the schema defined in the \textit{values.schema.json} file included in the chart. 
 It then deploys an instance of the Krateo composition-dynamic-controller, configuring it up to manage resources of the type defined by the CRD \cite{krateo_core_provider}.
-This is another example of the Operator paradigm described in section \ref{sec:kubernetes_extensibility} where the Krateo core-provider is the Operator and the CompositionDefinition is the CRD.
+This is another example of the operator paradigm described in section \ref{sec:kubernetes_extensibility} where the Krateo core-provider is the operator and the CompositionDefinition is the CRD.
 
 \subsection{Krateo composition-dynamic-controller}
 
-The Krateo composition-dynamic-controller is the Kubernetes operator that is instantiated by the Krateo core-provider to manage the specific CRs whose CRDs are generated by the core-provider.
+The Krateo composition-dynamic-controller (CDC) is the Kubernetes operator that is instantiated by the Krateo core-provider to manage the specific CRs whose CRDs are generated by the core-provider.
 In practice, when a CR is created, the specific instance of Krateo composition-dynamic-controller checks if a Helm release associated with the CR already exists in the cluster \cite{krateo_composition_dynamic_controller}. 
 If this is not the case, it performs an \textit{helm install} operation using the values specified in the CR to create a new Helm release. 
 This will practically deploy all the resources defined in the Helm chart (in the folder ``/templates'') using \textbf{Helm's templating engine}.
@@ -336,7 +341,7 @@ One of OPA's key strengths is its \textbf{domain-agnostic design}, allowing it t
 This makes it highly adaptable to different use cases, ranging from access control to infrastructure security. 
 Some representative examples of policies that OPA can enforce include:
 
-\begin{itemize}[itemsep=0.2pt, topsep=1pt] \item[$\bullet$] Restricting which image registries can be used for deploying new Pods in a Kubernetes cluster.
+\begin{itemize}[itemsep=0.2pt, topsep=1pt]
     \item[$\bullet$] Restricting which specific image registries can be used for deploying new pods in a Kubernetes cluster.
     \item[$\bullet$] Controlling whether a specific user is permitted to perform delete operations on certain resources on an API server.
     \item[$\bullet$] Enforcing network security policies, such as blocking external access to sensitive internal services.
@@ -362,8 +367,8 @@ This approach offers several key advantages \cite{opa_docs}:
 
 \subsection{OPA Gatekeeper}
 
-OPA Gatekeeper is a Kubernetes-native policy engine that extends OPA with \textbf{Custom Resources (CRs)} and controllers to enforce policies across a Kubernetes cluster \cite{opa_gatekeeper}. 
-It integrates natively with Kubernetes and provides a declarative approach to defining and enforcing policies using Kubernetes Custom Resources (CRs). 
+OPA Gatekeeper is a Kubernetes-native policy engine that extends OPA with \textbf{Custom Resources} and controllers to enforce policies across a Kubernetes cluster \cite{opa_gatekeeper}. 
+It integrates natively with Kubernetes and provides a declarative approach to defining and enforcing policies using Kubernetes Custom Resources. 
 This makes it an excellent choice for basic and standard policy enforcement scenarios, such as RBAC (Role-Based Access Control), security compliance, and resource constraints \cite{opa_gatekeeper}.
 However, while OPA Gatekeeper is \textbf{well-suited for simple use cases}, it presents \textbf{limitations} when addressing complex policy requirements, particularly when policies involve \textbf{mutations} or require access to \textbf{external data sources} \cite{opa_gatekeeper_external_data}. 
 Indeed, these limitations make it unsuitable for the specific challenges tackled in this system. 
@@ -459,7 +464,7 @@ It is deemed important to mention some of the MLflow API calls that are used in 
 The \textit{infer\_signature} function captures the \textbf{input and output schema of the model}, which is important for the deployment of the model.
 The \textit{autolog} function is used to automatically log the parameters and metrics of the model training session, without the need to manually log them. In particular, each supported ML framework has its own autolog function which is used to automatically log the parameters and metrics of the model training session.
 The final phase of a model training session is the automatic creation of a \textbf{self-contained directory}, named after the experiment and run IDs, that contains all the necessary files to deploy the model. 
-In particular, the folder contains: the serialized model with model weights, the configuration files (conda.yaml, requirements.txt), and the MLmodel file that contains additional configuration, among which, the model signature.
+In particular, the folder contains: the serialized model with model weights, the configuration files (\textit{conda.yaml}, \textit{requirements.txt}), and the \textit{MLmodel} file that contains additional configuration, among which, the model signature.
 The self-contained folder is then automatically uploaded to the MLflow Tracking Server as an artifact.
 The following is an example of the structure of the self-contained directory created by MLflow after a PyTorch model training session: \\
 
@@ -517,7 +522,7 @@ This information could be related to performance, behavior, resource utilization
 In the context of cloud resource management, metrics are essential for monitoring the \textbf{performance and health of cloud resources}, enabling organizations to make informed decisions about resource allocation, scaling, and optimization.
 Focusing on the first use case of the proposed system (i.e., VM scheduling for carbon footprint optimization), carbon metrics could be used to determine the carbon footprint of a scheduled VM.
 How to measure the carbon footprint of a resource managed in the cloud is a complex and challenging task.
-The carbon footprint of a cloud resource is influenced by several factors, such as the power usage effectiveness (PUE) of the data center where the resource is hosted, the carbon intensity of the electricity grid in the region where the data center is located, whether the data center uses additional energy sources off the grid, and finally the energy consumption of the resource itself.
+The carbon footprint of a cloud resource is influenced by several factors, such as the power usage effectiveness of the data center where the resource is hosted, the carbon intensity of the electricity grid in the region where the data center is located, whether the data center uses additional energy sources off the grid, and finally the energy consumption of the resource itself.
 The last factor is probably the most difficult to measure, as a cloud resource is an \textbf{entity that is abstracted from the physical infrastructure}, and therefore it is not straightforward to measure its power consumption. 
 In this first iteration of the system we are dealing for instance with virtual machines (VMs).
 On the other hand, an on-premises server, for instance, could be potentially equipped with physical sensors that measure the direct power consumption of the server, but this is not the case for any cloud resource, especially since this work is focused on the consumer side of the cloud, where the consumer does not have access to any physical infrastructure.
@@ -557,7 +562,7 @@ In addition, the Prometheus server can be configured to send alerts based on the
 
 An example of how these metrics can be used for ``day 2 operations" is the one put in place by the \textbf{Krateo Composable FinOps} component \cite{krateo_docs}.
 In this case, the system uses a set of Prometheus exporters and scrapers, configured through Kubernetes Custom Resources, to collect metrics about the VMs managed by the system.
-The optimizations are encoded in a set of Kubernetes Custom Resources (CRs) that are used by the specific operators (e.g., \textit{finops-operator-vm-manager}) to performs operations on the VMs, such as scaling up or down the VMs, stopping them during off-peak hours, etc \cite{krateo_docs}.
+The optimizations are encoded in a set of Kubernetes Custom Resources that are used by the specific operators (e.g., \textit{finops-operator-vm-manager}) to performs operations on the VMs, such as scaling up or down the VMs, stopping them during off-peak hours, etc \cite{krateo_docs}.
 %Prometheus exporters (https://prometheus.io/docs/instrumenting/exporters/) + Prometheus scrapers for data collection.
 %Generic Prometheus exporters and scrapers already used for Krateo Composable FinOps leveraging specific K8s Custom Resources. These exporters are generic and can scrape arbitrary metrics configured in specific CRs (for instance, collecting VMs CPU consumption though Azure APIs).
 %From the Krateo Composable FinOps document: 
@@ -569,7 +574,7 @@ The optimizations are encoded in a set of Kubernetes Custom Resources (CRs) that
 As Microsoft Azure documentation describes, there are actually two different categories of metrics that can be collected from a VM in the cloud: the \textbf{guest-level metrics} and the \textbf{hypervisor-level or host-level metrics} \cite{azure_vm_monitoring}.
 The first category of metrics is collected by agents directly installed on the VMs, as described above.
 The second category of metrics is collected by \textbf{cloud provider APIs}, and they provide information about the VMs from the hypervisor or host level.
-For instance, in the case of Azure Virtual Machines, this date is relaated to the Hyper-V host that runs the VM \cite{azure_vm_monitoring}.
+For instance, in the case of Azure Virtual Machines, this date is related to the Hyper-V host that runs the VM \cite{azure_vm_monitoring}.
 The difference between these two categories of metrics is that the guest-level metrics are more fine-grained and provide information about the actual resource usage of the VM (being collected at the OS level), while the hypervisor-level metrics are more high-level. \newline
 %Azure monitoring REST API: https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/rest-api-walkthrough?tabs=rest%2Cportal
 %https://learn.microsoft.com/en-us/rest/api/monitor/metrics/list?view=rest-monitor-2023-10-01&tabs=HTTP
@@ -591,6 +596,7 @@ However, Public Cloud Providers do not provide real-time data about power consum
 Scaphandre represents a promising solution only for on-premises servers, as it relies on the Intel \textbf{Running Average Power Limit (RAPL)} sensors to collect power consumption data.
 As a matter of fact, due to security and privacy concerns, public cloud providers do not expose to tenants the underlying RAPL sensors that Scaphandre relies on to track energy consumption \cite{scaphandre_github_issue}.
 Therefore, Scaphandre is unsuitable for our current use case.
+
 Another interesting and quite mature project is \textbf{Kepler} \cite{kepler}, which is a tool designed to monitor the energy consumption of Kubernetes resources (e.g., Nodes, Pods).
 Being Kubernetes-centric, Kepler is not suitable for our first use case, as it does not provide real-time data about the power consumption of a generic VM instance.
 However, Kepler could be potentially used in a future iteration of the system.
@@ -601,10 +607,10 @@ However, Kepler could be potentially used in a future iteration of the system.
 \subsection{Carbon metrics}
 \label{sec:carbon_metrics}
 
-As briefly mentioned in the beginning of this section, there is no adopted standard adopted by Public Cloud Providers to calculate and expose the carbon footprint of a cloud resource.
+As briefly mentioned in the beginning of this section, there is no adopted standard adopted by public cloud providers to calculate and expose the carbon footprint of a cloud resource.
 In section \ref{sec:real_time_cloud}, we briefly described that the Green Software Foundation is working on a standard called \textbf{Real Time Cloud} that aims to provide a common standard for carbon footprint calculation.
-The goal would be to have a \textbf{real-time carbon metric} to be used for optimization and this metric would be added to the set of metrics that are already provided by the cloud providers (e.g., CPU usage, memory usage).
-However, this standard is not yet adopted by any major Public Cloud Provider which in turn provide only high-level monthly reports for carbon emission data.
+The goal would be to have a \textbf{real-time carbon metric} to be used for optimization and that this metric would be added to the set of metrics that are already provided by the cloud providers (e.g., CPU usage, memory usage).
+However, this standard is not yet adopted by any major public cloud provider which in turn provide only high-level monthly reports for carbon emission data.
 A brief summary, as reported by one of the proposers of Real Time Cloud \cite{cloud_provider_sustainability_reports}, is shown in Table \ref{tab:cloud_carbon_emissions_reports}.
 
 \begin{table}[t]
@@ -626,9 +632,9 @@ A brief summary, as reported by one of the proposers of Real Time Cloud \cite{cl
 We deem interesting to mention some of the existing projects that can be used to estimate the carbon footprint of a cloud resource.
 \textbf{Cloud Carbon Footprint} \cite{cloud_carbon_footprint} is a tool that uses cloud provider billing (i.e., AWS Cost and Usage Reports with Amazon Athena, GCP Billing Export Table using BigQuery, Azure Consumption Management API) and resource usage metrics to provide an estimation of the carbon footprint of a cloud resource. For live grid carbon intensity an integration with Electricity Maps API is supported \cite{cloud_carbon_footprint}.
 Another tool within the GreenOps ecosystem is the \textbf{Aether} calculation engine \cite{aether}
-Currently only AWS and GCP are supported as it uses AWS CloudWatch and Google monitoring
+Currently only AWS and GCP are supported as it uses AWS CloudWatch and Google monitoring.
 There is not the possibility to use a real-time Grid Carbon Intensity Coefficient since carbon data is extrapolated from “governative” data reports \cite{aether}.
-A different approach to estimate the carbon footprint of resource, in particualar a virtual machine is the one proposed by the \textbf{carbond} agent \cite{carbond:2023:hotcarbon}. 
+A different approach to estimate the carbon footprint of resources, virtual machines in particular, is the one proposed by the \textbf{carbond} agent \cite{carbond:2023:hotcarbon}. 
 This agent must be installed on the VM and aims to provide a real-time estimation of the carbon footprint of the VM via a file-system API \cite{carbond:2023:hotcarbon}.
 It should be investigated further whether this agent could be use in cloud environments, since those settings, as described above, do not provide access to the underlying hardware sensors that are usually used by agents to estimate the power consumption of the VM
 
@@ -707,7 +713,7 @@ Leveraging this representation, they propose a SLA-driven architecture with thre
 The SLA Manager is the entry point for users and essentially builds and register agreements starting from the user requirements.
 The Orchestrator, having a complete view of all the available cloud backends, performs the critical task of scheduling and resource allocation, considering the SLA constraints.
 The Infrastructure Connector is the component that actually interacts with the cloud providers, performing the actual resource allocation and deallocation (provisioning and deprovisioning).
-An interesting feature of the Infrastructure Connector is the ``configuration step'' in which arbitrary actions can be performed such as the \textbf{injection of a monitoring agent on a Virtual Machine}.
+An interesting feature of the Infrastructure Connector is the ``configuration step'' in which arbitrary actions can be performed such as the \textbf{injection of a monitoring agent on a virtual machine}.
 \newline
 
 In the context of serverless computing environments, the work of 2021 by Mampage et al. \cite{9499407} proposes a deadline-aware dynamic resource management system.
@@ -830,7 +836,7 @@ In the system proposed by this thesis, the elements needed for multi-cloud resou
 From a general standpoint, the system proposed in this thesis is different from the state of the art analyzed for a number of reasons.
 First of all, the system was designed to be easily integrated in a production environment rather than be used in a ``sandboxed" or simulation environment.
 The system is designed to be \textbf{flexible} and \textbf{agnostic} with respect to the type of resources managed and the cloud providers used.
-On the other hand, the works described in sections \ref{sec:multi_cloud_resource_management} and  \ref{sec:carbon_aware_resource_management} are usually tied to one type of resource (e.g., VMs, K8s pods) or when they are not, like in the case of the Kubernetes Bridge Operator \cite{lublinsky2022kubernetesbridgeoperatorcloud}, a specific controller must be implemented for each time for each external resource manager.
+On the other hand, the works described in sections \ref{sec:multi_cloud_resource_management} and  \ref{sec:carbon_aware_resource_management} are usually tied to one type of resource (e.g., VMs, K8s pods) or when they are not, like in the case of the ``Kubernetes Bridge operator" \cite{lublinsky2022kubernetesbridgeoperatorcloud}, a specific controller must be implemented each time for each external resource manager.
 In our case, we leverage Kubernetes as a control plane to manage the resources of the cloud providers.
 We do not need to implement a specific controller for each cloud provider but we leverage the Kubernetes ecosystem of operators to manage cloud resources.
 We then leverage Open Policy Agent and the ``Policy as Code'' paradigm to encode the constraints and objectives of the system, which we believe is a more flexible and powerful approach than the one used in the works described in the previous sections.

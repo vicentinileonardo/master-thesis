@@ -28,11 +28,11 @@ with:
     \item \( \text{MinRAM} \) is the minimum RAM required (in GB).
     \item \( D \) is the duration for which the VM must run to complete its processing task \( P \) (in hours).
     \item \( DL \) is the deadline timestamp by which the VM must complete execution.
-    \item \( ML \) is the maximum allowed latency in milliseconds. If latency is not a constraint, then it cn be omitted. \\
+    \item \( ML \) is the maximum allowed latency in milliseconds. If latency is not a constraint, then it can be omitted. \\
 \end{itemize}
 
-This VM can be scheduled on any Public Cloud Provider since we are interested in a multi-cloud system where the cloud can be effectively seen as a commodity. 
-Alternatively, a subset of \textbf{eligible Public Cloud Providers} can be set at runtime by the user.
+This VM can be scheduled on any public cloud provider since we are interested in a multi-cloud system where the cloud can be effectively seen as a commodity. 
+Alternatively, a subset of \textbf{eligible public cloud providers} can be set at runtime by the user.
 We will refer to \textbf{general-purpose VMs} and not specialized ones like GPU instances or high-performance computing instances. \\
 
 As an example, we can define a VM with the following specifications:
@@ -47,7 +47,8 @@ where:
     \item \( \text{MinCPU} = 4 \) vCPUs
     \item \( \text{MinRAM} = 4 \) GB
     \item \( D = 1 \) hour
-    \item \( DL = \texttt{"2025-03-20T23:59:59Z"} \) (i.e., the processing task \( P \) inside the VM must complete before this timestamp) \\
+    \item \( DL = \texttt{"2025-03-20T23:59:59Z"} \) (i.e., the processing task \( P \) inside the VM must complete before this timestamp)
+    \item \( ML = 100 \) ms (i.e., the maximum allowed latency) \\
 \end{itemize}
 
 The system is designed to be cloud-agnostic, however for the purpose of this work, the system is currently configured to support three major cloud providers: \textbf{Microsoft Azure}, \textbf{Google Cloud Platform (GCP)}, and \textbf{Amazon Web Services (AWS)}.
@@ -1158,10 +1159,10 @@ The system is designed to be highly flexible and extensible, allowing for the ad
 \label{sec:day2_operations}
 
 What was analyzed so far can be defined as ``Day 1'' optimization, i.e., the optimization of resources at deployment time.
-We can define as \textbf{\textit{Day 2 operations}} all the management operations that are performed after the deployment of a resource.
+We can define as \textbf{\textit{``Day 2 operations''}} all the management operations that are performed after the deployment of a resource.
 These operations comprise tasks such as scaling up or down a VM based on the load, stopping a VM during off-peak hours, or migrating a VM to a different region to optimize costs.
 As we previously described, the mutating webhook configuration is set on both the CREATE and \textbf{UPDATE} operations.
-A possible UPDATE operation trigger could be a Kubernetes Cronjob that attaches a label \textit{"greenops-optimization": "123456789"} to the VmTemplate resource at a specific time of the day.
+A possible UPDATE operation trigger could be a Kubernetes Cronjob that attaches a label \textit{``greenops-optimization": "123456789"} to the VmTemplate resource at a specific time of the day.
 This could be useful to trigger specific policies that are only applied during the day 2 operations.
 In addition to that, the UPDATE operation could be useful for VMs that have already been scheduled in a distant future (due to their deadline being very far in the future) to obtain a new scheduling decision based on new conditions (e.g. more recent carbon intensity forecast).
 

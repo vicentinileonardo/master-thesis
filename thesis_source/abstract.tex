@@ -40,7 +40,7 @@ In order to implement these principles, the use of \textbf{Kubernetes as a platf
 
 The project is carried out in collaboration with Krateo SRL, a company that is developing a modular platform for resource management and with Electricity Maps, a company that provides historic and real-time data on the carbon intensity of electricity grids around the world. 
 The former provided support for platform integration and supplied the infrastructure used for testing while the latter was the data provider.
-\newline
+\newpage
 
 %The goal of the project is to employ mainly time-shifting and geographical shifting for the scheduling of workload leveraging a multi-cloud setting.
 %We can choose to schedule workloads in periods and regions with low carbon intensity (when renewables are plentiful). 
@@ -51,21 +51,21 @@ The former provided support for platform integration and supplied the infrastruc
 
 %\section{Problem statement}
 
-The traditional management of resources and workloads in the cloud does not usually consider the environmental impact, leading to suboptimal energy usage and excessive carbon emissions.
-However, users and organizations, even if interested in reducing carbon emissions and energy consumption, may not have the necessary systems to do so.
-In addition, they may be reluctant to give up performance and cost requirements in favor of environmental sustainability.
-
 The core challenge addressed in this thesis is:
 \begin{center}
     How can virtual machines (VMs) and cloud resources be scheduled in a way that reduces their carbon footprint while maintaining a varied set of requirements (Service Level Agreements, Quality of Service, cost, etc.)?
 \end{center}
+
+As a matter of fact, the traditional management of resources and workloads in the cloud does not usually consider the environmental impact, leading to suboptimal energy usage and excessive carbon emissions.
+However, users and organizations, even if interested in reducing carbon emissions and energy consumption, may not have the necessary systems to do so.
+In addition, they may be reluctant to give up performance and cost requirements in favor of environmental sustainability.
 
 To tackle this wide and complex problem, this research proposes and describes a multi-cloud resource management system that is mainly built upon Kubernetes, Krateo PlatformOps and Open Policy Agent (OPA) to enable a dynamic policy-driven workload scheduling.
 System capabilities are leveraged to enable the scheduling of workloads in a way that that aims to reduce the carbon footprint of the workloads while satisfying other requirements.
 
 Some of the objectives that the system aims to achieve are the following multi-cloud compatibility, policy-driven resource management, extensibility and flexibility.
 Multi-cloud compatibility is achieved by providing a vendor-agnostic solution that can operate across multiple cloud providers.
-Enabling the definition of policies that encode requirements and constraints of workloads (e.g., Service Level Agreements, Quality of Service, cost, carbon footprint reduction) is how policy-driven resource management is enabled.
+Enabling the flexible definition of policies that encode requirements and constraints of workloads (e.g., Service Level Agreements, Quality of Service, cost, carbon footprint reduction) is how policy-driven resource management is accomplished.
 Extensibility and flexibility are obtained by designing a modular system that can be adapted for additional use cases beyond VM scheduling and with arbitrary requirements. \newline
     
 
