@@ -31,7 +31,7 @@ Said system is mainly based on the idea of exploiting \textbf{time-shifting} and
 As a matter of fact, nowadays, the carbon intensity of electricity varies significantly depending on the time of day and the geographical region.
 Therefore, it is deemed interesting to leverage these fluctuations in electricity grid carbon intensity to schedule workloads in a way that reduces the carbon footprint of the workloads compared to a traditional scheduling approach.
 Currently, targeted workloads are the ones that are not time-sensitive but instead are quite delay-tolerant.
-In addition, workloads are also characterized by other requirements, such as Quality of Service (QoS) requirements (e.g., deadlines, maximum latency constraints, etc.) and cost constraints (e.g., budget constraints, cost optimization, etc.).
+In addition, workloads are also characterized by other requirements, such as Quality of Service (QoS) requirements (e.g., deadlines, maximum latency constraints, etc.) and cost constraints (e.g., budget constraints, cost optimizations, etc.).
 Indeed a \textbf{policy-driven approach} is used to encode these requirements along with scheduling outcomes.
 The system is designed to be used in a multi-cloud setting, where workloads can be scheduled on different cloud providers.
 Adopting a multi-cloud paradigm offers several advantages, including user-centric flexibility, avoidance of vendor lock-in, and the ability to exploit multiple regions because cloud providers may have varying geographical coverage.
@@ -51,23 +51,21 @@ The former provided support for platform integration and supplied the infrastruc
 
 %\section{Problem statement}
 
-The core challenge addressed in this thesis is:
-\begin{center}
-    How can virtual machines (VMs) and cloud resources be scheduled in a way that reduces their carbon footprint while maintaining a varied set of requirements (Service Level Agreements, Quality of Service, cost, etc.)?
-\end{center}
+This thesis addresses the following research question: ``How can flexible and dynamic resource management be achieved to satisfy a varied set of requirements in the context of multi-cloud environments?''
 
+To tackle this wide and complex problem, this research envisions, designs, and implements a policy-driven architecture based on the Kubernetes ecosystem.
+In particular, we propose and describe a multi-cloud resource management system that is mainly built upon Kubernetes, Krateo PlatformOps and Open Policy Agent (OPA).
+
+Some of the objectives that the system aims to achieve are the following: multi-cloud compatibility, policy-driven resource management, extensibility and flexibility.
+Multi-cloud compatibility is achieved by providing a vendor-agnostic solution that can operate across multiple cloud providers.
+Enabling the flexible definition of policies that encode requirements and constraints of workloads (e.g., Service Level Agreements, Quality of Service, economic cost reduction, carbon footprint reduction) is how policy-driven resource management is accomplished.
+Extensibility and flexibility are obtained by designing a modular system that can be adapted for any kind of cloud resource and arbitrary requirements. 
+
+In particular, the use case taken into consideration in the context of this thesis is the scheduling of virtual machines (VMs) in a multi-cloud environment to minimize their carbon footprint while maintaining an exemplificative set of requirements and constraints.
 As a matter of fact, the traditional management of resources and workloads in the cloud does not usually consider the environmental impact, leading to suboptimal energy usage and excessive carbon emissions.
 However, users and organizations, even if interested in reducing carbon emissions and energy consumption, may not have the necessary systems to do so.
 In addition, they may be reluctant to give up performance and cost requirements in favor of environmental sustainability.
-
-To tackle this wide and complex problem, this research proposes and describes a multi-cloud resource management system that is mainly built upon Kubernetes, Krateo PlatformOps and Open Policy Agent (OPA) to enable a dynamic policy-driven workload scheduling.
-System capabilities are leveraged to enable the scheduling of workloads in a way that that aims to reduce the carbon footprint of the workloads while satisfying other requirements.
-
-Some of the objectives that the system aims to achieve are the following multi-cloud compatibility, policy-driven resource management, extensibility and flexibility.
-Multi-cloud compatibility is achieved by providing a vendor-agnostic solution that can operate across multiple cloud providers.
-Enabling the flexible definition of policies that encode requirements and constraints of workloads (e.g., Service Level Agreements, Quality of Service, cost, carbon footprint reduction) is how policy-driven resource management is accomplished.
-Extensibility and flexibility are obtained by designing a modular system that can be adapted for additional use cases beyond VM scheduling and with arbitrary requirements. \newline
-    
+Therefore, the proposed system enables VM scheduling in a way that minimize carbon footprint while satisfying other requirements and constraints. \newline
 
 
 %Use cases (basic ones for the beginning) higher level explanation here
@@ -88,7 +86,7 @@ The phases of the methodology followed for this thesis are the following:
 \begin{enumerate}
     \item \textbf{Literature and Technology Review}: The first phase of the research methodology is to review the existing literature and technologies related to the problem statement. 
     This includes exploring the state-of-the-art of multi-cloud resource management and carbon-aware resource management.
-    A study on Public Cloud Providers and the multi-cloud paradigm is also conducted.
+    A study on public cloud providers and the multi-cloud paradigm is also conducted.
     In addition, the review includes identification and study of the existing open-source tools and technologies that can be used to develop the solution (e.g., Kubernetes, Krateo PlatformOps, Open Policy Agent).
     \item \textbf{System Architecture Design}: The second phase of the methodology is to design the system architecture, including the components, interactions, and data flows.
     This includes also the development of various Proof-of-Concepts in order to test the feasibility of the various identified candidate solutions and to understand tools' strengths, limitations, trade-offs.
