@@ -367,12 +367,12 @@ This approach offers several key advantages \cite{opa_docs}:
 
 \subsection{OPA Gatekeeper}
 
-OPA Gatekeeper is a Kubernetes-native policy engine that extends OPA with \textbf{Custom Resources} and controllers to enforce policies across a Kubernetes cluster \cite{opa_gatekeeper}. 
-It integrates natively with Kubernetes and provides a declarative approach to defining and enforcing policies using Kubernetes Custom Resources. 
-This makes it an excellent choice for basic and standard policy enforcement scenarios, such as RBAC (Role-Based Access Control), security compliance, and resource constraints \cite{opa_gatekeeper}.
-However, while OPA Gatekeeper is \textbf{well-suited for simple use cases}, it presents \textbf{limitations} when addressing complex policy requirements, particularly when policies involve \textbf{mutations} or require access to \textbf{external data sources} \cite{opa_gatekeeper_external_data}. 
+OPA Gatekeeper is a Kubernetes-native tool that extends OPA with \textbf{Custom Resources} and controllers to enforce policies within a Kubernetes cluster \cite{opa_gatekeeper}. 
+As a matter of fact, it provides a declarative approach to defining and enforcing policies using Kubernetes Custom Resources. 
+This makes it a convenient choice for simple and standard policy enforcement scenarios in Kubernetes, such as RBAC (Role-Based Access Control), basic security compliance, and resource constraints \cite{opa_gatekeeper}.
+However, while OPA Gatekeeper is \textbf{well-suited for simple use cases}, it presents heavy \textbf{limitations} when addressing complex policy requirements, particularly when policies involve \textbf{mutations} or require access to \textbf{external data sources} \cite{opa_gatekeeper_external_data}. 
 Indeed, these limitations make it unsuitable for the specific challenges tackled in this system. 
-Therefore, after an initial investigation and Proof of Concept implementation, we decided to use a standard OPA server deployment for policy enforcement mainly due to the flexibility it provides in handling diverse scenarios.
+Therefore, after an initial investigation and Proof of Concept implementation, we decided to use a standard OPA server for policy enforcement mainly due to the flexibility it provides in handling diverse scenarios.
 To illustrate the differences between a standard OPA policy and an OPA Gatekeeper policy, we present two examples:  
 \begin{itemize}[itemsep=0.2pt, topsep=1pt]
   \item[$\bullet$] a simple Rego policy that enforces a basic constraint on Pod creation in a Kubernetes cluster.
@@ -392,7 +392,7 @@ deny[msg] {
 }
 \end{lstlisting}
 
-The second example, illustrated in listing \ref{lst:gatekeeper-template} utilizes OPA Gatekeeper, which extends Kubernetes with Kubernetes CRDs, enabling declarative policy management. By using a ConstraintTemplate, policies can be enforced dynamically through Kubernetes, making them easier to distribute and manage.
+The second example, illustrated in listing \ref{lst:gatekeeper-template} utilizes OPA Gatekeeper and therefore its CRs. By using a ConstraintTemplate CR, policies can be enforced with Kubernetes tooling, making them easier to distribute and manage in this context.
 In other words, with this kind of setting, OPA policy bundles are not employed in the same way as in the standard OPA server. Instead, policies are defined as Kubernetes resources, allowing for more straightforward policy enforcement and management within a Kubernetes environment.
 
 \vspace{5cm}

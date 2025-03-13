@@ -83,15 +83,15 @@ Table \ref{tab:system_components} provides an overview of the main components of
     \hline
     \textbf{Component} & \textbf{Function} \\
     \hline
-    Krateo PlatformOps & Provides an abstraction layer for infrastructure orchestration, enabling declarative resource management and integration with cloud providers with templates. \\
+    Krateo PlatformOps & Provides an abstraction layer for infrastructure orchestration, enabling declarative resource management and allowing integration with cloud providers with operators. \\
     \hline
     Cloud Providers Kubernetes Operators & Manages the provisioning and reconciliation of cloud resources within Kubernetes, ensuring the actual state matches the desired state. \\
     \hline
-    Kubernetes Mutating Webhook Configuration & Intercepts and modifies API requests before they are persisted, allowing dynamic configuration adjustments with policy enforcement. \\
+    Kubernetes Mutating Webhook Configuration & Intercepts and modifies API requests before they are persisted, allowing dynamic resource modifications with policy enforcement. \\
     \hline
     OPA Server & Evaluates policy decisions based on defined constraints and input data from Kubernetes API requests through the webhook configuration. \\
     \hline
-    OPA Policies and Data & Define the rules and contextual information used by OPA to make policy decisions, namely scheduling information \\
+    OPA Policies and Data & Define the rules and contextual information used by OPA to make policy decisions, namely scheduling information (for this use case) \\
     \hline
     GreenOps Scheduler & Determines the optimal scheduling region and scheduling time for VMs, acting as an external data source for OPA policies. \\
     \hline
